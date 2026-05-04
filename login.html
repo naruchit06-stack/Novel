@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ - MeMonster Novel</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --primary:#e8445a; --primary-dark:#c73248; --bg:#0d0d14; --surface:#16161f; --surface2:#1e1e2e; --border:rgba(255,255,255,0.08); --text:#f0f0f8; --muted:#888aaa; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; overflow:hidden; }
+  .bg-art { position:fixed; inset:0; z-index:0; overflow:hidden; }
+  .bg-art::before { content:''; position:absolute; width:600px; height:600px; background:radial-gradient(circle,rgba(232,68,90,0.18) 0%,transparent 70%); top:-100px; left:-100px; animation:pulse1 6s ease-in-out infinite; }
+  .bg-art::after { content:''; position:absolute; width:500px; height:500px; background:radial-gradient(circle,rgba(120,80,255,0.12) 0%,transparent 70%); bottom:-100px; right:-100px; animation:pulse2 8s ease-in-out infinite; }
+  @keyframes pulse1 { 0%,100%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.1) translate(30px,20px)} }
+  @keyframes pulse2 { 0%,100%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.15) translate(-20px,-30px)} }
+  .particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .particle { position:absolute; width:4px; height:4px; background:var(--primary); border-radius:50%; opacity:0; animation:float-up linear infinite; }
+  @keyframes float-up { 0%{opacity:0;transform:translateY(100vh) scale(0)} 10%{opacity:0.6} 90%{opacity:0.2} 100%{opacity:0;transform:translateY(-10vh) scale(1.5)} }
+  .left-panel { position:relative; z-index:1; flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:60px; background:linear-gradient(135deg,rgba(232,68,90,0.05) 0%,transparent 60%); border-right:1px solid var(--border); overflow:hidden; }
+  .left-panel::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8445a' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+  .brand-logo { font-family:'Chakra Petch',sans-serif; font-size:2.5rem; font-weight:700; color:var(--primary); letter-spacing:-1px; margin-bottom:8px; }
+  .brand-sub { font-size:0.8rem; color:var(--muted); letter-spacing:4px; text-transform:uppercase; margin-bottom:60px; }
+  .book-stack { position:relative; width:280px; height:320px; margin-bottom:60px; }
+  .book-card { position:absolute; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6); transition:transform 0.3s ease; }
+  .book-card-1 { width:160px; height:220px; bottom:0; left:0; transform:rotate(-8deg); z-index:1; background:linear-gradient(135deg,#1a1a2e,#16213e); display:flex; align-items:center; justify-content:center; font-size:3rem; }
+  .book-card-2 { width:170px; height:230px; bottom:20px; left:60px; transform:rotate(-2deg); z-index:2; background:linear-gradient(135deg,#2d1b2e,#1a0a1e); display:flex; align-items:center; justify-content:center; font-size:3rem; }
+  .book-card-3 { width:160px; height:215px; bottom:10px; right:0; transform:rotate(6deg); z-index:1; background:linear-gradient(135deg,#0a1628,#0d2137); display:flex; align-items:center; justify-content:center; font-size:3rem; }
+  .book-stack:hover .book-card-1 { transform:rotate(-12deg) translateY(-10px); }
+  .book-stack:hover .book-card-3 { transform:rotate(10deg) translateY(-10px); }
+  .left-tagline { text-align:center; font-size:1.3rem; font-weight:600; color:var(--text); line-height:1.6; }
+  .left-tagline span { color:var(--primary); }
+  .right-panel { position:relative; z-index:1; width:480px; min-width:480px; display:flex; flex-direction:column; justify-content:center; padding:60px 50px; background:var(--surface); }
+  .form-header { margin-bottom:36px; }
+  .form-header h1 { font-family:'Chakra Petch',sans-serif; font-size:2rem; font-weight:700; margin-bottom:8px; }
+  .form-header p { color:var(--muted); font-size:0.95rem; }
+  .form-header p a { color:var(--primary); text-decoration:none; font-weight:600; }
+  .btn-google { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; padding:14px 20px; background:#fff; color:#1a1a1a; border:none; border-radius:12px; font-family:'Sarabun',sans-serif; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.2s; margin-bottom:24px; box-shadow:0 2px 12px rgba(0,0,0,0.3); }
+  .btn-google:hover { background:#f5f5f5; box-shadow:0 4px 20px rgba(0,0,0,0.4); transform:translateY(-1px); }
+  .btn-google:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
+  .btn-google svg { width:22px; height:22px; flex-shrink:0; }
+  .divider { display:flex; align-items:center; gap:16px; margin-bottom:24px; color:var(--muted); font-size:0.85rem; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+  .field { margin-bottom:18px; }
+  .field label { display:block; font-size:0.875rem; font-weight:600; color:var(--muted); margin-bottom:8px; }
+  .field input { width:100%; padding:13px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Sarabun',sans-serif; font-size:0.95rem; transition:all 0.2s; outline:none; }
+  .field input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(232,68,90,0.15); }
+  .field-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .remember-me { display:flex; align-items:center; gap:8px; font-size:0.875rem; color:var(--muted); cursor:pointer; }
+  .remember-me input { width:16px; height:16px; accent-color:var(--primary); cursor:pointer; }
+  .forgot-link { font-size:0.875rem; color:var(--primary); text-decoration:none; font-weight:600; }
+  .btn-submit { width:100%; padding:15px; background:var(--primary); color:#fff; border:none; border-radius:12px; font-family:'Chakra Petch',sans-serif; font-size:1.05rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .btn-submit:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:0 8px 24px rgba(232,68,90,0.4); }
+  .btn-submit:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
+  .tabs { display:flex; background:var(--surface2); border-radius:10px; padding:4px; margin-bottom:28px; }
+  .tab { flex:1; padding:10px; text-align:center; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.9rem; color:var(--muted); transition:all 0.2s; border:none; background:none; font-family:'Sarabun',sans-serif; }
+  .tab.active { background:var(--primary); color:#fff; }
+  .form-section { display:none; }
+  .form-section.active { display:block; }
+  .toast { position:fixed; bottom:30px; right:30px; background:#1e2a3a; border:1px solid rgba(232,68,90,0.3); border-radius:12px; padding:14px 20px; color:var(--text); font-size:0.9rem; transform:translateX(120%); transition:transform 0.3s; z-index:100; display:flex; align-items:center; gap:10px; max-width:320px; }
+  .toast.show { transform:translateX(0); }
+  .toast.toast-error { border-color:rgba(232,68,90,0.6); }
+  .toast.toast-success { border-color:rgba(34,197,94,0.4); }
+  .loading-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:none; align-items:center; justify-content:center; }
+  .loading-overlay.show { display:flex; }
+  .loading-spinner { width:48px; height:48px; border:3px solid rgba(232,68,90,0.3); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (max-width:900px) { .left-panel { display:none; } .right-panel { width:100%; min-width:unset; } }
+</style>
+</head>
+<body>
+<div class="bg-art"></div>
+<div class="particles" id="particles"></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+
+<div class="left-panel">
+  <div class="brand-logo">Me.Monster</div>
+  <div class="brand-sub">Novel</div>
+  <div class="book-stack">
+    <div class="book-card book-card-1">📖</div>
+    <div class="book-card book-card-2">⚔️</div>
+    <div class="book-card book-card-3">🐉</div>
+  </div>
+  <div class="left-tagline">สนุกไปกับ<span>นิยาย</span>ที่คุณชอบ<br>อ่านได้ทุกที่ ทุกเวลา</div>
+</div>
+
+<div class="right-panel">
+  <div class="form-header">
+    <h1>ยินดีต้อนรับ 👋</h1>
+    <p id="form-subtitle">ยังไม่มีบัญชี? <a href="#" onclick="switchTab('register'); return false;">สมัครสมาชิก</a></p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="switchTab('login')">เข้าสู่ระบบ</button>
+    <button class="tab" id="tab-register" onclick="switchTab('register')">สมัครสมาชิก</button>
+  </div>
+  <button class="btn-google" id="btnGoogle" onclick="loginWithGoogle()">
+    <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+    เข้าสู่ระบบด้วย Google
+  </button>
+  <div class="divider">หรือใช้อีเมล</div>
+
+  <div class="form-section active" id="section-login">
+    <div class="field"><label>อีเมล</label><input type="email" placeholder="your@email.com" id="login-email"></div>
+    <div class="field"><label>รหัสผ่าน</label><input type="password" placeholder="••••••••" id="login-password" onkeydown="if(event.key==='Enter')handleLogin()"></div>
+    <div class="field-row">
+      <label class="remember-me"><input type="checkbox" id="rememberMe"> จดจำฉัน</label>
+      <a href="#" class="forgot-link" onclick="handleForgotPassword(); return false;">ลืมรหัสผ่าน?</a>
+    </div>
+    <button class="btn-submit" id="btnLogin" onclick="handleLogin()">เข้าสู่ระบบ</button>
+  </div>
+
+  <div class="form-section" id="section-register">
+    <div class="field"><label>ชื่อผู้ใช้</label><input type="text" placeholder="ชื่อที่แสดงในระบบ" id="reg-name"></div>
+    <div class="field"><label>อีเมล</label><input type="email" placeholder="your@email.com" id="reg-email"></div>
+    <div class="field"><label>รหัสผ่าน</label><input type="password" placeholder="อย่างน้อย 8 ตัวอักษร" id="reg-password"></div>
+    <div class="field" style="margin-bottom:24px"><label>ยืนยันรหัสผ่าน</label><input type="password" placeholder="••••••••" id="reg-confirm" onkeydown="if(event.key==='Enter')handleRegister()"></div>
+    <button class="btn-submit" id="btnRegister" onclick="handleRegister()">สมัครสมาชิก</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-icon">✅</span><span id="toast-msg"></span></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
+  authDomain:"login-24acc.firebaseapp.com",
+  projectId:"login-24acc",
+  storageBucket:"login-24acc.firebasestorage.app",
+  messagingSenderId:"440213309587",
+  appId:"1:440213309587:web:072857c31c2e6bd5062566"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+const gProvider = new GoogleAuthProvider();
+
+const errMsg = {
+  'auth/user-not-found':'ไม่พบบัญชีผู้ใช้นี้','auth/wrong-password':'รหัสผ่านไม่ถูกต้อง',
+  'auth/invalid-credential':'อีเมลหรือรหัสผ่านไม่ถูกต้อง','auth/email-already-in-use':'อีเมลนี้ถูกใช้งานแล้ว',
+  'auth/weak-password':'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร','auth/invalid-email':'รูปแบบอีเมลไม่ถูกต้อง',
+  'auth/popup-closed-by-user':'ปิดหน้าต่าง Google ก่อนเสร็จสิ้น','auth/too-many-requests':'พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่',
+};
+
+function toast(msg, icon='✅', type='success') {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').textContent=icon;
+  t.className='toast show toast-'+type;
+  setTimeout(()=>t.classList.remove('show'),4000);
+}
+function setLoad(v) {
+  document.getElementById('loadingOverlay').classList.toggle('show',v);
+  ['btnLogin','btnRegister','btnGoogle'].forEach(id=>document.getElementById(id).disabled=v);
+}
+function redirect() {
+  const r=new URLSearchParams(window.location.search).get('returnTo');
+  window.location.href=r||'index.html';
+}
+async function saveProfile(user, name) {
+  try {
+    await setDoc(doc(db,'users',user.uid),{
+      uid:user.uid, email:user.email,
+      displayName:name||user.displayName||user.email.split('@')[0],
+      photoURL:user.photoURL||null, role:'user',
+      lastLogin:serverTimestamp()
+    },{merge:true});
+  } catch(e){}
+}
+
+onAuthStateChanged(auth, u => { if(u) redirect(); });
+
+window.loginWithGoogle = async function() {
+  setLoad(true);
+  try {
+    const r = await signInWithPopup(auth, gProvider);
+    await saveProfile(r.user);
+    toast('เข้าสู่ระบบด้วย Google สำเร็จ! 🎉','✅','success');
+    setTimeout(redirect,1000);
+  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); setLoad(false); }
+};
+
+window.handleLogin = async function() {
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  const remember=document.getElementById('rememberMe').checked;
+  if(!email||!pass){toast('กรุณากรอกอีเมลและรหัสผ่าน','⚠️','error');return;}
+  setLoad(true);
+  try {
+    await setPersistence(auth, remember?browserLocalPersistence:browserSessionPersistence);
+    const r = await signInWithEmailAndPassword(auth, email, pass);
+    await saveProfile(r.user);
+    toast('เข้าสู่ระบบสำเร็จ! 🎉','✅','success');
+    setTimeout(redirect,1000);
+  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); setLoad(false); }
+};
+
+window.handleRegister = async function() {
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-password').value;
+  const confirm=document.getElementById('reg-confirm').value;
+  if(!name||!email||!pass||!confirm){toast('กรุณากรอกข้อมูลให้ครบ','⚠️','error');return;}
+  if(pass!==confirm){toast('รหัสผ่านไม่ตรงกัน','❌','error');return;}
+  if(pass.length<8){toast('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร','⚠️','error');return;}
+  setLoad(true);
+  try {
+    const r = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(r.user,{displayName:name});
+    await saveProfile(r.user, name);
+    toast(`ยินดีต้อนรับ ${name}! 🎉`,'✅','success');
+    setTimeout(redirect,1200);
+  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); setLoad(false); }
+};
+
+window.handleForgotPassword = async function() {
+  const email=document.getElementById('login-email').value.trim();
+  if(!email){toast('กรอกอีเมลในช่องด้านบนก่อน','⚠️','error');return;}
+  try {
+    await sendPasswordResetEmail(auth, email);
+    toast('ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว ตรวจสอบกล่องจดหมาย','📧','success');
+  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); }
+};
+
+window.switchTab = function(tab) {
+  ['tab-login','tab-register'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  ['section-login','section-register'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('section-'+tab).classList.add('active');
+  document.getElementById('form-subtitle').innerHTML = tab==='login'
+    ? 'ยังไม่มีบัญชี? <a href="#" onclick="switchTab(\'register\'); return false;">สมัครสมาชิก</a>'
+    : 'มีบัญชีอยู่แล้ว? <a href="#" onclick="switchTab(\'login\'); return false;">เข้าสู่ระบบ</a>';
+};
+</script>
+<script>
+(function(){const c=document.getElementById('particles');for(let i=0;i<20;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(2+Math.random()*4)+'px';p.style.animationDuration=(8+Math.random()*12)+'s';p.style.animationDelay=(Math.random()*10)+'s';c.appendChild(p);}})();
+</script>
+</body>
+</html>
