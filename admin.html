@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - MeMonster Novel</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Chakra+Petch:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #e8445a;
+    --primary-dark: #c73248;
+    --primary-glow: rgba(232,68,90,0.25);
+    --bg: #0a0a10;
+    --surface: #111118;
+    --surface2: #18181f;
+    --surface3: #1e1e28;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f8;
+    --muted: #6868a0;
+    --muted2: #9090b8;
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.15);
+    --yellow: #f59e0b;
+    --yellow-dim: rgba(245,158,11,0.15);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.15);
+    --admin-accent: #a855f7;
+    --admin-accent-dim: rgba(168,85,247,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== LOGIN OVERLAY ===== */
+  #login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #login-overlay.hidden { display: none; }
+
+  .login-box {
+    width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 48px 40px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .login-box::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(232,68,90,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .login-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--admin-accent-dim);
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.75rem;
+    color: var(--admin-accent);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+
+  .login-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #fff 40%, var(--admin-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 36px;
+  }
+
+  .login-field {
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .login-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted2);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .login-field input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  .login-field input:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.15);
+    background: var(--surface3);
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--admin-accent), #7c3aed);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(168,85,247,0.4);
+  }
+
+  .login-btn:active { transform: translateY(0); }
+
+  .login-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .login-hint code {
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--admin-accent);
+    font-size: 0.8rem;
+  }
+
+  .login-error {
+    background: rgba(232,68,90,0.1);
+    border: 1px solid rgba(232,68,90,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: var(--primary);
+    margin-top: 12px;
+    display: none;
+  }
+
+  .login-error.show { display: block; }
+
+  /* ===== ADMIN LAYOUT ===== */
+  #admin-panel { display: none; }
+  #admin-panel.show { display: flex; min-height: 100vh; }
+
+  /* Admin Sidebar */
+  .admin-sidebar {
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .admin-logo-area {
+    padding: 24px 22px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .admin-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--admin-accent-dim);
+    border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--admin-accent);
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+  }
+
+  .admin-site-name {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-site-logo {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .admin-site-logo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .admin-nav {
+    padding: 16px 0;
+    flex: 1;
+  }
+
+  .admin-nav-group {
+    padding: 8px 16px 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 22px;
+    color: var(--muted2);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    border-left: 3px solid transparent;
+    transition: all 0.18s;
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  .admin-nav-item:hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .admin-nav-item.active {
+    color: var(--admin-accent);
+    border-left-color: var(--admin-accent);
+    background: var(--admin-accent-dim);
+  }
+
+  .admin-nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .admin-nav-badge {
+    margin-left: auto;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .admin-logout-area {
+    padding: 16px 22px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .admin-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .admin-avatar {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--admin-accent), var(--primary));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .admin-user-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .admin-user-role {
+    font-size: 0.72rem;
+    color: var(--admin-accent);
+    font-weight: 600;
+  }
+
+  .btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    background: rgba(232,68,90,0.08);
+    border: 1px solid rgba(232,68,90,0.2);
+    border-radius: 8px;
+    color: var(--primary);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover {
+    background: rgba(232,68,90,0.15);
+    border-color: var(--primary);
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .admin-main {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-topbar {
+    background: rgba(10,10,16,0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+  }
+
+  .page-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .page-title span { color: var(--admin-accent); }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn-back-site {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted2);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-back-site:hover { color: var(--text); border-color: var(--border2); }
+
+  /* ===== PAGES ===== */
+  .admin-page {
+    display: none;
+    padding: 36px;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .admin-page.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== DASHBOARD ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 0 14px 0 80px;
+    opacity: 0.08;
+  }
+
+  .stat-card.red::before { background: var(--primary); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.purple::before { background: var(--admin-accent); }
+
+  .stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+
+  .stat-value {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-card.red .stat-value { color: var(--primary); }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.blue .stat-value { color: var(--blue); }
+  .stat-card.purple .stat-value { color: var(--admin-accent); }
+
+  .stat-label {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .recent-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .section-head {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-head-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .recent-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .recent-table th {
+    padding: 12px 24px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .recent-table td {
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .recent-table tr:last-child td { border-bottom: none; }
+
+  .novel-row-cover {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .novel-row-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .novel-row-title { font-weight: 600; font-size: 0.9rem; }
+  .novel-row-meta { font-size: 0.78rem; color: var(--muted); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .status-active { background: var(--green-dim); color: var(--green); }
+  .status-done { background: var(--blue-dim); color: var(--blue); }
+  .status-new { background: var(--yellow-dim); color: var(--yellow); }
+
+  /* ===== FORM STYLES ===== */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+
+  .form-card-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-card-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  .form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted2);
+    margin-bottom: 8px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  .form-input:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+    background: var(--surface3);
+  }
+
+  textarea.form-input {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.6;
+  }
+
+  /* Upload zones */
+  .upload-zone {
+    border: 2px dashed rgba(168,85,247,0.3);
+    border-radius: 12px;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(168,85,247,0.03);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--admin-accent);
+    background: rgba(168,85,247,0.08);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon { font-size: 2rem; margin-bottom: 10px; }
+  .upload-text { font-size: 0.9rem; color: var(--muted2); font-weight: 600; }
+  .upload-hint { font-size: 0.78rem; color: var(--muted); margin-top: 5px; }
+
+  .upload-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-top: 12px;
+  }
+
+  .preview-thumb {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    background: var(--surface3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .preview-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-info { flex: 1; }
+  .preview-name { font-size: 0.85rem; font-weight: 600; word-break: break-all; }
+  .preview-size { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+  .preview-remove {
+    background: rgba(232,68,90,0.1);
+    border: 1px solid rgba(232,68,90,0.2);
+    border-radius: 6px;
+    color: var(--primary);
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'Sarabun', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .preview-remove:hover { background: rgba(232,68,90,0.2); }
+
+  /* Tags input */
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    min-height: 50px;
+    cursor: text;
+    transition: all 0.2s;
+  }
+
+  .tags-container:focus-within {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+  }
+
+  .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--admin-accent-dim);
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    color: var(--admin-accent);
+    font-weight: 600;
+  }
+
+  .tag-remove {
+    cursor: pointer;
+    opacity: 0.7;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: opacity 0.2s;
+  }
+
+  .tag-remove:hover { opacity: 1; }
+
+  .tag-input-field {
+    border: none;
+    background: none;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .tag-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .tag-suggest {
+    padding: 4px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--muted2);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  .tag-suggest:hover {
+    background: var(--admin-accent-dim);
+    border-color: rgba(168,85,247,0.3);
+    color: var(--admin-accent);
+  }
+
+  /* Action buttons */
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 26px;
+    border-radius: 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-save {
+    background: linear-gradient(135deg, var(--admin-accent), #7c3aed);
+    color: #fff;
+  }
+
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(168,85,247,0.4);
+  }
+
+  .btn-publish {
+    background: linear-gradient(135deg, var(--green), #16a34a);
+    color: #fff;
+  }
+
+  .btn-publish:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(34,197,94,0.4);
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--muted2);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover { color: var(--text); border-color: var(--border2); }
+
+  .action-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ===== NOVEL LIST ===== */
+  .novel-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .novel-admin-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .novel-admin-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+  }
+
+  .novel-admin-cover {
+    width: 100%;
+    height: 140px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .novel-admin-cover img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .novel-admin-cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+  }
+
+  .novel-admin-body { padding: 14px 16px; }
+  .novel-admin-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+  .novel-admin-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+
+  .novel-admin-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+
+  .novel-admin-tag {
+    padding: 2px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    font-size: 0.72rem;
+    color: var(--muted2);
+  }
+
+  .novel-admin-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .novel-action-btn {
+    flex: 1;
+    padding: 7px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'Sarabun', sans-serif;
+    transition: all 0.18s;
+  }
+
+  .novel-action-edit {
+    background: var(--blue-dim);
+    color: var(--blue);
+  }
+
+  .novel-action-edit:hover { background: rgba(59,130,246,0.25); }
+
+  .novel-action-delete {
+    background: rgba(232,68,90,0.08);
+    color: var(--primary);
+  }
+
+  .novel-action-delete:hover { background: rgba(232,68,90,0.18); }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    min-width: 280px;
+    max-width: 380px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 9998;
+    transform: translateX(130%);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+
+  .toast.show { transform: translateX(0); }
+  .toast.toast-success { border-left: 4px solid var(--green); }
+  .toast.toast-error { border-left: 4px solid var(--primary); }
+  .toast.toast-info { border-left: 4px solid var(--admin-accent); }
+
+  .toast-msg { font-size: 0.9rem; font-weight: 600; }
+
+  /* ===== SETTINGS PAGE ===== */
+  .settings-preview {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--border);
+    margin-top: 12px;
+  }
+
+  .preview-logo-box {
+    width: 52px; height: 52px;
+    border-radius: 10px;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .preview-logo-box img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-site-name {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+
+  .preview-site-tagline {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ===== AUDIO PLAYER PREVIEW ===== */
+  .audio-preview {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--border);
+    margin-top: 12px;
+  }
+
+  .audio-play-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--admin-accent);
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .audio-play-btn:hover { transform: scale(1.1); background: #7c3aed; }
+
+  .audio-info { flex: 1; }
+  .audio-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+
+  .audio-bar {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .audio-bar-fill {
+    height: 100%;
+    width: 35%;
+    background: linear-gradient(90deg, var(--admin-accent), var(--primary));
+    border-radius: 2px;
+  }
+
+  .audio-duration {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .admin-sidebar { width: 60px; overflow: hidden; }
+    .admin-sidebar .admin-nav-item span,
+    .admin-sidebar .admin-logo-area .admin-site-name span,
+    .admin-sidebar .admin-nav-group,
+    .admin-sidebar .admin-badge-pill,
+    .admin-sidebar .admin-user-info div,
+    .admin-sidebar .btn-logout span,
+    .admin-sidebar .admin-nav-badge { display: none; }
+    .admin-main { margin-left: 60px; }
+    .admin-nav-item { justify-content: center; padding: 13px; }
+    .admin-nav-icon { width: auto; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .admin-page { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+
+  <!-- Sidebar -->
+  <div class="admin-sidebar">
+    <div class="admin-logo-area">
+      <div class="admin-badge-pill">⚡ ADMIN</div>
+      <div class="admin-badge-pill" id="superadmin-badge" style="display:none;background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b;margin-top:4px">👑 SUPER ADMIN</div>
+      <div class="admin-site-name">
+        <div class="admin-site-logo" id="sidebar-logo">🦁</div>
+        <span id="sidebar-sitename">MeMonster Novel</span>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <div class="admin-nav-group">หลัก</div>
+      <button class="admin-nav-item active" onclick="showPage('dashboard', this)">
+        <span class="admin-nav-icon">📊</span>
+        <span>แดชบอร์ด</span>
+      </button>
+      <button class="admin-nav-item" onclick="showPage('novels', this)">
+        <span class="admin-nav-icon">📚</span>
+        <span>นิยายทั้งหมด</span>
+        <span class="admin-nav-badge" id="novel-count-badge">8</span>
+      </button>
+
+      <div class="admin-nav-group" style="margin-top:8px">จัดการ</div>
+      <button class="admin-nav-item" onclick="showPage('upload', this)">
+        <span class="admin-nav-icon">⬆️</span>
+        <span>อัพโหลดนิยายเสียง</span>
+      </button>
+      <button class="admin-nav-item" onclick="showPage('settings', this)">
+        <span class="admin-nav-icon">⚙️</span>
+        <span>ตั้งค่าเว็บไซต์</span>
+      </button>
+      <div class="admin-nav-group" style="margin-top:8px">Super Admin</div>
+      <button class="admin-nav-item" id="nav-manage-admins" style="display:none" onclick="showPage('manage-admins', this)">
+        <span class="admin-nav-icon">👑</span>
+        <span>จัดการแอดมิน</span>
+      </button>
+    </nav>
+
+    <div class="admin-logout-area">
+      <div class="admin-user-info">
+        <div class="admin-avatar" id="admin-avatar-text">A</div>
+        <div>
+          <div class="admin-user-name" id="admin-user-name">Admin</div>
+          <div class="admin-user-role" id="admin-user-role">Super Admin</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doAdminLogout()">
+        <span>🚪</span>
+        <span>ออกจากระบบ</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title" id="page-title"><span>📊</span> แดชบอร์ด</div>
+      <div class="topbar-actions">
+        <a href="index.html" class="btn-back-site">🌐 ดูหน้าเว็บ</a>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+    <div class="admin-page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card red">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value" id="stat-novels">8</div>
+          <div class="stat-label">นิยายทั้งหมด</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">▶️</div>
+          <div class="stat-value" id="stat-eps">2,311</div>
+          <div class="stat-label">ตอนทั้งหมด</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">👁️</div>
+          <div class="stat-value" id="stat-views">1.8แสน</div>
+          <div class="stat-label">ยอดวิวรวม</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value" id="stat-members">342</div>
+          <div class="stat-label">สมาชิก</div>
+        </div>
+      </div>
+
+      <div class="recent-section">
+        <div class="section-head">
+          <div class="section-head-title">📋 นิยายล่าสุด</div>
+          <button class="btn-action btn-secondary" style="padding:7px 16px;font-size:0.8rem;" onclick="showPage('upload', document.querySelector('.admin-nav-item:nth-child(5)'))">+ อัพโหลดใหม่</button>
+        </div>
+        <table class="recent-table" id="dashboard-table">
+          <thead>
+            <tr>
+              <th>นิยาย</th>
+              <th>แท็ก</th>
+              <th>ตอน</th>
+              <th>ยอดวิว</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="dashboard-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== NOVELS LIST PAGE ===== -->
+    <div class="admin-page" id="page-novels">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div>
+          <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800">นิยายทั้งหมด</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-top:3px" id="novels-count-text">8 เรื่อง</div>
+        </div>
+        <button class="btn-action btn-save" onclick="showPage('upload', document.querySelectorAll('.admin-nav-item')[2])">⬆️ อัพโหลดนิยายใหม่</button>
+      </div>
+      <div class="novel-list-grid" id="novels-grid"></div>
+    </div>
+
+    <!-- ===== UPLOAD PAGE ===== -->
+    <div class="admin-page" id="page-upload">
+      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px">อัพโหลดนิยายเสียง</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:24px">เพิ่มนิยายเสียงใหม่พร้อมรายละเอียด</div>
+
+      <!-- Novel Info -->
+      <div class="form-card">
+        <div class="form-card-title">📝 ข้อมูลนิยาย</div>
+        <div class="form-card-sub">ใส่ชื่อ เนื้อเรื่องย่อ และแท็กที่เกี่ยวข้อง</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">ชื่อนิยาย *</label>
+            <input type="text" class="form-input" id="novel-title" placeholder="เช่น ตัวเอกพวกนั้นฉันฆ่าเองแหละ!">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ผู้แต่ง</label>
+            <input type="text" class="form-input" id="novel-author" placeholder="ชื่อผู้แต่ง">
+          </div>
+        </div>
+
+        <div class="form-group full" style="grid-column:1/-1">
+          <label class="form-label">เนื้อเรื่องย่อ *</label>
+          <textarea class="form-input" id="novel-synopsis" placeholder="เขียนเนื้อเรื่องย่อที่น่าดึงดูด...&#10;&#10;เช่น ชายหนุ่มผู้ถูกชะตาเล่นตลก ได้ตื่นมาพบว่าตัวเองอยู่ในโลกแฟนตาซีในฐานะตัวร้ายที่ถูกกำหนดให้ตาย..."></textarea>
+        </div>
+
+        <div class="form-group full" style="grid-column:1/-1">
+          <label class="form-label">แท็ก *</label>
+          <div class="tags-container" id="tags-container" onclick="document.getElementById('tag-input').focus()">
+            <input type="text" class="tag-input-field" id="tag-input" placeholder="พิมพ์แท็กแล้วกด Enter..." onkeydown="handleTagInput(event)">
+          </div>
+          <div class="tag-suggestions">
+            <span style="font-size:0.78rem;color:var(--muted);margin-right:4px">แนะนำ:</span>
+            <button class="tag-suggest" onclick="addTag('แฟนตาซี')">แฟนตาซี</button>
+            <button class="tag-suggest" onclick="addTag('แอ็กชัน')">แอ็กชัน</button>
+            <button class="tag-suggest" onclick="addTag('ระบบ')">ระบบ</button>
+            <button class="tag-suggest" onclick="addTag('พระเอกเก่ง')">พระเอกเก่ง</button>
+            <button class="tag-suggest" onclick="addTag('เกิดใหม่')">เกิดใหม่</button>
+            <button class="tag-suggest" onclick="addTag('ต่างโลก')">ต่างโลก</button>
+            <button class="tag-suggest" onclick="addTag('โรแมนซ์')">โรแมนซ์</button>
+            <button class="tag-suggest" onclick="addTag('ดาร์ก')">ดาร์ก</button>
+            <button class="tag-suggest" onclick="addTag('ฮาเร็ม')">ฮาเร็ม</button>
+            <button class="tag-suggest" onclick="addTag('เวทมนตร์')">เวทมนตร์</button>
+            <button class="tag-suggest" onclick="addTag('กีฬา')">กีฬา</button>
+            <button class="tag-suggest" onclick="addTag('ย้อนเวลา')">ย้อนเวลา</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">จำนวนตอน</label>
+            <input type="number" class="form-input" id="novel-eps" placeholder="เช่น 42" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">สถานะ</label>
+            <select class="form-input" id="novel-status">
+              <option value="ongoing">กำลังดำเนินเรื่อง</option>
+              <option value="done">จบแล้ว</option>
+              <option value="new">ใหม่</option>
+              <option value="hiatus">หยุดพัก</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cover Image Upload -->
+      <div class="form-card">
+        <div class="form-card-title">🖼️ รูปปกนิยาย</div>
+        <div class="form-card-sub">แนะนำรูปขนาด 800×1200px รองรับ JPG, PNG, WebP</div>
+
+        <div class="upload-zone" id="cover-zone">
+          <input type="file" accept="image/*" onchange="handleCoverUpload(event)" id="cover-input">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">คลิกหรือลากรูปปกมาวาง</div>
+          <div class="upload-hint">JPG, PNG, WebP • แนะนำ 800×1200px</div>
+        </div>
+
+        <div class="upload-preview" id="cover-preview" style="display:none">
+          <div class="preview-thumb" id="cover-thumb">🖼️</div>
+          <div class="preview-info">
+            <div class="preview-name" id="cover-name">-</div>
+            <div class="preview-size" id="cover-size">-</div>
+          </div>
+          <button class="preview-remove" onclick="removeCover()">✕ ลบ</button>
+        </div>
+      </div>
+
+      <!-- Audio Files Upload -->
+      <div class="form-card">
+        <div class="form-card-title">🎵 ไฟล์เสียงนิยาย</div>
+        <div class="form-card-sub">อัพโหลดไฟล์เสียง MP3, M4A, WAV, OGG สำหรับแต่ละตอน</div>
+
+        <div class="upload-zone" id="audio-zone">
+          <input type="file" accept="audio/*" multiple onchange="handleAudioUpload(event)" id="audio-input">
+          <div class="upload-icon">🎧</div>
+          <div class="upload-text">คลิกหรือลากไฟล์เสียงมาวาง</div>
+          <div class="upload-hint">MP3, M4A, WAV, OGG • รองรับหลายไฟล์พร้อมกัน</div>
+        </div>
+
+        <div id="audio-list" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- Submit -->
+      <div class="form-card" style="background:rgba(168,85,247,0.04);border-color:rgba(168,85,247,0.2)">
+        <div class="form-card-title">🚀 เผยแพร่นิยาย</div>
+        <div class="form-card-sub">ตรวจสอบข้อมูลให้ครบก่อนเผยแพร่</div>
+        <div class="action-bar">
+          <button class="btn-action btn-publish" onclick="publishNovel()">✅ เผยแพร่นิยาย</button>
+          <button class="btn-action btn-secondary" onclick="saveDraft()">💾 บันทึกฉบับร่าง</button>
+          <button class="btn-action btn-secondary" onclick="clearForm()">🗑️ ล้างฟอร์ม</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS PAGE ===== -->
+    <div class="admin-page" id="page-settings">
+      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px">ตั้งค่าเว็บไซต์</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:24px">ปรับแต่งชื่อและโลโก้ของเว็บไซต์</div>
+
+      <!-- Site Name -->
+      <div class="form-card">
+        <div class="form-card-title">🌐 ชื่อเว็บไซต์</div>
+        <div class="form-card-sub">ชื่อที่แสดงในแถบเมนูและ Browser Tab</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">ชื่อเว็บไซต์ *</label>
+            <input type="text" class="form-input" id="site-name" value="MeMonster Novel" oninput="updatePreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">แท็กไลน์</label>
+            <input type="text" class="form-input" id="site-tagline" value="สนุกไปกับนิยายที่คุณชอบ" oninput="updatePreview()">
+          </div>
+        </div>
+
+        <label class="form-label">ตัวอย่างแสดงผล</label>
+        <div class="settings-preview">
+          <div class="preview-logo-box" id="preview-logo-box">🦁</div>
+          <div>
+            <div class="preview-site-name" id="preview-site-name">MeMonster Novel</div>
+            <div class="preview-site-tagline" id="preview-tagline">สนุกไปกับนิยายที่คุณชอบ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logo Upload -->
+      <div class="form-card">
+        <div class="form-card-title">🖼️ โลโก้เว็บไซต์</div>
+        <div class="form-card-sub">โลโก้ที่แสดงในแถบด้านซ้าย แนะนำ 128×128px รูปสี่เหลี่ยมหรือวงกลม</div>
+
+        <div class="upload-zone" id="logo-zone">
+          <input type="file" accept="image/*" onchange="handleLogoUpload(event)" id="logo-input">
+          <div class="upload-icon">🏷️</div>
+          <div class="upload-text">คลิกหรือลากโลโก้มาวาง</div>
+          <div class="upload-hint">JPG, PNG, WebP, SVG • แนะนำ 128×128px</div>
+        </div>
+
+        <div class="upload-preview" id="logo-preview" style="display:none">
+          <div class="preview-thumb" id="logo-thumb">🏷️</div>
+          <div class="preview-info">
+            <div class="preview-name" id="logo-name">-</div>
+            <div class="preview-size" id="logo-size">-</div>
+          </div>
+          <button class="preview-remove" onclick="removeLogo()">✕ ลบ</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <label class="form-label">หรือใช้ Emoji เป็นโลโก้</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" id="emoji-picker">
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Color -->
+      <div class="form-card">
+        <div class="form-card-title">🎨 สีธีมหลัก</div>
+        <div class="form-card-sub">สีที่ใช้ในปุ่ม แถบเมนู และองค์ประกอบหลัก</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px" id="color-swatches"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">สีหลัก (HEX)</label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <input type="color" id="color-picker" value="#e8445a" style="width:46px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px" onchange="applyColor(this.value)">
+              <input type="text" class="form-input" id="color-hex" value="#e8445a" style="flex:1" oninput="if(this.value.match(/^#[0-9a-fA-F]{6}$/)) applyColor(this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Settings -->
+      <div class="form-card" style="background:rgba(168,85,247,0.04);border-color:rgba(168,85,247,0.2)">
+        <div class="action-bar">
+          <button class="btn-action btn-save" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+          <button class="btn-action btn-secondary" onclick="resetSettings()">↩️ รีเซ็ต</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MANAGE ADMINS PAGE ===== -->
+    <div class="admin-page" id="page-manage-admins">
+      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+        <span style="color:#f59e0b">👑</span> จัดการแอดมิน
+        <span style="font-size:0.7rem;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#f59e0b;padding:2px 10px;border-radius:10px;font-weight:700">SUPER ADMIN ONLY</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:24px">เพิ่ม ลบ หรือแก้ไขสิทธิ์แอดมิน — เฉพาะ Super Admin เท่านั้น</div>
+
+      <!-- Add Admin Card -->
+      <div class="form-card" style="margin-bottom:24px">
+        <div class="form-card-title">➕ เพิ่มแอดมินใหม่</div>
+        <div class="form-card-sub">สร้างบัญชีแอดมินใหม่ในระบบ</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">ชื่อแอดมิน *</label>
+            <input type="text" class="form-input" id="new-admin-name" placeholder="เช่น Editor1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email / Admin ID *</label>
+            <input type="email" class="form-input" id="new-admin-email" placeholder="email@example.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน *</label>
+            <input type="text" class="form-input" id="new-admin-pass" placeholder="อย่างน้อย 6 ตัวอักษร">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ระดับสิทธิ์</label>
+            <select class="form-input" id="new-admin-role" style="cursor:pointer">
+              <option value="admin">🛡️ Admin (ทั่วไป)</option>
+            </select>
+          </div>
+        </div>
+        <div class="action-bar" style="margin-top:12px">
+          <button class="btn-action btn-publish" onclick="addNewAdmin()">➕ เพิ่มแอดมิน</button>
+          <button class="btn-action btn-secondary" onclick="clearNewAdminForm()">🗑️ ล้างฟอร์ม</button>
+        </div>
+      </div>
+
+      <!-- Admin List -->
+      <div class="form-card">
+        <div class="form-card-title">📋 รายชื่อแอดมินทั้งหมด</div>
+        <div class="form-card-sub">คลิก 🗑️ เพื่อถอดสิทธิ์แอดมิน (ไม่สามารถลบ Super Admin ได้)</div>
+        <div id="admin-list-container" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+  </div><!-- end admin-main -->
+</div><!-- end admin-panel -->
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✅</span>
+  <span class="toast-msg" id="toast-msg">บันทึกสำเร็จ!</span>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// ===== FIREBASE INIT =====
+const app = initializeApp({
+  apiKey:"AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
+  authDomain:"login-24acc.firebaseapp.com",
+  projectId:"login-24acc",
+  storageBucket:"login-24acc.firebasestorage.app",
+  messagingSenderId:"440213309587",
+  appId:"1:440213309587:web:072857c31c2e6bd5062566"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ===== CLOUDINARY CONFIG (จากภาพ Cloudinary ของคุณ) =====
+const CLOUDINARY_CLOUD = 'dmr6ln5hy';
+const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; // ต้องตั้งค่า unsigned preset ใน Cloudinary
+
+// Admin emails ที่มีสิทธิ์เข้าใช้
+const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
+const SUPERADMIN_EMAIL = 'momoppl01@gmail.com';
+
+let currentAdmin = null;
+let novels = [];
+let tags = [];
+let audioFiles = [];
+let coverFile = null;
+let logoFile = null;
+let siteSettings = { name:'MeMonster Novel', tagline:'สนุกไปกับนิยายที่คุณชอบ', logo:'🦁', color:'#e8445a' };
+const EMOJIS = ['🦁','🐉','⚔️','📚','🌙','🔥','🌑','✨','👑','🗡️','🛡️','🧙‍♂️','🎭','🎪','⭐','🌟'];
+const COLORS = ['#e8445a','#a855f7','#3b82f6','#22c55e','#f59e0b','#ec4899','#06b6d4','#f97316'];
+
+// ===== AUTH STATE =====
+onAuthStateChanged(auth, (user) => {
+  if (user && ADMIN_EMAILS.includes(user.email)) {
+    currentAdmin = { email: user.email, name: user.displayName || user.email.split('@')[0], role: user.email === SUPERADMIN_EMAIL ? 'superadmin' : 'admin' };
+    showAdminPanel();
+  } else if (user && !ADMIN_EMAILS.includes(user.email)) {
+    // login แล้วแต่ไม่ใช่ admin → กลับหน้าหลัก
+    window.location.href = 'index.html';
+  } else {
+    // ยังไม่ได้ login → ไปหน้า login
+    window.location.href = 'login.html';
+  }
+});
+
+function showAdminPanel() {
+  document.getElementById('admin-panel').classList.add('show');
+  document.getElementById('admin-user-name').textContent = currentAdmin.name;
+  document.getElementById('admin-user-role').textContent = currentAdmin.role === 'superadmin' ? '👑 Super Admin' : '🛡️ Admin';
+  document.getElementById('admin-avatar-text').textContent = currentAdmin.name.substring(0,2).toUpperCase();
+  if (currentAdmin.role === 'superadmin') {
+    const saBadge = document.getElementById('superadmin-badge');
+    if (saBadge) saBadge.style.display = 'flex';
+    const navManage = document.getElementById('nav-manage-admins');
+    if (navManage) navManage.style.display = 'flex';
+  }
+  loadNovels();
+  initAdmin();
+}
+
+window.doAdminLogout = async function() {
+  await signOut(auth);
+};
+
+// ===== LOAD NOVELS FROM FIRESTORE =====
+function loadNovels() {
+  const q = query(collection(db,'novels'), orderBy('createdAt','desc'));
+  onSnapshot(q, (snap) => {
+    novels = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDashboard();
+  }, (err) => {
+    console.warn('Firestore read error:', err);
+    showToast('ไม่สามารถโหลดข้อมูลได้: '+err.code, '⚠️', 'error');
+  });
+}
+
+// ===== PUBLISH NOVEL (FIRESTORE + CLOUDINARY) =====
+window.publishNovel = async function() {
+  const title = document.getElementById('novel-title').value.trim();
+  const synopsis = document.getElementById('novel-synopsis').value.trim();
+  if (!title) { showToast('กรุณาใส่ชื่อนิยาย', '⚠️', 'error'); return; }
+  if (!synopsis) { showToast('กรุณาใส่เนื้อเรื่องย่อ', '⚠️', 'error'); return; }
+  if (tags.length === 0) { showToast('กรุณาใส่แท็กอย่างน้อย 1 อัน', '⚠️', 'error'); return; }
+
+  showToast('กำลังอัพโหลด...', '⏳', 'info');
+
+  let coverUrl = null;
+  // Upload cover to Cloudinary
+  if (coverFile) {
+    try {
+      const fd = new FormData();
+      fd.append('file', coverFile);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      fd.append('cloud_name', CLOUDINARY_CLOUD);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.secure_url) coverUrl = data.secure_url;
+    } catch(e) { console.warn('Cover upload failed:', e); }
+  }
+
+  // Upload audio files to Cloudinary (raw resource type for audio)
+  const audioMeta = [];
+  for (let i = 0; i < audioFiles.length; i++) {
+    const f = audioFiles[i];
+    showToast(`กำลังอัพโหลดเสียงตอนที่ ${i+1}/${audioFiles.length}...`, '🎵', 'info');
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      fd.append('cloud_name', CLOUDINARY_CLOUD);
+      fd.append('resource_type', 'raw');
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/raw/upload`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.secure_url) {
+        audioMeta.push({ name: f.name, url: data.secure_url, size: f.size, duration: null });
+      } else {
+        console.warn('Audio upload failed:', data);
+        audioMeta.push({ name: f.name, url: null, size: f.size });
+      }
+    } catch(e) {
+      console.warn('Audio upload failed:', e);
+      audioMeta.push({ name: f.name, url: null, size: f.size });
+    }
+  }
+
+  const emojiList=['📖','🐉','⚔️','🌙','🔮','🌸','🚀','👻','🐲','🗡️','🧙‍♂️','⚾','🛡️','🎩','🌑','🐜'];
+  const newNovel = {
+    title,
+    author: document.getElementById('novel-author').value || 'Unknown',
+    emoji: coverFile ? null : emojiList[Math.floor(Math.random()*emojiList.length)],
+    coverUrl,
+    tags: [...tags],
+    eps: parseInt(document.getElementById('novel-eps').value) || audioFiles.length || 0,
+    views: '0',
+    status: document.getElementById('novel-status').value,
+    synopsis,
+    audioFiles: audioMeta,
+    createdBy: currentAdmin.email,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  try {
+    await addDoc(collection(db,'novels'), newNovel);
+    showToast(`เผยแพร่ "${title}" สำเร็จ!`, '🎉', 'success');
+    clearForm();
+    showPage('dashboard', document.querySelectorAll('.admin-nav-item')[0]);
+  } catch(e) {
+    showToast('บันทึกล้มเหลว: '+e.message, '❌', 'error');
+  }
+};
+
+window.deleteNovel = async function(id) {
+  if (!confirm('ต้องการลบนิยายนี้?')) return;
+  try {
+    await deleteDoc(doc(db,'novels',id));
+    showToast('ลบนิยายแล้ว','🗑️','error');
+  } catch(e) {
+    showToast('ลบล้มเหลว: '+e.message,'❌','error');
+  }
+};
+
+// ===== UI FUNCTIONS =====
+window.showPage = function(pageId, navEl) {
+  document.querySelectorAll('.admin-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+pageId).classList.add('active');
+  if(navEl) navEl.classList.add('active');
+  const titles={dashboard:'📊 แดชบอร์ด','manage-admins':'👑 จัดการแอดมิน',novels:'📚 นิยายทั้งหมด',upload:'⬆️ อัพโหลดนิยายเสียง',settings:'⚙️ ตั้งค่าเว็บไซต์'};
+  document.getElementById('page-title').innerHTML='<span>'+titles[pageId]+'</span>';
+  if(pageId==='novels') renderNovelsGrid();
+  if(pageId==='dashboard') renderDashboard();
+};
+
+function initAdmin() {
+  renderDashboard();
+  renderEmojiPicker();
+  renderColorSwatches();
+  updatePreview();
+}
+
+function statusBadge(s) {
+  const map={ongoing:['active','กำลังดำเนิน'],done:['done','จบแล้ว'],new:['new','ใหม่'],hiatus:['new','หยุดพัก']};
+  const [cls,txt]=map[s]||['new',s];
+  return `<span class="status-badge status-${cls}">● ${txt}</span>`;
+}
+
+function renderDashboard() {
+  const statEl = document.getElementById('stat-novels');
+  if(statEl) statEl.textContent=novels.length;
+  const badgeEl = document.getElementById('novel-count-badge');
+  if(badgeEl) badgeEl.textContent=novels.length;
+  const countEl = document.getElementById('novels-count-text');
+  if(countEl) countEl.textContent=novels.length+' เรื่อง';
+  const tbody=document.getElementById('dashboard-tbody');
+  if(!tbody) return;
+  tbody.innerHTML=novels.map(n=>`
+    <tr>
+      <td><div class="novel-row-info">
+        <div class="novel-row-cover" style="${n.coverUrl?'padding:0;overflow:hidden':''}">${n.coverUrl?`<img src="${n.coverUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:(n.emoji||n.cover||'📖')}</div>
+        <div><div class="novel-row-title">${n.title}</div><div class="novel-row-meta">${n.author}</div></div>
+      </div></td>
+      <td style="font-size:0.8rem;color:var(--muted)">${(n.tags||[]).slice(0,2).join(', ')}</td>
+      <td>${n.eps||0} ตอน</td>
+      <td>${n.views||0}</td>
+      <td>${statusBadge(n.status)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderNovelsGrid() {
+  const grid=document.getElementById('novels-grid');
+  if(!grid)return;
+  grid.innerHTML=novels.map(n=>`
+    <div class="novel-admin-card">
+      <div class="novel-admin-cover">
+        ${n.coverUrl?`<img src="${n.coverUrl}" alt="">`:`<span style="font-size:3rem">${n.emoji||n.cover||'📖'}</span>`}
+        <div class="novel-admin-cover-overlay"></div>
+      </div>
+      <div class="novel-admin-body">
+        <div class="novel-admin-title">${n.title}</div>
+        <div class="novel-admin-meta">${n.eps||0} ตอน • ดู ${n.views||0} • ${statusBadge(n.status)}</div>
+        <div class="novel-admin-tags">${(n.tags||[]).map(t=>`<span class="novel-admin-tag">${t}</span>`).join('')}</div>
+        <div style="font-size:0.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${n.synopsis||''}</div>
+      </div>
+      <div class="novel-admin-actions">
+        <button class="novel-action-btn novel-action-edit" onclick="showEditNovel('${n.id}')">✏️ แก้ไข</button>
+        <button class="novel-action-btn novel-action-delete" onclick="deleteNovel('${n.id}')">🗑️ ลบ</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.showEditNovel = function(id) {
+  const n = novels.find(x=>x.id===id);
+  if(!n) return;
+  showPage('upload', null);
+  document.getElementById('novel-title').value = n.title||'';
+  document.getElementById('novel-author').value = n.author||'';
+  document.getElementById('novel-synopsis').value = n.synopsis||'';
+  document.getElementById('novel-eps').value = n.eps||'';
+  document.getElementById('novel-status').value = n.status||'ongoing';
+  tags = [...(n.tags||[])];
+  renderTags();
+  // Change publish button to update
+  const publishBtn = document.querySelector('[onclick="publishNovel()"]');
+  if(publishBtn) {
+    publishBtn.textContent = '✅ บันทึกการแก้ไข';
+    publishBtn.onclick = async function() {
+      const updates = {
+        title: document.getElementById('novel-title').value.trim(),
+        author: document.getElementById('novel-author').value||'Unknown',
+        synopsis: document.getElementById('novel-synopsis').value.trim(),
+        eps: parseInt(document.getElementById('novel-eps').value)||n.eps||0,
+        status: document.getElementById('novel-status').value,
+        tags:[...tags], updatedAt:serverTimestamp()
+      };
+      try {
+        await updateDoc(doc(db,'novels',id), updates);
+        showToast('แก้ไขสำเร็จ!','✅','success');
+        clearForm();
+        publishBtn.textContent='🚀 เผยแพร่นิยาย';
+        publishBtn.onclick = publishNovel;
+      } catch(e) { showToast('แก้ไขล้มเหลว: '+e.message,'❌','error'); }
+    };
+  }
+};
+
+// ===== TAGS =====
+window.handleTagInput = function(e) {
+  if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(',','');if(val)addTag(val);e.target.value='';}
+  else if(e.key==='Backspace'&&!e.target.value&&tags.length){tags.pop();renderTags();}
+};
+window.addTag = function(val) { val=val.trim(); if(!val||tags.includes(val))return; tags.push(val); renderTags(); document.getElementById('tag-input').value=''; };
+window.removeTag = function(tag) { tags=tags.filter(t=>t!==tag); renderTags(); };
+function renderTags() {
+  const container=document.getElementById('tags-container');
+  const input=document.getElementById('tag-input');
+  container.innerHTML='';
+  tags.forEach(t=>{const el=document.createElement('span');el.className='tag-item';el.innerHTML=`${t} <span class="tag-remove" onclick="removeTag('${t}')">×</span>`;container.appendChild(el);});
+  container.appendChild(input);
+}
+
+// ===== COVER UPLOAD =====
+window.handleCoverUpload = function(e) {
+  const file=e.target.files[0]; if(!file)return; coverFile=file;
+  const url=URL.createObjectURL(file);
+  document.getElementById('cover-zone').style.display='none';
+  const preview=document.getElementById('cover-preview'); preview.style.display='flex';
+  document.getElementById('cover-thumb').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+  document.getElementById('cover-name').textContent=file.name;
+  document.getElementById('cover-size').textContent=formatSize(file.size);
+};
+window.removeCover = function() { coverFile=null; document.getElementById('cover-zone').style.display='block'; document.getElementById('cover-preview').style.display='none'; document.getElementById('cover-input').value=''; };
+
+// ===== AUDIO UPLOAD =====
+window.handleAudioUpload = function(e) {
+  const files=Array.from(e.target.files);
+  files.forEach(f=>{if(!audioFiles.find(x=>x.name===f.name))audioFiles.push(f);});
+  renderAudioList();
+};
+function renderAudioList() {
+  const list=document.getElementById('audio-list');
+  list.innerHTML=audioFiles.map((f,i)=>`
+    <div class="audio-preview">
+      <button class="audio-play-btn">▶</button>
+      <div class="audio-info"><div class="audio-title">ตอนที่ ${i+1} — ${f.name}</div><div class="audio-bar"><div class="audio-bar-fill" style="width:0%"></div></div><div class="audio-duration">${formatSize(f.size)}</div></div>
+      <button class="preview-remove" onclick="removeAudio(${i})">✕</button>
+    </div>`).join('');
+}
+window.removeAudio = function(i){audioFiles.splice(i,1);renderAudioList();};
+
+window.clearForm = function() {
+  document.getElementById('novel-title').value='';
+  document.getElementById('novel-author').value='';
+  document.getElementById('novel-synopsis').value='';
+  document.getElementById('novel-eps').value='';
+  document.getElementById('novel-status').value='ongoing';
+  tags=[]; renderTags(); audioFiles=[]; renderAudioList(); removeCover();
+};
+window.saveDraft = function(){showToast(`บันทึกฉบับร่าง "${document.getElementById('novel-title').value||'ฉบับร่าง'}" แล้ว`,'💾','info');};
+
+// ===== SETTINGS =====
+window.updatePreview = function() {
+  const name=document.getElementById('site-name').value||'MeMonster Novel';
+  const tagline=document.getElementById('site-tagline').value||'';
+  const pn=document.getElementById('preview-site-name'); if(pn)pn.textContent=name;
+  const pt=document.getElementById('preview-tagline'); if(pt)pt.textContent=tagline;
+  const sn=document.getElementById('sidebar-sitename'); if(sn)sn.textContent=name;
+};
+window.handleLogoUpload = function(e){
+  const file=e.target.files[0]; if(!file)return; logoFile=file;
+  const url=URL.createObjectURL(file);
+  document.getElementById('logo-zone').style.display='none';
+  const preview=document.getElementById('logo-preview'); preview.style.display='flex';
+  document.getElementById('logo-thumb').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
+  document.getElementById('logo-name').textContent=file.name;
+  document.getElementById('logo-size').textContent=formatSize(file.size);
+  const imgHtml=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
+  const plb=document.getElementById('preview-logo-box'); if(plb)plb.innerHTML=imgHtml;
+  const sl=document.getElementById('sidebar-logo'); if(sl)sl.innerHTML=imgHtml;
+};
+window.removeLogo = function(){
+  logoFile=null;
+  document.getElementById('logo-zone').style.display='block';
+  document.getElementById('logo-preview').style.display='none';
+  document.getElementById('logo-input').value='';
+  const plb=document.getElementById('preview-logo-box'); if(plb)plb.textContent=siteSettings.logo;
+  const sl=document.getElementById('sidebar-logo'); if(sl)sl.textContent=siteSettings.logo;
+};
+function renderEmojiPicker(){
+  const el=document.getElementById('emoji-picker'); if(!el)return;
+  el.innerHTML=EMOJIS.map(em=>`<button onclick="selectEmoji('${em}')" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-size:1.3rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='var(--admin-accent)'" onmouseout="this.style.borderColor='var(--border)'">${em}</button>`).join('');
+}
+window.selectEmoji = function(em){
+  siteSettings.logo=em;
+  const plb=document.getElementById('preview-logo-box'); if(plb)plb.textContent=em;
+  const sl=document.getElementById('sidebar-logo'); if(sl)sl.textContent=em;
+  removeLogo();
+};
+function renderColorSwatches(){
+  const el=document.getElementById('color-swatches'); if(!el)return;
+  el.innerHTML=COLORS.map(c=>`<button onclick="applyColor('${c}')" style="width:36px;height:36px;border-radius:50%;background:${c};border:3px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></button>`).join('');
+}
+window.applyColor = function(hex){
+  const cp=document.getElementById('color-picker'); if(cp)cp.value=hex;
+  const ch=document.getElementById('color-hex'); if(ch)ch.value=hex;
+  document.documentElement.style.setProperty('--primary',hex);
+  siteSettings.color=hex;
+};
+window.saveSettings = function(){
+  siteSettings.name=document.getElementById('site-name').value;
+  siteSettings.tagline=document.getElementById('site-tagline').value;
+  document.title=siteSettings.name+' — Admin';
+  showToast('บันทึกการตั้งค่าแล้ว','✅','success');
+};
+window.resetSettings = function(){
+  document.getElementById('site-name').value='MeMonster Novel';
+  document.getElementById('site-tagline').value='สนุกไปกับนิยายที่คุณชอบ';
+  applyColor('#e8445a'); selectEmoji('🦁'); updatePreview();
+  showToast('รีเซ็ตการตั้งค่าแล้ว','↩️','info');
+};
+
+// ===== ADMIN MANAGEMENT =====
+window.renderAdminList = function(){
+  const container=document.getElementById('admin-list-container'); if(!container)return;
+  const admins=[{email:'momoppl01@gmail.com',name:'Naruchit',role:'superadmin'},{email:'admin@memonster.com',name:'Admin',role:'admin'}];
+  container.innerHTML=admins.map((a,i)=>{
+    const isSelf=a.email===currentAdmin.email;
+    const isSA=a.role==='superadmin';
+    const roleLabel=isSA?'<span style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:0.72rem;font-weight:700">👑 Super Admin</span>':'<span style="background:var(--admin-accent-dim);border:1px solid rgba(168,85,247,0.3);color:var(--admin-accent);padding:2px 10px;border-radius:8px;font-size:0.72rem;font-weight:700">🛡️ Admin</span>';
+    return `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:10px">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--admin-accent),var(--primary));display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0">${a.name.substring(0,2).toUpperCase()}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:0.9rem">${a.name} ${isSelf?'<span style="font-size:0.72rem;color:var(--muted)">(คุณ)</span>':''}</div><div style="font-size:0.78rem;color:var(--muted)">${a.email}</div></div>
+      <div>${roleLabel}</div>
+      ${!isSA&&!isSelf?'<button style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">🗑️ ถอดสิทธิ์</button>':'<div style="width:90px;height:36px;display:flex;align-items:center;justify-content:center;opacity:0.35;font-size:0.75rem;color:var(--muted)">🔒 ลบไม่ได้</div>'}
+    </div>`;
+  }).join('');
+};
+
+// ===== UTILS =====
+function formatSize(bytes){ if(bytes<1024)return bytes+' B'; if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB'; return(bytes/1048576).toFixed(1)+' MB'; }
+let toastTimer;
+function showToast(msg,icon='✅',type='success'){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-msg').textContent=msg;
+  t.className='toast show toast-'+type;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+window.showToast = showToast;
+
+// Drag & drop
+['cover-zone','audio-zone','logo-zone'].forEach(id=>{
+  const zone=document.getElementById(id); if(!zone)return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',e=>{
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const input=zone.querySelector('input[type=file]');
+    if(input&&e.dataTransfer.files.length){
+      const evt={target:{files:e.dataTransfer.files}};
+      if(id==='cover-zone')handleCoverUpload(evt);
+      else if(id==='audio-zone')handleAudioUpload(evt);
+      else if(id==='logo-zone')handleLogoUpload(evt);
+    }
+  });
+});
+
+// Login on Enter
+document.addEventListener('keydown', e => {
+
+});
+</script>
+</body>
+</html>
