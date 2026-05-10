@@ -57,6 +57,7 @@
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="เมนู">☰</button>
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="ค้นหานิยายเสียง ชื่อเรื่อง หรือผู้แต่ง..." oninput="filterNovels()">
@@ -164,7 +165,16 @@
   </div>
 </div>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
 <audio id="audioEl"></audio>
+<script>
+/* [CSS-12] hamburger toggle — global scope */
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+</script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
