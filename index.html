@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Golden Hoard Novels</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Chakra+Petch:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon" style="background:none;padding:2px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAG8AAACACAYAAAAF1zc3AAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAAAA==" style="width:36px;height:36px;object-fit:contain;border-radius:8px"></div>
+    <div>
+      <div class="logo-text">The Golden Hoard</div>
+      <div class="logo-sub">NOVELS</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="index.html"><span class="nav-icon">🏠</span> หน้าแรก</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📚</span> คลังนิยาย</a>
+    <a class="nav-item" href="#"><span class="nav-icon">❤️</span> เรื่องโปรด<span class="nav-badge">99+</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">🔔</span> การแจ้งเตือน</a>
+    <a class="nav-item" href="#"><span class="nav-icon">💎</span> เติมเหรียญ</a>
+    <a class="nav-item" href="#"><span class="nav-icon">🎮</span> แพ็กเกจสมาชิก</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item" href="#"><span class="nav-icon">📖</span> โหวตนิยายเรื่องใหม่</a>
+    <a class="nav-item" href="#"><span class="nav-icon">💬</span> ติดต่อผู้ดูแลระบบ</a>
+    <a class="nav-item" href="#"><span class="nav-icon">👤</span> โปรไฟล์</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item" id="navLoginBtn" href="login.html"><span class="nav-icon">🔑</span> เข้าสู่ระบบ</a>
+    <div id="navUserArea" style="display:none;flex-direction:column;gap:4px;">
+      <div class="nav-item" style="cursor:default;">
+        <span class="nav-icon">👤</span>
+        <span id="navUserName" style="font-size:0.85rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      </div>
+      <a class="nav-item" id="navAdminBtn" href="admin.html" style="display:none;background:rgba(232,68,90,0.12);color:var(--primary);">
+        <span class="nav-icon">⚙️</span> จัดการนิยาย
+      </a>
+      <a class="nav-item" onclick="handleSignOut()" style="cursor:pointer;color:#e8445a;">
+        <span class="nav-icon">🚪</span> ออกจากระบบ
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="theme-toggle">
+      <button class="theme-btn active" id="lightBtn" onclick="setTheme('light')">☀️</button>
+      <button class="theme-btn"        id="darkBtn"  onclick="setTheme('dark')">🌙</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="ค้นหานิยายเสียง ชื่อเรื่อง หรือผู้แต่ง..." oninput="filterNovels()">
+    </div>
+    <div class="topbar-actions">
+      <a href="login.html" id="topbarLoginBtn"    class="topbar-btn btn-outline">เข้าสู่ระบบ</a>
+      <a href="login.html" id="topbarRegisterBtn" class="topbar-btn btn-fill">สมัครสมาชิก</a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="banner">
+      <span class="banner-icon">ℹ️</span>
+      <div class="banner-text">
+        <strong>เปลี่ยนระบบการซื้อแพ็กเกจไปใช้เหรียญแทน</strong>
+        <span>ทำให้สามารถเติมเหรียญได้ไว และสามารถซื้อแพ็กเกจได้อย่างรวดเร็ว โดยไม่ต้องโอนเงินทุกรอบ</span>
+      </div>
+      <a href="#" class="banner-btn">เติมเหรียญ →</a>
+    </div>
+
+    <div class="section-label">NEW RELEASES</div>
+    <div class="section-title">นิยายมาใหม่</div>
+    <div class="novels-grid" id="newReleasesGrid"></div>
+
+    <div class="section-label">POPULAR NOVELS</div>
+    <div class="section-title">นิยายยอดนิยม</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'7day')">7 วัน</button>
+      <button class="tab"        onclick="switchTab(this,'30day')">30 วัน</button>
+      <button class="tab"        onclick="switchTab(this,'all')">ตลอดกาล</button>
+    </div>
+    <div class="novels-grid" id="popularGrid"></div>
+
+    <div class="section-label">ALL NOVELS</div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+      นิยายเสียงทั้งหมด
+      <span id="novels-count" style="font-size:0.85rem;color:var(--muted);font-family:'Sarabun',sans-serif;font-weight:400"></span>
+    </div>
+    <div class="novels-grid" id="novelsGrid"></div>
+  </div>
+</main>
+
+<!-- PLAYER MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="player-modal" id="playerModal">
+    <div class="player-cover" id="modalCover">
+      <span id="modalEmoji">🎧</span>
+      <img id="modalCoverImg" src="" style="display:none" alt="">
+      <div class="player-cover-overlay"></div>
+      <button class="player-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="player-body">
+      <div class="player-title"    id="modalTitle">-</div>
+      <div class="player-author"   id="modalAuthor">-</div>
+      <div class="player-synopsis" id="modalSynopsis"></div>
+      <div class="player-tags"     id="modalTags"></div>
+      <div class="episodes-label">🎵 ตอนทั้งหมด</div>
+      <div class="episode-list"    id="episodeList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOW PLAYING BAR -->
+<div class="now-playing" id="nowPlaying">
+  <div class="np-mini">
+    <div class="np-cover" id="npCover" onclick="toggleExpand()">🎧</div>
+    <div class="np-info"  onclick="toggleExpand()">
+      <div class="np-title" id="npTitle">-</div>
+      <div class="np-ep"    id="npEp">-</div>
+    </div>
+    <div class="np-mini-bar">
+      <div class="np-bar" onclick="seekAudio(event)" id="npBar">
+        <div class="np-bar-fill" id="npBarFill"></div>
+      </div>
+      <div class="np-time">
+        <span id="npCurrent">0:00</span>
+        <span id="npDuration">0:00</span>
+      </div>
+    </div>
+    <div class="np-controls">
+      <button class="np-btn"            onclick="prevEp()">⏮</button>
+      <button class="np-btn play-pause" id="btnPlayPause" onclick="togglePlay()">▶</button>
+      <button class="np-btn"            onclick="nextEp()">⏭</button>
+    </div>
+    <span class="np-chevron" onclick="toggleExpand()">▲</span>
+  </div>
+  <div class="np-expanded-area" id="npExpandedArea">
+    <div id="npExpandCover" style="width:100%;max-width:200px;aspect-ratio:1;border-radius:16px;overflow:hidden;margin:0 auto 12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:3rem">🎧</div>
+    <div class="np-expanded-title" id="npExpandTitle">-</div>
+    <div class="np-expanded-ep"    id="npExpandEp">-</div>
+    <div class="np-expanded-bar"   onclick="seekAudio2(event)" id="npBar2">
+      <div class="np-expanded-fill" id="npBarFill2"></div>
+    </div>
+    <div class="np-expanded-time">
+      <span id="npCurrent2">0:00</span>
+      <span id="npDuration2">0:00</span>
+    </div>
+    <div class="np-expanded-controls">
+      <button class="np-exp-btn"     onclick="rewind10()"  title="ย้อน 10 วิ">⏪<br><span style="font-size:0.6rem">10</span></button>
+      <button class="np-exp-btn"     onclick="prevEp()">⏮</button>
+      <button class="np-exp-btn big" id="btnPlayPause2"    onclick="togglePlay()">▶</button>
+      <button class="np-exp-btn"     onclick="nextEp()">⏭</button>
+      <button class="np-exp-btn"     onclick="forward10()" title="ข้าม 10 วิ">⏩<br><span style="font-size:0.6rem">10</span></button>
+    </div>
+  </div>
+</div>
+
+<audio id="audioEl"></audio>
+<script type="module" src="app.js"></script>
+</body>
+</html>
