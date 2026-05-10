@@ -162,10 +162,22 @@ window.filterNovels = function() {
 window.switchTab = function(btn, period) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  // TODO: กรอง allNovels จริงๆ ตาม period ('7day','30day','all')
-  // ตอนนี้ใช้ random shuffle แทนก่อน
-  const shuffled = [...allNovels].sort(() => Math.random() - 0.5).slice(0, 4);
-  renderSection('popularGrid', shuffled);
+
+  const now = Date.now();
+  const msPerDay = 86_400_000;
+  const cutoff = period === '7day'  ? now - 7  * msPerDay
+               : period === '30day' ? now - 30 * msPerDay
+               : 0; // 'all' — ไม่ตัด
+
+  const filtered = cutoff > 0
+    ? allNovels.filter(n => {
+        // createdAt อาจเป็น Firestore Timestamp หรือ Date หรือ number
+        const ts = n.createdAt?.toMillis?.() ?? n.createdAt?.seconds * 1000 ?? Number(n.createdAt) ?? 0;
+        return ts >= cutoff;
+      })
+    : [...allNovels];
+
+  renderSection('popularGrid', filtered.slice(0, 4));
 };
 
 
@@ -432,6 +444,7 @@ function updateMediaSession() {
 
 /* ===== 11. THEME ===== */
 window.setTheme = function(t) {
+  localStorage.setItem('theme', t);   // [JS-11] save theme
   if (t === 'dark') {
     document.documentElement.style.setProperty('--bg',         '#0d0d14');
     document.documentElement.style.setProperty('--sidebar-bg', '#111118');
@@ -456,3 +469,14 @@ window.setTheme = function(t) {
     document.getElementById('darkBtn').classList.remove('active');
   }
 };
+
+// [JS-11] โหลด theme ที่ save ไว้ตอนเปิดหน้า
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    // รอ DOM พร้อม (script เป็น module จึงรัน defer อยู่แล้ว)
+    window.addEventListener('DOMContentLoaded', () => setTheme(saved), { once: true });
+    // กรณี DOMContentLoaded ผ่านไปแล้ว (module defer)
+    if (document.readyState !== 'loading') setTheme(saved);
+  }
+})();
