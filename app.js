@@ -41,30 +41,36 @@ const db   = getFirestore(app);
 const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
 
 onAuthStateChanged(auth, (user) => {
+  // [JS-1] Navbar elements
   const loginBtn      = document.getElementById('navLoginBtn');
-  const loginTopBtn   = document.getElementById('topbarLoginBtn');
-  const registerTopBtn= document.getElementById('topbarRegisterBtn');
-  const userArea      = document.getElementById('navUserArea');
+  const registerBtn   = document.getElementById('navRegisterBtn');
+  const userMenu      = document.getElementById('navUserMenu');
   const userNameEl    = document.getElementById('navUserName');
   const adminBtn      = document.getElementById('navAdminBtn');
+  const mobileGuest   = document.getElementById('mobileGuestAuth');
 
   if (user) {
-    if (loginBtn)       loginBtn.style.display = 'none';
-    if (loginTopBtn)    loginTopBtn.style.display = 'none';
-    if (registerTopBtn) registerTopBtn.style.display = 'none';
-    if (userArea) {
-      userArea.style.display = 'flex';
-      userNameEl.textContent = user.displayName || user.email.split('@')[0];
+    // ซ่อนปุ่ม login/register
+    if (loginBtn)    loginBtn.style.display    = 'none';
+    if (registerBtn) registerBtn.style.display = 'none';
+    if (mobileGuest) mobileGuest.style.display = 'none';
+    // แสดง user menu
+    if (userMenu) {
+      userMenu.style.display = 'flex';
+      if (userNameEl) userNameEl.textContent = user.displayName || user.email.split('@')[0];
     }
+    // แสดงปุ่ม admin ถ้าเป็น admin
     if (adminBtn && ADMIN_EMAILS.includes(user.email)) {
       adminBtn.style.display = 'flex';
     }
   } else {
-    if (loginBtn)       loginBtn.style.display = 'flex';
-    if (loginTopBtn)    loginTopBtn.style.display = 'inline-flex';
-    if (registerTopBtn) registerTopBtn.style.display = 'inline-flex';
-    if (userArea)       userArea.style.display = 'none';
-    if (adminBtn)       adminBtn.style.display = 'none';
+    // แสดงปุ่ม login/register
+    if (loginBtn)    loginBtn.style.display    = 'inline-flex';
+    if (registerBtn) registerBtn.style.display = 'inline-flex';
+    if (mobileGuest) mobileGuest.style.display = 'flex';
+    // ซ่อน user menu + admin
+    if (userMenu)  userMenu.style.display  = 'none';
+    if (adminBtn)  adminBtn.style.display  = 'none';
   }
 });
 
@@ -100,39 +106,44 @@ onSnapshot(novelsQuery, (snapshot) => {
 /* ===== 4. NOVEL CARDS ===== */
 const STATUS_MAP = {
   ongoing: { label: 'กำลังดำเนิน', cls: 'badge-ongoing' },
-  done:    { label: 'จบแล้ว',       cls: 'badge-done'    },
-  new:     { label: 'ใหม่',          cls: 'badge-new'     },
-  hiatus:  { label: 'หยุดพัก',      cls: 'badge-hiatus'  },
+  done:    { label: 'จบแล้ว',       cls: 'badge-complete' },
+  new:     { label: 'ใหม่',          cls: 'badge-ongoing'  },
+  hiatus:  { label: 'หยุดพัก',      cls: 'badge-hiatus'   },
 };
 
+// [JS-2] Horizontal card template
 function cardHTML(n) {
-  const st = STATUS_MAP[n.status] || STATUS_MAP.ongoing;
-  const coverHtml = n.coverUrl
-    ? `<img src="${n.coverUrl}" alt="${n.title}" loading="lazy" onerror="this.style.display='none'"><div class="novel-cover-overlay"></div>`
-    : `<span>${n.emoji || '🎧'}</span>`;
-  const tagsHtml = (n.tags || []).slice(0, 2).map(t => `<span class="novel-tag">${t}</span>`).join('');
+  const st  = STATUS_MAP[n.status] || STATUS_MAP.ongoing;
   const url = `novel.html?id=${encodeURIComponent(n.id)}`;
-  return `<a class="novel-card" href="${url}" style="text-decoration:none;color:inherit;">
-    <div class="novel-cover">
-      ${coverHtml}
-      <div class="novel-badge ${st.cls}">${st.label}</div>
-      <div class="novel-play-btn">▶</div>
-    </div>
-    <div class="novel-info">
-      <div class="novel-title">${n.title}</div>
-      <div class="novel-author">✍️ ${n.author || 'Unknown'}</div>
-      <div class="novel-meta">
-        <span class="novel-eps">🎵 ${n.eps || 0} ตอน</span>
-        <span class="novel-views">👁 ${n.views || 0}</span>
+  const cover = n.coverUrl
+    ? `<img src="${n.coverUrl}" alt="${n.title}" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="novel-card-cover-placeholder">${n.emoji || '📖'}</div>`;
+  const rating = n.rating ? `⭐ ${n.rating}` : '⭐ —';
+  return `
+  <div class="novel-card-h">
+    <div class="novel-card-cover">${cover}</div>
+    <div class="novel-card-body">
+      <div class="novel-card-top">
+        <span class="badge ${st.cls}">${st.label}</span>
       </div>
-      <div class="novel-tags">${tagsHtml}</div>
+      <div class="novel-card-title">${n.title}</div>
+      <div class="novel-card-desc">${n.desc || n.description || ''}</div>
+      <div class="novel-card-meta">
+        <span>📖 ${n.eps || 0} ตอน</span>
+        <span>👁 ${n.views || 0}</span>
+      </div>
+      <div class="novel-card-footer">
+        <span class="novel-card-rating">${rating}</span>
+        <a href="${url}" class="novel-card-read-btn">อ่านต่อ</a>
+      </div>
     </div>
-  </a>`;
+  </div>`;
 }
 
 function renderNovels(list) {
   const grid = document.getElementById('novelsGrid');
-  document.getElementById('novels-count').textContent = list.length + ' เรื่อง';
+  const countEl = document.getElementById('novels-count');
+  if (countEl) countEl.textContent = list.length + ' เรื่อง';
   grid.innerHTML = list.length
     ? list.map(cardHTML).join('')
     : `<div class="empty-state"><div class="empty-icon">🎙️</div><p>ยังไม่มีนิยายเสียง</p></div>`;
@@ -140,44 +151,86 @@ function renderNovels(list) {
 
 function renderSection(gridId, novels) {
   const el = document.getElementById(gridId);
-  if (el) el.innerHTML = novels.map(cardHTML).join('');
+  if (el) el.innerHTML = novels.length
+    ? novels.map(cardHTML).join('')
+    : `<div class="empty-state"><p>ยังไม่มีข้อมูล</p></div>`;
 }
 
 
 /* ===== 5. SEARCH & FILTER ===== */
+let currentFilterTab = 'popular'; // track active filter tab
+
 window.filterNovels = function() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  filtered = q
-    ? allNovels.filter(n =>
-        n.title.toLowerCase().includes(q) ||
-        (n.author || '').toLowerCase().includes(q) ||
-        (n.tags || []).some(t => t.toLowerCase().includes(q))
-      )
-    : [...allNovels];
-  renderNovels(filtered);
+  // รับค่าจาก search bar ใหม่ (searchInputMain) หรือเดิม (searchInput)
+  const el = document.getElementById('searchInputMain') || document.getElementById('searchInput');
+  const q  = el ? el.value.toLowerCase().trim() : '';
+
+  let result = applyFilterTab(currentFilterTab, allNovels);
+  if (q) {
+    result = result.filter(n =>
+      n.title.toLowerCase().includes(q) ||
+      (n.author || '').toLowerCase().includes(q) ||
+      (n.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
+  renderNovels(result);
+};
+
+// [JS-3] filter tab logic — ยอดนิยม / มาใหม่ / อัปเดต / ทั้งหมด
+function applyFilterTab(tab, novels) {
+  const now      = Date.now();
+  const msPerDay = 86_400_000;
+
+  if (tab === 'popular') {
+    return [...novels].sort((a, b) => (b.views || 0) - (a.views || 0));
+  }
+  if (tab === 'new') {
+    return [...novels].sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds * 1000) ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds * 1000) ?? 0;
+      return tb - ta;
+    });
+  }
+
+// --- MID-CODE CHECKPOINT: ✅ task เดียว ✅ buffer พอ ---
+
+  if (tab === 'updated') {
+    return [...novels].sort((a, b) => {
+      const ta = a.updatedAt?.toMillis?.() ?? (a.updatedAt?.seconds * 1000) ?? 0;
+      const tb = b.updatedAt?.toMillis?.() ?? (b.updatedAt?.seconds * 1000) ?? 0;
+      return tb - ta;
+    });
+  }
+  return [...novels]; // 'all'
+}
+
+window.switchFilterTab = function(btn, tab) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilterTab = tab;
+  window.filterNovels();
 };
 
 
-/* ===== 6. TAB SWITCH ===== */
+/* ===== 6. TAB SWITCH (popular sub-tabs: 7วัน/30วัน/ตลอดกาล) ===== */
 window.switchTab = function(btn, period) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
 
-  const now = Date.now();
+  const now      = Date.now();
   const msPerDay = 86_400_000;
-  const cutoff = period === '7day'  ? now - 7  * msPerDay
-               : period === '30day' ? now - 30 * msPerDay
-               : 0; // 'all' — ไม่ตัด
+  const cutoff   = period === '7day'  ? now - 7  * msPerDay
+                 : period === '30day' ? now - 30 * msPerDay
+                 : 0;
 
-  const filtered = cutoff > 0
+  const list = cutoff > 0
     ? allNovels.filter(n => {
-        // createdAt อาจเป็น Firestore Timestamp หรือ Date หรือ number
-        const ts = n.createdAt?.toMillis?.() ?? n.createdAt?.seconds * 1000 ?? Number(n.createdAt) ?? 0;
+        const ts = n.createdAt?.toMillis?.() ?? (n.createdAt?.seconds * 1000) ?? 0;
         return ts >= cutoff;
       })
-    : [...allNovels];
+    : [...allNovels].sort((a, b) => (b.views || 0) - (a.views || 0));
 
-  renderSection('popularGrid', filtered.slice(0, 4));
+  renderSection('popularGrid', list.slice(0, 4));
 };
 
 

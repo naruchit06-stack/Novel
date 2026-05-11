@@ -1121,7 +1121,11 @@
       <div class="admin-nav-group" style="margin-top:8px">จัดการ</div>
       <button class="admin-nav-item" onclick="showPage('upload', this)">
         <span class="admin-nav-icon">⬆️</span>
-        <span>อัพโหลดนิยายเสียง</span>
+        <span>เพิ่มนิยายใหม่</span>
+      </button>
+      <button class="admin-nav-item" id="nav-manage-eps" style="display:none" onclick="showPage('manage-eps', this)">
+        <span class="admin-nav-icon">🎵</span>
+        <span id="nav-manage-eps-label">จัดการตอน</span>
       </button>
       <div class="admin-nav-group" style="margin-top:8px">Super Admin</div>
       <button class="admin-nav-item" id="nav-manage-admins" style="display:none" onclick="showPage('manage-admins', this)">
@@ -1374,6 +1378,13 @@
       </div>
     </div>
 
+    <!-- ===== MANAGE EPISODES PAGE ===== -->
+    <div class="admin-page" id="page-manage-eps">
+      <div id="manage-eps-content">
+        <div style="text-align:center;padding:40px;color:var(--muted)">กรุณาเลือกนิยายจากหน้านิยายทั้งหมด</div>
+      </div>
+    </div>
+
   </div><!-- end admin-main -->
 </div><!-- end admin-panel -->
 
@@ -1551,10 +1562,11 @@ window.showPage = function(pageId, navEl) {
   document.querySelectorAll('.admin-nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'📊 แดชบอร์ด','manage-admins':'👑 จัดการแอดมิน',novels:'📚 นิยายทั้งหมด',upload:'⬆️ อัพโหลดนิยายเสียง'};
+  const titles={dashboard:'📊 แดชบอร์ด','manage-admins':'👑 จัดการแอดมิน',novels:'📚 นิยายทั้งหมด',upload:'⬆️ เพิ่มนิยายใหม่','manage-eps':'🎵 จัดการตอน'};
   document.getElementById('page-title').innerHTML='<span>'+titles[pageId]+'</span>';
   if(pageId==='novels') renderNovelsGrid();
   if(pageId==='dashboard') renderDashboard();
+  if(pageId==='manage-eps') renderManageEps();
 };
 
 function initAdmin() {
@@ -1609,7 +1621,8 @@ function renderNovelsGrid() {
         <div style="font-size:0.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${n.synopsis||''}</div>
       </div>
       <div class="novel-admin-actions">
-        <button class="novel-action-btn novel-action-edit" onclick="showEditNovel('${n.id}')">✏️ แก้ไข</button>
+        <button class="novel-action-btn novel-action-edit" onclick="showEditNovel('${n.id}')">✏️ แก้ไขข้อมูล</button>
+        <button class="novel-action-btn" style="background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.3);color:#60a5fa" onclick="openManageEps('${n.id}')">🎵 จัดการตอน</button>
         <button class="novel-action-btn novel-action-delete" onclick="deleteNovel('${n.id}')">🗑️ ลบ</button>
       </div>
     </div>
@@ -1776,6 +1789,172 @@ window.renderAdminList = function(){
       ${!isSA&&!isSelf?'<button style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">🗑️ ถอดสิทธิ์</button>':'<div style="width:90px;height:36px;display:flex;align-items:center;justify-content:center;opacity:0.35;font-size:0.75rem;color:var(--muted)">🔒 ลบไม่ได้</div>'}
     </div>`;
   }).join('');
+};
+
+/* ── manage episodes ── */
+let currentManageNovelId = null;
+
+window.openManageEps = function(id) {
+  currentManageNovelId = id;
+  const navBtn = document.getElementById('nav-manage-eps');
+  const n = novels.find(x => x.id === id);
+  if (navBtn) {
+    navBtn.style.display = 'flex';
+    document.getElementById('nav-manage-eps-label').textContent = n ? `ตอน: ${n.title.substring(0,12)}...` : 'จัดการตอน';
+  }
+  showPage('manage-eps', navBtn);
+};
+
+window.renderManageEps = function() {
+  const n = novels.find(x => x.id === currentManageNovelId);
+  const container = document.getElementById('manage-eps-content');
+  if (!n) { container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบนิยาย</div>'; return; }
+  const eps = n.audioFiles || [];
+  container.innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800">${n.title}</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-top:3px">${eps.length} ตอน • คลิกตอนเพื่อแก้ไข หรือเพิ่มตอนใหม่</div>
+    </div>
+    <div class="form-card" style="margin-bottom:16px">
+      <div class="form-card-title">➕ เพิ่มตอนใหม่</div>
+      <div class="form-card-sub">อัพโหลดไฟล์เสียงสำหรับตอนใหม่</div>
+      <div class="upload-zone" id="new-ep-zone">
+        <input type="file" accept="audio/*" multiple onchange="handleNewEpUpload(event)" id="new-ep-input">
+        <div class="upload-icon">🎵</div>
+        <div class="upload-text">คลิกหรือลากไฟล์เสียงมาวาง</div>
+        <div class="upload-hint">MP3, M4A, WAV, OGG</div>
+      </div>
+      <div id="new-ep-list" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
+      <div class="action-bar" style="margin-top:12px">
+        <button class="btn-action btn-publish" onclick="saveNewEps()">💾 บันทึกตอนใหม่</button>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-card-title">📋 รายการตอนทั้งหมด (${eps.length})</div>
+      <div class="form-card-sub">คลิก ✏️ แก้ไขชื่อตอน หรือ 🗑️ ลบตอน</div>
+      <div id="ep-list-admin" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+        ${eps.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--muted)">ยังไม่มีตอน</div>' :
+          eps.map((ep, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px" id="ep-row-${i}">
+            <span style="font-size:1rem;flex-shrink:0">🎵</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.88rem;font-weight:600" id="ep-name-display-${i}">${ep.name || `ตอนที่ ${i+1}`}</div>
+              ${ep.url ? '<div style="font-size:0.72rem;color:var(--muted)">มีไฟล์เสียง ✅</div>' : '<div style="font-size:0.72rem;color:var(--primary)">ไม่มีไฟล์ ⚠️</div>'}
+            </div>
+            <button onclick="startEditEpName(${i})" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--admin-accent);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:inherit">✏️ แก้ชื่อ</button>
+            <button onclick="replaceEpAudio(${i})" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:inherit">🔄 เปลี่ยนไฟล์</button>
+            <button onclick="deleteEp(${i})" style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:inherit">🗑️</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  // re-bind drag&drop for new-ep-zone
+  const zone = document.getElementById('new-ep-zone');
+  if (zone) {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('drag-over');
+      const evt = {target:{files:e.dataTransfer.files}};
+      handleNewEpUpload(evt);
+    });
+  }
+};
+
+let newEpFiles = [];
+window.handleNewEpUpload = function(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => { if (!newEpFiles.find(x => x.name === f.name)) newEpFiles.push(f); });
+  const list = document.getElementById('new-ep-list');
+  if (list) list.innerHTML = newEpFiles.map((f,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px">
+      <span>🎵</span>
+      <div style="flex:1;font-size:0.85rem">${f.name}</div>
+      <button onclick="removeNewEp(${i})" style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:6px;padding:4px 8px;cursor:pointer;font-family:inherit">✕</button>
+    </div>`).join('');
+};
+window.removeNewEp = function(i) { newEpFiles.splice(i,1); handleNewEpUpload({target:{files:[]}}); };
+
+window.saveNewEps = async function() {
+  if (!currentManageNovelId || newEpFiles.length === 0) { showToast('กรุณาเลือกไฟล์เสียง','⚠️','error'); return; }
+  const n = novels.find(x => x.id === currentManageNovelId);
+  const existingEps = [...(n.audioFiles || [])];
+  showToast('กำลังอัพโหลด...','⏳','info');
+  for (let i = 0; i < newEpFiles.length; i++) {
+    const f = newEpFiles[i];
+    showToast(`อัพโหลดตอน ${i+1}/${newEpFiles.length}...`,'🎵','info');
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.secure_url) {
+        existingEps.push({ name: f.name, url: data.secure_url, size: f.size, duration: null });
+      }
+    } catch(e) { console.warn('Upload failed:', e); }
+  }
+  try {
+    await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: existingEps, eps: existingEps.length, updatedAt: serverTimestamp() });
+    newEpFiles = [];
+    showToast(`เพิ่ม ${newEpFiles.length} ตอนสำเร็จ!`,'🎉','success');
+    renderManageEps();
+  } catch(e) { showToast('บันทึกล้มเหลว: '+e.message,'❌','error'); }
+};
+
+window.deleteEp = async function(idx) {
+  if (!confirm(`ต้องการลบตอนที่ ${idx+1}?`)) return;
+  const n = novels.find(x => x.id === currentManageNovelId);
+  const eps = [...(n.audioFiles || [])];
+  eps.splice(idx, 1);
+  try {
+    await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: eps, eps: eps.length, updatedAt: serverTimestamp() });
+    showToast('ลบตอนแล้ว','🗑️','info');
+  } catch(e) { showToast('ลบล้มเหลว','❌','error'); }
+};
+
+window.startEditEpName = function(idx) {
+  const display = document.getElementById(`ep-name-display-${idx}`);
+  const row = document.getElementById(`ep-row-${idx}`);
+  if (!display) return;
+  const current = display.textContent;
+  display.innerHTML = `<input type="text" value="${current}" id="ep-name-input-${idx}" style="background:var(--surface3);border:1px solid var(--admin-accent);border-radius:6px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.88rem;width:100%" onblur="saveEpName(${idx})" onkeydown="if(event.key==='Enter')saveEpName(${idx})">`;
+  document.getElementById(`ep-name-input-${idx}`).focus();
+};
+
+window.saveEpName = async function(idx) {
+  const input = document.getElementById(`ep-name-input-${idx}`);
+  if (!input) return;
+  const newName = input.value.trim() || `ตอนที่ ${idx+1}`;
+  const n = novels.find(x => x.id === currentManageNovelId);
+  const eps = [...(n.audioFiles || [])];
+  if (eps[idx]) eps[idx] = { ...eps[idx], name: newName };
+  try {
+    await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: eps, updatedAt: serverTimestamp() });
+    showToast('บันทึกชื่อแล้ว','✅','success');
+  } catch(e) { showToast('บันทึกล้มเหลว','❌','error'); }
+};
+
+window.replaceEpAudio = function(idx) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'audio/*';
+  input.onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    showToast(`กำลังอัพโหลด ${f.name}...`,'⏳','info');
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error('Upload failed');
+      const n = novels.find(x => x.id === currentManageNovelId);
+      const eps = [...(n.audioFiles || [])];
+      if (eps[idx]) eps[idx] = { ...eps[idx], url: data.secure_url, name: f.name, size: f.size };
+      await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: eps, updatedAt: serverTimestamp() });
+      showToast('เปลี่ยนไฟล์สำเร็จ!','✅','success');
+    } catch(e) { showToast('อัพโหลดล้มเหลว','❌','error'); }
+  };
+  input.click();
 };
 
 function formatSize(bytes){ if(bytes<1024)return bytes+' B'; if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB'; return(bytes/1048576).toFixed(1)+' MB'; }

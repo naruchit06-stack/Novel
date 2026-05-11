@@ -9,66 +9,114 @@
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon" style="background:none;padding:2px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAG8AAACACAYAAAAF1zc3AAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAAAA==" style="width:36px;height:36px;object-fit:contain;border-radius:8px"></div>
-    <div>
-      <div class="logo-text">The Golden Hoard</div>
-      <div class="logo-sub">NOVELS</div>
+<!-- NAVBAR -->
+<nav class="navbar" id="mainNavbar">
+
+  <!-- Logo ซ้าย -->
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">👑</div>
+    <div class="nav-logo-text">The Golden <span>Hoard</span></div>
+  </a>
+
+  <!-- เมนูกลาง -->
+  <div class="nav-links">
+    <a href="index.html" class="active">หน้าหลัก</a>
+    <a href="#">ตลาดทั้งหมด</a>
+    <a href="#">ยอดนิยม</a>
+    <a href="#">หมวดหมู่</a>
+  </div>
+
+  <!-- Search box -->
+  <div class="nav-search">
+    <span class="nav-search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="ค้นหานิยาย..." oninput="filterNovels()">
+  </div>
+
+  <!-- Actions ขวา — แสดงเมื่อ logout -->
+  <div class="nav-actions" id="navGuestActions">
+    <a href="login.html" class="nav-btn nav-btn-outline" id="navLoginBtn">เข้าสู่ระบบ</a>
+    <a href="login.html" class="nav-btn nav-btn-fill"    id="navRegisterBtn">สมัครสมาชิก</a>
+  </div>
+
+  <!-- User menu — แสดงเมื่อ login -->
+  <div class="nav-user" id="navUserMenu" style="display:none;">
+    <div class="nav-avatar" id="navAvatar">U</div>
+    <div class="nav-dropdown">
+      <a href="#" id="navUserName" style="cursor:default;pointer-events:none;color:var(--text);font-weight:700;">ผู้ใช้</a>
+      <a href="admin.html" id="navAdminBtn" style="display:none;">⚙️ จัดการนิยาย</a>
+      <a href="#" class="danger" onclick="handleSignOut()">🚪 ออกจากระบบ</a>
     </div>
   </div>
 
-  <nav class="sidebar-nav">
-    <a class="nav-item active" href="index.html"><span class="nav-icon">🏠</span> หน้าแรก</a>
-    <a class="nav-item" href="#"><span class="nav-icon">📚</span> คลังนิยาย</a>
-    <a class="nav-item" href="#"><span class="nav-icon">❤️</span> เรื่องโปรด<span class="nav-badge">99+</span></a>
-    <a class="nav-item" href="#"><span class="nav-icon">🔔</span> การแจ้งเตือน</a>
-    <a class="nav-item" href="#"><span class="nav-icon">💎</span> เติมเหรียญ</a>
-    <a class="nav-item" href="#"><span class="nav-icon">🎮</span> แพ็กเกจสมาชิก</a>
-    <div class="nav-divider"></div>
-    <a class="nav-item" href="#"><span class="nav-icon">📖</span> โหวตนิยายเรื่องใหม่</a>
-    <a class="nav-item" href="#"><span class="nav-icon">💬</span> ติดต่อผู้ดูแลระบบ</a>
-    <a class="nav-item" href="#"><span class="nav-icon">👤</span> โปรไฟล์</a>
-    <div class="nav-divider"></div>
-    <a class="nav-item" id="navLoginBtn" href="login.html"><span class="nav-icon">🔑</span> เข้าสู่ระบบ</a>
-    <div id="navUserArea" style="display:none;flex-direction:column;gap:4px;">
-      <div class="nav-item" style="cursor:default;">
-        <span class="nav-icon">👤</span>
-        <span id="navUserName" style="font-size:0.85rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  <!-- Hamburger (mobile) -->
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="เมนู">☰</button>
+
+</nav>
+
+<!-- Mobile nav drawer -->
+<div class="nav-mobile-drawer" id="mobileDrawer">
+  <a href="index.html" class="active">🏠 หน้าหลัก</a>
+  <a href="#">📚 ตลาดทั้งหมด</a>
+  <a href="#">🔥 ยอดนิยม</a>
+  <a href="#">🗂️ หมวดหมู่</a>
+  <div class="nav-mobile-search">
+    <span>🔍</span>
+    <input type="text" placeholder="ค้นหานิยาย..." oninput="filterNovels()">
+  </div>
+  <div class="nav-mobile-auth" id="mobileGuestAuth">
+    <a href="login.html" class="nav-btn nav-btn-outline"><span>เข้าสู่ระบบ</span></a>
+    <a href="login.html" class="nav-btn nav-btn-fill"><span>สมัครสมาชิก</span></a>
+  </div>
+</div>
+
+<!-- [IDX-2] HERO SECTION -->
+<section class="hero" id="heroSection">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <p class="hero-label">✨ ยินดีต้อนรับสู่</p>
+      <h1 class="hero-title">
+        The <span>Golden</span> Hoard<br>นิยายเสียงคุณภาพ
+      </h1>
+      <p class="hero-desc">
+        รวมนิยายเสียงภาษาไทยคัดสรรคุณภาพ อัปเดตใหม่ทุกวัน<br>
+        ฟังได้ทุกที่ ทุกเวลา บนทุกอุปกรณ์
+      </p>
+      <div class="hero-actions">
+        <a href="#novelList" class="hero-btn-primary">เริ่มอ่านเลย 📖</a>
+        <a href="#novelList" class="hero-btn-outline">ดูนิยายทั้งหมด →</a>
       </div>
-      <a class="nav-item" id="navAdminBtn" href="admin.html" style="display:none;background:rgba(232,68,90,0.12);color:var(--primary);">
-        <span class="nav-icon">⚙️</span> จัดการนิยาย
-      </a>
-      <a class="nav-item" onclick="handleSignOut()" style="cursor:pointer;color:#e8445a;">
-        <span class="nav-icon">🚪</span> ออกจากระบบ
-      </a>
     </div>
-  </nav>
-
-  <div class="sidebar-bottom">
-    <div class="theme-toggle">
-      <button class="theme-btn active" id="lightBtn" onclick="setTheme('light')">☀️</button>
-      <button class="theme-btn"        id="darkBtn"  onclick="setTheme('dark')">🌙</button>
+    <div class="hero-image" id="heroImage">
+      <div class="hero-image-placeholder">👑</div>
     </div>
   </div>
-</aside>
+</section>
+
 
 <!-- MAIN -->
-<main class="main">
-  <div class="topbar">
-    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="เมนู">☰</button>
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="ค้นหานิยายเสียง ชื่อเรื่อง หรือผู้แต่ง..." oninput="filterNovels()">
-    </div>
-    <div class="topbar-actions">
-      <a href="login.html" id="topbarLoginBtn"    class="topbar-btn btn-outline">เข้าสู่ระบบ</a>
-      <a href="login.html" id="topbarRegisterBtn" class="topbar-btn btn-fill">สมัครสมาชิก</a>
-    </div>
-  </div>
-
+<main class="page-content" id="mainContent">
   <div class="content">
+
+    <!-- [IDX-3] SEARCH + FILTER TABS -->
+    <div class="search-section" id="novelList">
+      <div class="search-bar-wrap">
+        <span class="search-bar-icon">🔍</span>
+        <input
+          type="text"
+          id="searchInputMain"
+          class="search-bar-input"
+          placeholder="ค้นหานิยาย ชื่อเรื่อง ผู้แต่ง..."
+          oninput="filterNovels()"
+        >
+      </div>
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" onclick="switchFilterTab(this,'popular')">🔥 ยอดนิยม</button>
+        <button class="filter-tab" onclick="switchFilterTab(this,'new')">⭐ มาใหม่</button>
+        <button class="filter-tab" onclick="switchFilterTab(this,'updated')">🕐 อัปเดตล่าสุด</button>
+        <button class="filter-tab" onclick="switchFilterTab(this,'all')">🔲 ทั้งหมด</button>
+      </div>
+    </div>
+
     <div class="banner">
       <span class="banner-icon">ℹ️</span>
       <div class="banner-text">
@@ -78,27 +126,130 @@
       <a href="#" class="banner-btn">เติมเหรียญ →</a>
     </div>
 
-    <div class="section-label">NEW RELEASES</div>
-    <div class="section-title">นิยายมาใหม่</div>
-    <div class="novels-grid" id="newReleasesGrid"></div>
-
-    <div class="section-label">POPULAR NOVELS</div>
-    <div class="section-title">นิยายยอดนิยม</div>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab(this,'7day')">7 วัน</button>
-      <button class="tab"        onclick="switchTab(this,'30day')">30 วัน</button>
-      <button class="tab"        onclick="switchTab(this,'all')">ตลอดกาล</button>
+    <!-- [IDX-5] SECTION นิยายล่าสุดที่อัปเดต -->
+    <div class="section-block">
+      <div class="section-header">
+        <div>
+          <div class="section-label">LATEST UPDATES</div>
+          <div class="section-title">นิยายล่าสุดที่อัปเดต</div>
+        </div>
+        <a href="#" class="section-view-all">ดูทั้งหมด →</a>
+      </div>
+      <div class="novel-grid-h" id="newReleasesGrid"></div>
     </div>
-    <div class="novels-grid" id="popularGrid"></div>
 
-    <div class="section-label">ALL NOVELS</div>
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
-      นิยายเสียงทั้งหมด
-      <span id="novels-count" style="font-size:0.85rem;color:var(--muted);font-family:'Sarabun',sans-serif;font-weight:400"></span>
+    <!-- [IDX-4] SECTION นิยายยอดนิยม -->
+    <div class="section-block">
+      <div class="section-header">
+        <div>
+          <div class="section-label">POPULAR NOVELS</div>
+          <div class="section-title">นิยายยอดนิยม</div>
+        </div>
+        <a href="#" class="section-view-all">ดูทั้งหมด →</a>
+      </div>
+      <div class="sub-tabs" id="popularSubTabs">
+        <button class="sub-tab active" onclick="switchTab(this,'7day')">7 วัน</button>
+        <button class="sub-tab" onclick="switchTab(this,'30day')">30 วัน</button>
+        <button class="sub-tab" onclick="switchTab(this,'all')">ตลอดกาล</button>
+      </div>
+      <div class="novel-grid-h" id="popularGrid"></div>
     </div>
-    <div class="novels-grid" id="novelsGrid"></div>
-  </div>
+
+    <!-- ALL NOVELS -->
+    <div class="section-block">
+      <div class="section-header">
+        <div>
+          <div class="section-label">ALL NOVELS</div>
+          <div class="section-title">นิยายเสียงทั้งหมด <span id="novels-count" style="font-size:0.8rem;color:var(--muted);font-weight:400"></span></div>
+        </div>
+      </div>
+      <div class="novel-grid-h" id="novelsGrid"></div>
+    </div>
+
+    <!-- [IDX-6] FEATURE HIGHLIGHTS -->
+    <div class="features-section">
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon feature-icon-red">📚</div>
+          <div class="feature-title">นิยายคุณภาพ</div>
+          <div class="feature-desc">คัดสรรมาดีๆ จากนักเขียนคุณภาพ</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon feature-icon-yellow">⚡</div>
+          <div class="feature-title">อัปเดตไว</div>
+          <div class="feature-desc">อัปเดตตอนใหม่ทุกวัน ไม่พลาดทุกเรื่อง</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon feature-icon-green">🛡️</div>
+          <div class="feature-title">ปลอดภัย 100%</div>
+          <div class="feature-desc">ระบบปลอดภัย ข้อมูลปลอดรั่วไหล</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon feature-icon-blue">📱</div>
+          <div class="feature-title">อ่านได้ทุกอุปกรณ์</div>
+          <div class="feature-desc">รองรับทุกแพลตฟอร์ม อ่านได้ทุกที่</div>
+        </div>
+      </div>
+    </div>
+
+</div>
 </main>
+
+<!-- [IDX-7] FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <!-- Col 1: Brand -->
+    <div>
+      <a href="index.html" class="footer-brand-logo">
+        👑 The <span>Golden</span> Hoard
+      </a>
+      <p class="footer-brand-desc">คลังรวมนิยายคุณภาพ ที่ใหญ่ที่สุดในประเทศไทย<br>อัปเดตทุกวันเพื่อคุณ</p>
+      <div class="footer-socials">
+        <a href="#" class="footer-social-btn" title="Facebook">f</a>
+        <a href="#" class="footer-social-btn" title="Discord">💬</a>
+        <a href="#" class="footer-social-btn" title="Twitter">𝕏</a>
+        <a href="#" class="footer-social-btn" title="YouTube">▶</a>
+      </div>
+    </div>
+
+    <!-- Col 2: เมนู -->
+    <div>
+      <div class="footer-col-title">เมนู</div>
+      <ul class="footer-links">
+        <li><a href="index.html">หน้าแรก</a></li>
+        <li><a href="#">ตลาดทั้งหมด</a></li>
+        <li><a href="#">ยอดนิยม</a></li>
+        <li><a href="#">หมวดหมู่</a></li>
+        <li><a href="#">อัปเดตล่าสุด</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 3: ช่วยเหลือ -->
+    <div>
+      <div class="footer-col-title">ช่วยเหลือ</div>
+      <ul class="footer-links">
+        <li><a href="#">คำถามที่พบบ่อย</a></li>
+        <li><a href="#">ติดต่อเรา</a></li>
+        <li><a href="#">นโยบายความเป็นส่วนตัว</a></li>
+        <li><a href="#">ข้อกำหนดการใช้งาน</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 4: Newsletter -->
+    <div>
+      <div class="footer-col-title">ติดตามข่าวสาร</div>
+      <p class="footer-newsletter-desc">รับข่าวสารและตอนใหม่ๆ ก่อนใคร</p>
+      <div class="footer-newsletter-form">
+        <input type="email" class="footer-newsletter-input" placeholder="กรอกอีเมลของคุณ">
+        <button class="footer-newsletter-btn">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © 2024 The Golden Hoard. สงวนลิขสิทธิ์ทุกประการ
+  </div>
+</footer>
 
 <!-- PLAYER MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
@@ -165,15 +316,20 @@
   </div>
 </div>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
 <audio id="audioEl"></audio>
 <script>
-/* [CSS-12] hamburger toggle — global scope */
-function toggleSidebar() {
-  document.querySelector('.sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('open');
+/* toggleMobileNav — เปิด/ปิด mobile drawer */
+function toggleMobileNav() {
+  document.getElementById('mobileDrawer').classList.toggle('open');
 }
+/* ปิด drawer เมื่อคลิกนอก */
+document.addEventListener('click', function(e) {
+  const drawer = document.getElementById('mobileDrawer');
+  const btn = document.getElementById('hamburgerBtn');
+  if (drawer && btn && !drawer.contains(e.target) && !btn.contains(e.target)) {
+    drawer.classList.remove('open');
+  }
+});
 </script>
 <script type="module" src="app.js"></script>
 </body>

@@ -71,21 +71,10 @@
   .section-title{font-size:17px;font-weight:700;margin:28px 0 14px}
   .ep-list{display:flex;flex-direction:column;gap:6px}
 
-  .ep-group{display:flex;align-items:center;gap:12px;padding:13px 18px;border-radius:10px;background:var(--s1);border:1px solid var(--bd);cursor:pointer;transition:all .2s;user-select:none}
-  .ep-group:hover{background:var(--s2);border-color:#3a3a3a}
-  .ep-group.active{background:rgba(200,150,62,.08);border-color:rgba(200,150,62,.3)}
-  .eg-icon{font-size:15px;color:var(--t2);width:20px;text-align:center;flex-shrink:0}
-  .ep-group.active .eg-icon{color:var(--ac)}
-  .eg-label{flex:1;font-size:14px;font-weight:600}
-  .eg-arrow{font-size:12px;color:var(--t3);transition:transform .2s}
-  .ep-group.open .eg-arrow{transform:rotate(180deg)}
-
-  .ep-sublist{display:none;flex-direction:column;gap:4px;padding:4px 0 4px 8px}
-  .ep-sublist.open{display:flex}
   .ep-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:10px;background:var(--s1);border:1px solid var(--bd);cursor:pointer;transition:all .2s}
   .ep-item:hover{background:var(--s2);border-color:#3a3a3a}
   .ep-item.active{background:rgba(200,150,62,.08);border-color:rgba(200,150,62,.3)}
-  .ep-item.locked{opacity:.5;cursor:default;pointer-events:none}
+  .ep-item.no-audio{opacity:.5;cursor:default}
   .ep-icon{font-size:15px;color:var(--t2);width:20px;text-align:center;flex-shrink:0}
   .ep-item.active .ep-icon{color:var(--ac)}
   .ep-label{font-size:14px;font-weight:500;flex:1}
@@ -297,45 +286,18 @@ function buildEpList(epCount) {
     list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--t3)">⏳ ยังไม่มีตอน</div>`;
     return;
   }
-  const GROUP = 50;
-  for (let start = 0; start < epCount; start += GROUP) {
-    const end = Math.min(start + GROUP - 1, epCount - 1);
-    const grpAudio = Array.from({length: end-start+1}, (_,i) => audioFiles[start+i]).some(af => af&&af.url);
-
-    const grp = document.createElement('div');
-    grp.className = 'ep-group' + (start===0 && grpAudio ? ' active open' : '');
-    grp.innerHTML = `<span class="eg-icon">${grpAudio?'▶':'🔒'}</span>
-      <span class="eg-label">ตอนที่ ${start+1} – ${end+1}${grpAudio?'':' <small style="color:var(--t3);font-weight:400">ยังไม่มีไฟล์</small>'}</span>
-      <span class="eg-arrow">▼</span>`;
-
-    const sub = document.createElement('div');
-    sub.className = 'ep-sublist' + (start===0 && grpAudio ? ' open' : '');
-
-    for (let i = start; i <= end; i++) {
-      const af = audioFiles[i];
-      const ok = af && af.url;
-      const lbl = af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`;
-      const item = document.createElement('div');
-      item.className = 'ep-item' + (ok?'':' locked');
-      item.id = 'ep-' + i;
-      item.innerHTML = `<span class="ep-icon">${ok?'▶':'🔒'}</span>
-        <span class="ep-label">${lbl}</span>
-        <span class="ep-dur">${ok ? fmt(af.duration) : 'ไม่มีไฟล์'}</span>`;
-      if (ok) item.addEventListener('click', () => playEp(i));
-      sub.appendChild(item);
-    }
-
-    if (grpAudio) {
-      grp.addEventListener('click', () => {
-        const wasOpen = sub.classList.contains('open');
-        document.querySelectorAll('.ep-group').forEach(g => g.classList.remove('open','active'));
-        document.querySelectorAll('.ep-sublist').forEach(s => s.classList.remove('open'));
-        if (!wasOpen) { grp.classList.add('open','active'); sub.classList.add('open'); }
-      });
-    }
-
-    list.appendChild(grp);
-    list.appendChild(sub);
+  for (let i = 0; i < epCount; i++) {
+    const af  = audioFiles[i];
+    const ok  = af && af.url;
+    const lbl = af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`;
+    const item = document.createElement('div');
+    item.className = 'ep-item' + (ok ? '' : ' no-audio');
+    item.id = 'ep-' + i;
+    item.innerHTML = `<span class="ep-icon">${ok ? '▶' : '⏳'}</span>
+      <span class="ep-label">${lbl}</span>
+      <span class="ep-dur">${ok ? fmt(af.duration) : ''}</span>`;
+    if (ok) item.addEventListener('click', () => playEp(i));
+    list.appendChild(item);
   }
 }
 
@@ -348,7 +310,7 @@ function playEp(idx) {
   document.querySelectorAll('.ep-item').forEach(el => {
     el.classList.remove('active');
     const ic = el.querySelector('.ep-icon');
-    if (ic && !el.classList.contains('locked')) ic.textContent = '▶';
+    if (ic) ic.textContent = '▶';
   });
   const activeEl = $('ep-' + idx);
   if (activeEl) {
