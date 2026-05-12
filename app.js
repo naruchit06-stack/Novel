@@ -20,7 +20,7 @@
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy }
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -85,6 +85,19 @@ let allNovels = [];
 let filtered  = [];
 
 const novelsRef   = collection(db, 'novels');
+
+/* ===== HERO IMAGE ===== */
+async function loadHeroImage() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'hero'));
+    if (snap.exists() && snap.data().imageUrl) {
+      const el = document.getElementById('heroImage');
+      if (!el) return;
+      el.innerHTML = `<img src="${snap.data().imageUrl}" alt="Hero" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+    }
+  } catch(e) { console.warn('Hero image:', e); }
+}
+loadHeroImage();
 const novelsQuery = query(novelsRef, orderBy('createdAt', 'desc'));
 
 onSnapshot(novelsQuery, (snapshot) => {

@@ -1321,3 +1321,73 @@ body {
 .sidebar-nav {
   display: none !important;
 }
+
+
+/* ===== ADMIN — CSS-7: Dashboard Stat Cards ===== */
+.admin-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.03);
+  border-radius: inherit;
+}
+
+.stat-card-novels  { background: linear-gradient(135deg, #7b1c2e 0%, #e8445a 100%); }
+.stat-card-eps     { background: linear-gradient(135deg, #145a32 0%, #27ae60 100%); }
+.stat-card-views   { background: linear-gradient(135deg, #1a3a6b 0%, #2980b9 100%); }
+.stat-card-members { background: linear-gradient(135deg, #4a1272 0%, #8e44ad 100%); }
+
+.stat-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.stat-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-card-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.stat-card-label {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 400;
+}
+
+@media (max-width: 900px) {
+  .admin-stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .admin-stats-bar {
+    grid-template-columns: 1fr;
+  }
+}

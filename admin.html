@@ -401,13 +401,22 @@
     z-index: 90;
   }
 
+  .topbar-left { display: flex; flex-direction: column; gap: 2px; }
+
   .page-title {
     font-family: 'Chakra Petch', sans-serif;
     font-size: 1.3rem;
     font-weight: 700;
+    line-height: 1;
   }
 
   .page-title span { color: var(--admin-accent); }
+
+  .page-subtitle {
+    font-size: 0.78rem;
+    color: var(--muted2);
+    font-weight: 400;
+  }
 
   .topbar-actions { display: flex; gap: 10px; align-items: center; }
 
@@ -854,11 +863,252 @@
     flex-wrap: wrap;
   }
 
-  /* ===== NOVEL LIST ===== */
-  .novel-list-grid {
+  /* ===== NOVEL LIST (ADM-3) ===== */
+  .novel-list-v {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Search + Filter bar */
+  .novel-list-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+
+  .novel-search-wrap {
+    position: relative;
+    flex: 1;
+  }
+
+  .novel-search-wrap input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    padding: 9px 14px 9px 36px;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .novel-search-wrap input:focus { border-color: var(--blue); }
+
+  .novel-search-wrap .search-icon {
+    position: absolute;
+    left: 11px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  .novel-filter-select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+    min-width: 120px;
+  }
+
+  /* Horizontal Novel Card */
+  .novel-h-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .novel-h-card:hover {
+    border-color: var(--border2);
+    background: var(--surface2);
+  }
+
+  .novel-h-card.active {
+    border-color: var(--blue);
+    background: var(--blue-dim);
+  }
+
+  .novel-h-cover {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--surface3);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    overflow: hidden;
+  }
+
+  .novel-h-cover img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .novel-h-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .novel-h-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  .novel-h-author {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .novel-h-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.76rem;
+    color: var(--muted2);
+  }
+
+  .novel-h-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .h-btn {
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'Sarabun', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .h-btn-edit {
+    background: var(--blue-dim);
+    color: var(--blue);
+  }
+
+  .h-btn-edit:hover { background: rgba(59,130,246,0.3); }
+
+  .h-btn-delete {
+    background: rgba(232,68,90,0.1);
+    color: var(--primary);
+  }
+
+  .h-btn-delete:hover { background: rgba(232,68,90,0.22); }
+
+  /* Pagination */
+  .novel-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 18px;
+  }
+
+  .page-btn {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--muted2);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  .page-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .page-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Left panel header badge */
+  .left-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .left-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .left-panel-badge {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--blue-dim);
+    color: var(--blue);
+    font-weight: 800;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== 2-COLUMN LAYOUT (ADM-2) ===== */
+  .admin-two-col {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
+    grid-template-columns: 1fr 420px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .admin-col-left {
+    min-width: 0;
+  }
+
+  .admin-col-right {
+    position: sticky;
+    top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .admin-col-right.hidden { display: none; }
+
+  @media (max-width: 1100px) {
+    .admin-two-col {
+      grid-template-columns: 1fr;
+    }
+    .admin-col-right {
+      position: static;
+    }
   }
 
   .novel-admin-card {
@@ -1152,7 +1402,10 @@
   <!-- Main Content -->
   <div class="admin-main">
     <div class="admin-topbar">
-      <div class="page-title" id="page-title"><span>📊</span> แดชบอร์ด</div>
+      <div class="topbar-left">
+        <div class="page-title" id="page-title"><span>📊</span> แดชบอร์ด</div>
+        <div class="page-subtitle" id="page-subtitle">ภาพรวมระบบ The Golden Hoard Novels</div>
+      </div>
       <div class="topbar-actions">
         <a href="index.html" class="btn-back-site">🌐 ดูหน้าเว็บ</a>
       </div>
@@ -1160,26 +1413,57 @@
 
     <!-- ===== DASHBOARD PAGE ===== -->
     <div class="admin-page active" id="page-dashboard">
-      <div class="stats-grid">
-        <div class="stat-card red">
-          <div class="stat-icon">📚</div>
-          <div class="stat-value" id="stat-novels">8</div>
-          <div class="stat-label">นิยายทั้งหมด</div>
+      <div class="admin-stats-bar">
+        <div class="stat-card stat-card-novels">
+          <div class="stat-card-icon">📚</div>
+          <div class="stat-card-body">
+            <div class="stat-card-value" id="stat-novels">—</div>
+            <div class="stat-card-label">นิยายทั้งหมด</div>
+          </div>
         </div>
-        <div class="stat-card green">
-          <div class="stat-icon">▶️</div>
-          <div class="stat-value" id="stat-eps">2,311</div>
-          <div class="stat-label">ตอนทั้งหมด</div>
+        <div class="stat-card stat-card-eps">
+          <div class="stat-card-icon">▶️</div>
+          <div class="stat-card-body">
+            <div class="stat-card-value" id="stat-eps">—</div>
+            <div class="stat-card-label">ตอนทั้งหมด</div>
+          </div>
         </div>
-        <div class="stat-card blue">
-          <div class="stat-icon">👁️</div>
-          <div class="stat-value" id="stat-views">1.8แสน</div>
-          <div class="stat-label">ยอดวิวรวม</div>
+        <div class="stat-card stat-card-views">
+          <div class="stat-card-icon">👁️</div>
+          <div class="stat-card-body">
+            <div class="stat-card-value" id="stat-views">—</div>
+            <div class="stat-card-label">ยอดวิวรวม</div>
+          </div>
         </div>
-        <div class="stat-card purple">
-          <div class="stat-icon">👥</div>
-          <div class="stat-value" id="stat-members">342</div>
-          <div class="stat-label">สมาชิก</div>
+        <div class="stat-card stat-card-members">
+          <div class="stat-card-icon">👥</div>
+          <div class="stat-card-body">
+            <div class="stat-card-value" id="stat-members">—</div>
+            <div class="stat-card-label">สมาชิก</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HERO IMAGE MANAGER -->
+      <div class="recent-section" style="margin-bottom:24px">
+        <div class="section-head">
+          <div class="section-head-title">🖼️ รูปภาพ Hero Banner</div>
+        </div>
+        <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;padding:16px;background:var(--admin-card);border:1px solid var(--border);border-radius:12px">
+          <div id="hero-preview-box" style="width:200px;height:140px;border-radius:10px;background:var(--admin-surface);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+            <span id="hero-preview-placeholder" style="font-size:2.5rem">👑</span>
+            <img id="hero-preview-img" style="display:none;width:100%;height:100%;object-fit:cover" src="" alt="Hero">
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:0.9rem;font-weight:700;margin-bottom:6px;color:var(--text)">อัพโหลดรูป Hero Banner</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-bottom:14px">รูปที่แสดงบนหน้าหลักตรงส่วน Hero (แนะนำ 400×500px ขึ้นไป)</div>
+            <label style="display:inline-flex;align-items:center;gap:8px;background:var(--admin-surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--text)">
+              📁 เลือกไฟล์รูป
+              <input type="file" id="hero-file-input" accept="image/*" style="display:none" onchange="previewHeroImage(event)">
+            </label>
+            <button onclick="uploadHeroImage()" id="hero-upload-btn" style="margin-left:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:0.85rem;font-weight:700;cursor:pointer">⬆️ บันทึก</button>
+            <div id="hero-upload-status" style="margin-top:10px;font-size:0.8rem;color:var(--muted)"></div>
+          </div>
         </div>
       </div>
 
@@ -1205,14 +1489,52 @@
 
     <!-- ===== NOVELS LIST PAGE ===== -->
     <div class="admin-page" id="page-novels">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-        <div>
-          <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800">นิยายทั้งหมด</div>
-          <div style="font-size:0.82rem;color:var(--muted);margin-top:3px" id="novels-count-text">8 เรื่อง</div>
+      <div class="admin-two-col">
+        <!-- ซ้าย: Novel List (ADM-3) -->
+        <div class="admin-col-left">
+          <!-- Header -->
+          <div class="left-panel-header">
+            <div class="left-panel-title">
+              <div class="left-panel-badge" id="novels-count-badge">2</div>
+              <div>
+                <div style="font-family:'Chakra Petch',sans-serif;font-size:1rem;font-weight:800">หน้านิยาย <span style="color:var(--muted2);font-weight:400">(Manage Novel)</span></div>
+                <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">แสดงข้อมูลนิยายทั้งหมด (แก้ไขได้)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <button class="btn-action btn-save" style="padding:9px 18px;font-size:0.85rem" onclick="openEditForm(null)">+ เพิ่มนิยาย</button>
+            <button class="btn-action" id="btn-manage-admins" style="border:1px solid var(--yellow);color:var(--yellow);background:transparent;padding:9px 18px;font-size:0.85rem" onclick="openAdminPanel()">👑 จัดการแอดมิน</button>
+          </div>
+
+          <!-- Search + Filter -->
+          <div class="novel-list-toolbar">
+            <div class="novel-search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="novel-search-input" placeholder="ค้นหาชื่อเรื่อง, ผู้แต่ง..." oninput="filterNovelList()">
+            </div>
+            <select class="novel-filter-select" id="novel-filter-status" onchange="filterNovelList()">
+              <option value="">ทุกสถานะ</option>
+              <option value="ongoing">กำลังดำเนิน</option>
+              <option value="done">จบแล้ว</option>
+              <option value="new">ใหม่</option>
+              <option value="hiatus">หยุดพัก</option>
+            </select>
+          </div>
+
+          <!-- Novel List -->
+          <div class="novel-list-v" id="novels-grid"></div>
+
+          <!-- Pagination -->
+          <div class="novel-pagination" id="novels-pagination"></div>
         </div>
-        <button class="btn-action btn-save" onclick="showPage('upload', document.querySelectorAll('.admin-nav-item')[2])">⬆️ อัพโหลดนิยายใหม่</button>
+        <!-- ขวา: Edit Form / Admin Panel (toggle) -->
+        <div class="admin-col-right hidden" id="novels-right-panel">
+          <!-- เนื้อหาใส่ใน ADM-4 -->
+        </div>
       </div>
-      <div class="novel-list-grid" id="novels-grid"></div>
     </div>
 
     <!-- ===== UPLOAD PAGE ===== -->
@@ -1397,7 +1719,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const app = initializeApp({
@@ -1582,13 +1904,32 @@ function statusBadge(s) {
   return `<span class="status-badge status-${cls}">● ${txt}</span>`;
 }
 
+async function loadDashboardStats() {
+  const novelEl = document.getElementById('stat-novels');
+  if(novelEl) novelEl.textContent = novels.length.toLocaleString();
+  let totalEps = 0, totalViews = 0;
+  novels.forEach(n => {
+    totalEps += Number(n.eps) || 0;
+    totalViews += Number(n.views) || 0;
+  });
+  const epsEl = document.getElementById('stat-eps');
+  if(epsEl) epsEl.textContent = totalEps.toLocaleString();
+  const viewsEl = document.getElementById('stat-views');
+  if(viewsEl) viewsEl.textContent = totalViews.toLocaleString();
+  try {
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const membersEl = document.getElementById('stat-members');
+    if(membersEl) membersEl.textContent = usersSnap.size.toLocaleString();
+  } catch(e) {
+    const membersEl = document.getElementById('stat-members');
+    if(membersEl) membersEl.textContent = '—';
+  }
+}
+
 function renderDashboard() {
-  const statEl = document.getElementById('stat-novels');
-  if(statEl) statEl.textContent=novels.length;
-  const badgeEl = document.getElementById('novel-count-badge');
+  loadDashboardStats();
+  const badgeEl = document.getElementById('novels-count-badge');
   if(badgeEl) badgeEl.textContent=novels.length;
-  const countEl = document.getElementById('novels-count-text');
-  if(countEl) countEl.textContent=novels.length+' เรื่อง';
   const tbody=document.getElementById('dashboard-tbody');
   if(!tbody) return;
   tbody.innerHTML=novels.map(n=>`
@@ -1605,29 +1946,122 @@ function renderDashboard() {
   `).join('');
 }
 
+// ===== ADM-3: Novel List State =====
+let novelListPage = 1;
+const NOVELS_PER_PAGE = 6;
+let activeNovelId = null;
+
 function renderNovelsGrid() {
-  const grid=document.getElementById('novels-grid');
-  if(!grid)return;
-  grid.innerHTML=novels.map(n=>`
-    <div class="novel-admin-card">
-      <div class="novel-admin-cover">
-        ${n.coverUrl?`<img src="${n.coverUrl}" alt="">`:`<span style="font-size:3rem">${n.emoji||n.cover||'📖'}</span>`}
-        <div class="novel-admin-cover-overlay"></div>
-      </div>
-      <div class="novel-admin-body">
-        <div class="novel-admin-title">${n.title}</div>
-        <div class="novel-admin-meta">${n.eps||0} ตอน • ดู ${n.views||0} • ${statusBadge(n.status)}</div>
-        <div class="novel-admin-tags">${(n.tags||[]).map(t=>`<span class="novel-admin-tag">${t}</span>`).join('')}</div>
-        <div style="font-size:0.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${n.synopsis||''}</div>
-      </div>
-      <div class="novel-admin-actions">
-        <button class="novel-action-btn novel-action-edit" onclick="showEditNovel('${n.id}')">✏️ แก้ไขข้อมูล</button>
-        <button class="novel-action-btn" style="background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.3);color:#60a5fa" onclick="openManageEps('${n.id}')">🎵 จัดการตอน</button>
-        <button class="novel-action-btn novel-action-delete" onclick="deleteNovel('${n.id}')">🗑️ ลบ</button>
-      </div>
-    </div>
-  `).join('');
+  const filtered = getFilteredNovels();
+  const grid = document.getElementById('novels-grid');
+  if (!grid) return;
+
+  // Update badge
+  const badge = document.getElementById('novels-count-badge');
+  if (badge) badge.textContent = filtered.length;
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / NOVELS_PER_PAGE));
+  if (novelListPage > totalPages) novelListPage = totalPages;
+  const start = (novelListPage - 1) * NOVELS_PER_PAGE;
+  const paged = filtered.slice(start, start + NOVELS_PER_PAGE);
+
+  if (paged.length === 0) {
+    grid.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.9rem">ไม่พบนิยายที่ค้นหา</div>`;
+  } else {
+    grid.innerHTML = paged.map(n => {
+      const isActive = activeNovelId === n.id;
+      const coverHtml = n.coverUrl
+        ? `<img src="${n.coverUrl}" alt="">`
+        : `<span style="font-size:1.8rem">${n.emoji||n.cover||'📖'}</span>`;
+      return `
+        <div class="novel-h-card${isActive?' active':''}" onclick="openEditForm('${n.id}')">
+          <div class="novel-h-cover">${coverHtml}</div>
+          <div class="novel-h-body">
+            <div class="novel-h-title">${n.title}</div>
+            <div class="novel-h-author">ผู้แต่ง: ${n.author||'—'}</div>
+            <div style="margin-bottom:5px">${statusBadge(n.status)}</div>
+            <div class="novel-h-meta">
+              <span>🎵 ${n.eps||0} ตอน</span>
+              <span>👁 ${n.views||0}</span>
+            </div>
+          </div>
+          <div class="novel-h-actions" onclick="event.stopPropagation()">
+            <button class="h-btn h-btn-edit" onclick="openEditForm('${n.id}')">✏️ แก้ไข</button>
+            <button class="h-btn h-btn-delete" onclick="deleteNovel('${n.id}')">🗑️</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  renderNovelPagination(totalPages);
 }
+
+function getFilteredNovels() {
+  const q = (document.getElementById('novel-search-input')?.value || '').toLowerCase();
+  const s = document.getElementById('novel-filter-status')?.value || '';
+  return novels.filter(n => {
+    const matchQ = !q || (n.title||'').toLowerCase().includes(q) || (n.author||'').toLowerCase().includes(q);
+    const matchS = !s || n.status === s;
+    return matchQ && matchS;
+  });
+}
+
+window.filterNovelList = function() {
+  novelListPage = 1;
+  renderNovelsGrid();
+};
+
+function renderNovelPagination(totalPages) {
+  const el = document.getElementById('novels-pagination');
+  if (!el || totalPages <= 1) { if(el) el.innerHTML=''; return; }
+  let html = `<button class="page-btn" onclick="goNovelPage(${novelListPage-1})" ${novelListPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 5 && i > 2 && i < totalPages - 1 && Math.abs(i - novelListPage) > 1) {
+      if (i === 3) html += `<span class="page-btn" style="cursor:default">…</span>`;
+      continue;
+    }
+    html += `<button class="page-btn${i===novelListPage?' active':''}" onclick="goNovelPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goNovelPage(${novelListPage+1})" ${novelListPage===totalPages?'disabled':''}>›</button>`;
+  el.innerHTML = html;
+}
+
+window.goNovelPage = function(p) {
+  const total = Math.max(1, Math.ceil(getFilteredNovels().length / NOVELS_PER_PAGE));
+  if (p < 1 || p > total) return;
+  novelListPage = p;
+  renderNovelsGrid();
+};
+
+window.openAdminPanel = function() {
+  const panel = document.getElementById('novels-right-panel');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+  // render admin panel content (ADM-6 — will fill later)
+  panel.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">
+    <div style="font-size:2rem;margin-bottom:8px">👑</div>
+    <div style="font-weight:700;margin-bottom:4px">จัดการแอดมิน</div>
+    <div style="font-size:0.8rem">Coming in ADM-6</div>
+  </div>`;
+  activeNovelId = null;
+  renderNovelsGrid();
+};
+
+window.openEditForm = function(novelId) {
+  activeNovelId = novelId;
+  const panel = document.getElementById('novels-right-panel');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+  // ADM-4 will fill this with full edit form
+  const n = novelId ? novels.find(x => x.id === novelId) : null;
+  panel.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">
+    <div style="font-size:2rem;margin-bottom:8px">✏️</div>
+    <div style="font-weight:700;margin-bottom:4px">${n ? 'แก้ไขนิยาย: '+n.title : 'เพิ่มนิยายใหม่'}</div>
+    <div style="font-size:0.8rem">Edit form coming in ADM-4</div>
+  </div>`;
+  renderNovelsGrid();
+};
 
 window.showEditNovel = function(id) {
   const n = novels.find(x=>x.id===id);
@@ -1985,6 +2419,62 @@ window.showToast = showToast;
     }
   });
 });
+
+
+/* ===== HERO IMAGE FUNCTIONS ===== */
+function previewHeroImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('hero-preview-img');
+    const ph  = document.getElementById('hero-preview-placeholder');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadHeroImage() {
+  const fileInput = document.getElementById('hero-file-input');
+  const statusEl  = document.getElementById('hero-upload-status');
+  const btn       = document.getElementById('hero-upload-btn');
+  if (!fileInput.files[0]) { statusEl.textContent = '⚠️ กรุณาเลือกไฟล์ก่อน'; return; }
+  btn.disabled = true;
+  statusEl.textContent = '⏳ กำลังอัพโหลด...';
+  try {
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    fd.append('cloud_name', CLOUDINARY_CLOUD);
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+    const data = await res.json();
+    if (!data.secure_url) throw new Error('Upload failed');
+    await setDoc(doc(db, 'settings', 'hero'), { imageUrl: data.secure_url, updatedAt: serverTimestamp() });
+    statusEl.style.color = '#4ade80';
+    statusEl.textContent = '✅ บันทึกรูป Hero สำเร็จ!';
+  } catch(e) {
+    statusEl.style.color = 'var(--primary)';
+    statusEl.textContent = '❌ อัพโหลดไม่สำเร็จ: ' + e.message;
+  }
+  btn.disabled = false;
+}
+
+async function loadCurrentHeroImage() {
+  try {
+    const snap = await getDocs(query(collection(db,'settings')));
+    snap.forEach(d => {
+      if (d.id === 'hero' && d.data().imageUrl) {
+        const img = document.getElementById('hero-preview-img');
+        const ph  = document.getElementById('hero-preview-placeholder');
+        if (img) { img.src = d.data().imageUrl; img.style.display='block'; if(ph) ph.style.display='none'; }
+      }
+    });
+  } catch(e) { console.warn('Load hero:', e); }
+}
+loadCurrentHeroImage();
+/* ================================ */
 
 // Login on Enter
 document.addEventListener('keydown', e => {
