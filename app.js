@@ -133,7 +133,7 @@ function cardHTML(n) {
     : `<div class="novel-card-cover-placeholder">${n.emoji || '📖'}</div>`;
   const rating = n.rating ? `⭐ ${n.rating}` : '⭐ —';
   return `
-  <div class="novel-card-h">
+  <a href="${url}" class="novel-card-h">
     <div class="novel-card-cover">
       ${cover}
       <span class="novel-card-cover-badge badge ${st.cls}">${st.label}</span>
@@ -145,12 +145,9 @@ function cardHTML(n) {
         <span>📖 ${n.eps || 0} ตอน</span>
         <span>👁 ${n.views || 0}</span>
       </div>
-      <div class="novel-card-footer">
-        <span class="novel-card-rating">${rating}</span>
-        <a href="${url}" class="novel-card-read-btn">อ่านต่อ</a>
-      </div>
+      <div class="novel-card-rating">${rating}</div>
     </div>
-  </div>`;
+  </a>`;
 }
 
 function renderNovels(list) {

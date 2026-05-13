@@ -176,11 +176,12 @@ function setLoad(v) {
 const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
 
 function redirect(user) {
+  const BASE = 'https://naruchit06-stack.github.io/Novel/';
   if (user && ADMIN_EMAILS.includes(user.email)) {
-    window.location.href = 'admin.html';
+    window.location.href = BASE + 'admin.html';
   } else {
     const r = new URLSearchParams(window.location.search).get('returnTo');
-    window.location.href = r || 'index.html';
+    window.location.href = r || BASE + 'index.html';
   }
 }
 async function saveProfile(user, name) {

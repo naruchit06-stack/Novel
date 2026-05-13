@@ -10,6 +10,16 @@ service cloud.firestore {
           'momoppl01@gmail.com',
           'admin@memonster.com'
         ];
+
+      // ตอน: ทุกคนอ่านได้, admin เท่านั้นที่เขียนได้
+      match /episodes/{episodeId} {
+        allow read: if true;
+        allow create, update, delete: if request.auth != null &&
+          request.auth.token.email in [
+            'momoppl01@gmail.com',
+            'admin@memonster.com'
+          ];
+      }
     }
 
     // Users: เจ้าของเท่านั้นอ่าน/เขียนได้

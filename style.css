@@ -469,6 +469,11 @@ body {
 
 
 /* ===== 12. HAMBURGER BUTTON ===== */
+/* Mobile drawer hidden by default — only shown inside media query */
+.nav-mobile-drawer {
+  display: none;
+}
+
 .hamburger-btn {
   display: none;
   width: 40px; height: 40px;
@@ -510,6 +515,7 @@ body {
 
   /* Mobile nav drawer */
   .nav-mobile-drawer {
+    display: flex;
     position: fixed; top: var(--navbar-h); left: 0; right: 0;
     background: rgba(13,13,20,0.98);
     backdrop-filter: blur(20px);
