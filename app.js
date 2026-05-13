@@ -134,11 +134,11 @@ function cardHTML(n) {
   const rating = n.rating ? `⭐ ${n.rating}` : '⭐ —';
   return `
   <div class="novel-card-h">
-    <div class="novel-card-cover">${cover}</div>
+    <div class="novel-card-cover">
+      ${cover}
+      <span class="novel-card-cover-badge badge ${st.cls}">${st.label}</span>
+    </div>
     <div class="novel-card-body">
-      <div class="novel-card-top">
-        <span class="badge ${st.cls}">${st.label}</span>
-      </div>
       <div class="novel-card-title">${n.title}</div>
       <div class="novel-card-desc">${n.desc || n.description || ''}</div>
       <div class="novel-card-meta">

@@ -3,2483 +3,1817 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel - The Golden Hoard Novels</title>
+<title>แดชบอร์ด — The Golden Hoard</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Chakra+Petch:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 <style>
-  :root {
-    --primary: #e8445a;
-    --primary-dark: #c73248;
-    --primary-glow: rgba(232,68,90,0.25);
-    --bg: #0a0a10;
-    --surface: #111118;
-    --surface2: #18181f;
-    --surface3: #1e1e28;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --text: #f0f0f8;
-    --muted: #6868a0;
-    --muted2: #9090b8;
-    --green: #22c55e;
-    --green-dim: rgba(34,197,94,0.15);
-    --yellow: #f59e0b;
-    --yellow-dim: rgba(245,158,11,0.15);
-    --blue: #3b82f6;
-    --blue-dim: rgba(59,130,246,0.15);
-    --admin-accent: #a855f7;
-    --admin-accent-dim: rgba(168,85,247,0.15);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    font-family: 'Sarabun', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* ===== LOGIN OVERLAY ===== */
-  #login-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-  }
-
-  #login-overlay.hidden { display: none; }
-
-  .login-box {
-    width: 420px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 20px;
-    padding: 48px 40px;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .login-box::before {
-    content: '';
-    position: absolute;
-    top: -60px; left: -60px;
-    width: 200px; height: 200px;
-    background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .login-box::after {
-    content: '';
-    position: absolute;
-    bottom: -40px; right: -40px;
-    width: 160px; height: 160px;
-    background: radial-gradient(circle, rgba(232,68,90,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .login-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--admin-accent-dim);
-    border: 1px solid rgba(168,85,247,0.3);
-    border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 0.75rem;
-    color: var(--admin-accent);
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 24px;
-  }
-
-  .login-title {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
-    margin-bottom: 6px;
-    background: linear-gradient(135deg, #fff 40%, var(--admin-accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .login-sub {
-    color: var(--muted);
-    font-size: 0.9rem;
-    margin-bottom: 36px;
-  }
-
-  .login-field {
-    margin-bottom: 18px;
-    position: relative;
-  }
-
-  .login-field label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--muted2);
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .login-field input {
-    width: 100%;
-    padding: 13px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    outline: none;
-  }
-
-  .login-field input:focus {
-    border-color: var(--admin-accent);
-    box-shadow: 0 0 0 3px rgba(168,85,247,0.15);
-    background: var(--surface3);
-  }
-
-  .login-btn {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, var(--admin-accent), #7c3aed);
-    border: none;
-    border-radius: 12px;
-    color: #fff;
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-    margin-top: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(168,85,247,0.4);
-  }
-
-  .login-btn:active { transform: translateY(0); }
-
-  .login-hint {
-    text-align: center;
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  .login-hint code {
-    background: var(--surface2);
-    padding: 2px 8px;
-    border-radius: 4px;
-    color: var(--admin-accent);
-    font-size: 0.8rem;
-  }
-
-  .login-error {
-    background: rgba(232,68,90,0.1);
-    border: 1px solid rgba(232,68,90,0.3);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 0.85rem;
-    color: var(--primary);
-    margin-top: 12px;
-    display: none;
-  }
-
-  .login-error.show { display: block; }
-
-  /* ===== ADMIN LAYOUT ===== */
-  #admin-panel { display: none; }
-  #admin-panel.show { display: flex; min-height: 100vh; }
-
-  /* Admin Sidebar */
-  .admin-sidebar {
-    width: 260px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-    overflow-y: auto;
-  }
-
-  .admin-logo-area {
-    padding: 24px 22px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .admin-badge-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--admin-accent-dim);
-    border: 1px solid rgba(168,85,247,0.25);
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--admin-accent);
-    letter-spacing: 1.5px;
-    margin-bottom: 12px;
-  }
-
-  .admin-site-name {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .admin-site-logo {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    background: var(--primary);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1rem;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .admin-site-logo img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-
-  .admin-nav {
-    padding: 16px 0;
-    flex: 1;
-  }
-
-  .admin-nav-group {
-    padding: 8px 16px 4px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .admin-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 22px;
-    color: var(--muted2);
-    text-decoration: none;
-    font-size: 0.92rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    border-left: 3px solid transparent;
-    transition: all 0.18s;
-    font-family: 'Sarabun', sans-serif;
-  }
-
-  .admin-nav-item:hover {
-    color: var(--text);
-    background: rgba(255,255,255,0.04);
-  }
-
-  .admin-nav-item.active {
-    color: var(--admin-accent);
-    border-left-color: var(--admin-accent);
-    background: var(--admin-accent-dim);
-  }
-
-  .admin-nav-icon { font-size: 1rem; width: 20px; text-align: center; }
-
-  .admin-nav-badge {
-    margin-left: auto;
-    background: var(--primary);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-
-  .admin-logout-area {
-    padding: 16px 22px 24px;
-    border-top: 1px solid var(--border);
-  }
-
-  .admin-user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--surface2);
-    border-radius: 10px;
-    margin-bottom: 10px;
-  }
-
-  .admin-avatar {
-    width: 34px; height: 34px;
-    background: linear-gradient(135deg, var(--admin-accent), var(--primary));
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  .admin-user-name {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .admin-user-role {
-    font-size: 0.72rem;
-    color: var(--admin-accent);
-    font-weight: 600;
-  }
-
-  .btn-logout {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 9px 14px;
-    background: rgba(232,68,90,0.08);
-    border: 1px solid rgba(232,68,90,0.2);
-    border-radius: 8px;
-    color: var(--primary);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-logout:hover {
-    background: rgba(232,68,90,0.15);
-    border-color: var(--primary);
-  }
-
-  /* ===== MAIN CONTENT ===== */
-  .admin-main {
-    margin-left: 260px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .admin-topbar {
-    background: rgba(10,10,16,0.8);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 36px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 90;
-  }
-
-  .topbar-left { display: flex; flex-direction: column; gap: 2px; }
-
-  .page-title {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .page-title span { color: var(--admin-accent); }
-
-  .page-subtitle {
-    font-size: 0.78rem;
-    color: var(--muted2);
-    font-weight: 400;
-  }
-
-  .topbar-actions { display: flex; gap: 10px; align-items: center; }
-
-  .btn-back-site {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--muted2);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-
-  .btn-back-site:hover { color: var(--text); border-color: var(--border2); }
-
-  /* ===== PAGES ===== */
-  .admin-page {
-    display: none;
-    padding: 36px;
-    animation: fadeIn 0.25s ease;
-  }
-
-  .admin-page.active { display: block; }
-
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ===== DASHBOARD ===== */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-    margin-bottom: 32px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px 24px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.2s;
-  }
-
-  .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; right: 0;
-    width: 80px; height: 80px;
-    border-radius: 0 14px 0 80px;
-    opacity: 0.08;
-  }
-
-  .stat-card.red::before { background: var(--primary); }
-  .stat-card.green::before { background: var(--green); }
-  .stat-card.blue::before { background: var(--blue); }
-  .stat-card.purple::before { background: var(--admin-accent); }
-
-  .stat-icon {
-    font-size: 1.5rem;
-    margin-bottom: 12px;
-  }
-
-  .stat-value {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 2.2rem;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .stat-card.red .stat-value { color: var(--primary); }
-  .stat-card.green .stat-value { color: var(--green); }
-  .stat-card.blue .stat-value { color: var(--blue); }
-  .stat-card.purple .stat-value { color: var(--admin-accent); }
-
-  .stat-label {
-    font-size: 0.82rem;
-    color: var(--muted);
-    font-weight: 600;
-  }
-
-  .recent-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .section-head {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .section-head-title {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .recent-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .recent-table th {
-    padding: 12px 24px;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .recent-table td {
-    padding: 14px 24px;
-    font-size: 0.9rem;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-
-  .recent-table tr:last-child td { border-bottom: none; }
-
-  .novel-row-cover {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    background: var(--surface2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  .novel-row-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .novel-row-title { font-weight: 600; font-size: 0.9rem; }
-  .novel-row-meta { font-size: 0.78rem; color: var(--muted); }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-
-  .status-active { background: var(--green-dim); color: var(--green); }
-  .status-done { background: var(--blue-dim); color: var(--blue); }
-  .status-new { background: var(--yellow-dim); color: var(--yellow); }
-
-  /* ===== FORM STYLES ===== */
-  .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px 32px;
-    margin-bottom: 24px;
-  }
-
-  .form-card-title {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .form-card-sub {
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-bottom: 24px;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-group.full { grid-column: 1 / -1; }
-
-  .form-label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--muted2);
-    margin-bottom: 8px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    outline: none;
-  }
-
-  .form-input:focus {
-    border-color: var(--admin-accent);
-    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
-    background: var(--surface3);
-  }
-
-  textarea.form-input {
-    resize: vertical;
-    min-height: 120px;
-    line-height: 1.6;
-  }
-
-  /* Upload zones */
-  .upload-zone {
-    border: 2px dashed rgba(168,85,247,0.3);
-    border-radius: 12px;
-    padding: 36px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: rgba(168,85,247,0.03);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .upload-zone:hover, .upload-zone.drag-over {
-    border-color: var(--admin-accent);
-    background: rgba(168,85,247,0.08);
-  }
-
-  .upload-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .upload-icon { font-size: 2rem; margin-bottom: 10px; }
-  .upload-text { font-size: 0.9rem; color: var(--muted2); font-weight: 600; }
-  .upload-hint { font-size: 0.78rem; color: var(--muted); margin-top: 5px; }
-
-  .upload-preview {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin-top: 12px;
-  }
-
-  .preview-thumb {
-    width: 48px; height: 48px;
-    border-radius: 8px;
-    background: var(--surface3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .preview-thumb img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-
-  .preview-info { flex: 1; }
-  .preview-name { font-size: 0.85rem; font-weight: 600; word-break: break-all; }
-  .preview-size { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
-
-  .preview-remove {
-    background: rgba(232,68,90,0.1);
-    border: 1px solid rgba(232,68,90,0.2);
-    border-radius: 6px;
-    color: var(--primary);
-    font-size: 0.8rem;
-    padding: 4px 10px;
-    cursor: pointer;
-    font-family: 'Sarabun', sans-serif;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-
-  .preview-remove:hover { background: rgba(232,68,90,0.2); }
-
-  /* Tags input */
-  .tags-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    min-height: 50px;
-    cursor: text;
-    transition: all 0.2s;
-  }
-
-  .tags-container:focus-within {
-    border-color: var(--admin-accent);
-    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
-  }
-
-  .tag-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--admin-accent-dim);
-    border: 1px solid rgba(168,85,247,0.3);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.82rem;
-    color: var(--admin-accent);
-    font-weight: 600;
-  }
-
-  .tag-remove {
-    cursor: pointer;
-    opacity: 0.7;
-    font-size: 0.9rem;
-    line-height: 1;
-    transition: opacity 0.2s;
-  }
-
-  .tag-remove:hover { opacity: 1; }
-
-  .tag-input-field {
-    border: none;
-    background: none;
-    color: var(--text);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    flex: 1;
-    min-width: 120px;
-  }
-
-  .tag-suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-  }
-
-  .tag-suggest {
-    padding: 4px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 0.8rem;
-    color: var(--muted2);
-    cursor: pointer;
-    transition: all 0.18s;
-    font-family: 'Sarabun', sans-serif;
-  }
-
-  .tag-suggest:hover {
-    background: var(--admin-accent-dim);
-    border-color: rgba(168,85,247,0.3);
-    color: var(--admin-accent);
-  }
-
-  /* Action buttons */
-  .btn-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 26px;
-    border-radius: 10px;
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    letter-spacing: 0.3px;
-  }
-
-  .btn-save {
-    background: linear-gradient(135deg, var(--admin-accent), #7c3aed);
-    color: #fff;
-  }
-
-  .btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(168,85,247,0.4);
-  }
-
-  .btn-publish {
-    background: linear-gradient(135deg, var(--green), #16a34a);
-    color: #fff;
-  }
-
-  .btn-publish:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(34,197,94,0.4);
-  }
-
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--muted2);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover { color: var(--text); border-color: var(--border2); }
-
-  .action-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-top: 8px;
-    flex-wrap: wrap;
-  }
-
-  /* ===== NOVEL LIST (ADM-3) ===== */
-  .novel-list-v {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* Search + Filter bar */
-  .novel-list-toolbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 14px;
-    align-items: center;
-  }
-
-  .novel-search-wrap {
-    position: relative;
-    flex: 1;
-  }
-
-  .novel-search-wrap input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 9px;
-    padding: 9px 14px 9px 36px;
-    color: var(--text);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.88rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .novel-search-wrap input:focus { border-color: var(--blue); }
-
-  .novel-search-wrap .search-icon {
-    position: absolute;
-    left: 11px; top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 0.9rem;
-    pointer-events: none;
-  }
-
-  .novel-filter-select {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 9px;
-    padding: 9px 12px;
-    color: var(--text);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.85rem;
-    outline: none;
-    cursor: pointer;
-    min-width: 120px;
-  }
-
-  /* Horizontal Novel Card */
-  .novel-h-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-
-  .novel-h-card:hover {
-    border-color: var(--border2);
-    background: var(--surface2);
-  }
-
-  .novel-h-card.active {
-    border-color: var(--blue);
-    background: var(--blue-dim);
-  }
-
-  .novel-h-cover {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: var(--surface3);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
-    overflow: hidden;
-  }
-
-  .novel-h-cover img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-
-  .novel-h-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .novel-h-title {
-    font-weight: 700;
-    font-size: 0.92rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
-  }
-
-  .novel-h-author {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
-  .novel-h-meta {
-    display: flex;
-    gap: 12px;
-    font-size: 0.76rem;
-    color: var(--muted2);
-  }
-
-  .novel-h-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .h-btn {
-    padding: 6px 12px;
-    border-radius: 7px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-family: 'Sarabun', sans-serif;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .h-btn-edit {
-    background: var(--blue-dim);
-    color: var(--blue);
-  }
-
-  .h-btn-edit:hover { background: rgba(59,130,246,0.3); }
-
-  .h-btn-delete {
-    background: rgba(232,68,90,0.1);
-    color: var(--primary);
-  }
-
-  .h-btn-delete:hover { background: rgba(232,68,90,0.22); }
-
-  /* Pagination */
-  .novel-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 18px;
-  }
-
-  .page-btn {
-    width: 34px; height: 34px;
-    border-radius: 8px;
-    border: 1px solid var(--border2);
-    background: var(--surface2);
-    color: var(--muted2);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    font-family: 'Sarabun', sans-serif;
-  }
-
-  .page-btn:hover { border-color: var(--blue); color: var(--blue); }
-  .page-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
-  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  /* Left panel header badge */
-  .left-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-  }
-
-  .left-panel-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .left-panel-badge {
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    background: var(--blue-dim);
-    color: var(--blue);
-    font-weight: 800;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* ===== 2-COLUMN LAYOUT (ADM-2) ===== */
-  .admin-two-col {
-    display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 24px;
-    align-items: start;
-  }
-
-  .admin-col-left {
-    min-width: 0;
-  }
-
-  .admin-col-right {
-    position: sticky;
-    top: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .admin-col-right.hidden { display: none; }
-
-  @media (max-width: 1100px) {
-    .admin-two-col {
-      grid-template-columns: 1fr;
-    }
-    .admin-col-right {
-      position: static;
-    }
-  }
-
-  .novel-admin-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    transition: all 0.2s;
-  }
-
-  .novel-admin-card:hover {
-    border-color: var(--border2);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-  }
-
-  .novel-admin-cover {
-    width: 100%;
-    height: 140px;
-    background: var(--surface2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .novel-admin-cover img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-
-  .novel-admin-cover-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
-  }
-
-  .novel-admin-body { padding: 14px 16px; }
-  .novel-admin-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-  .novel-admin-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
-
-  .novel-admin-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 12px;
-  }
-
-  .novel-admin-tag {
-    padding: 2px 8px;
-    background: var(--surface2);
-    border-radius: 4px;
-    font-size: 0.72rem;
-    color: var(--muted2);
-  }
-
-  .novel-admin-actions {
-    display: flex;
-    gap: 8px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-  }
-
-  .novel-action-btn {
-    flex: 1;
-    padding: 7px;
-    border-radius: 7px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-family: 'Sarabun', sans-serif;
-    transition: all 0.18s;
-  }
-
-  .novel-action-edit {
-    background: var(--blue-dim);
-    color: var(--blue);
-  }
-
-  .novel-action-edit:hover { background: rgba(59,130,246,0.25); }
-
-  .novel-action-delete {
-    background: rgba(232,68,90,0.08);
-    color: var(--primary);
-  }
-
-  .novel-action-delete:hover { background: rgba(232,68,90,0.18); }
-
-  /* ===== TOAST ===== */
-  .toast {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    min-width: 280px;
-    max-width: 380px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 12px;
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 9998;
-    transform: translateX(130%);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  }
-
-  .toast.show { transform: translateX(0); }
-  .toast.toast-success { border-left: 4px solid var(--green); }
-  .toast.toast-error { border-left: 4px solid var(--primary); }
-  .toast.toast-info { border-left: 4px solid var(--admin-accent); }
-
-  .toast-msg { font-size: 0.9rem; font-weight: 600; }
-
-  /* ===== SETTINGS PAGE ===== */
-  .settings-preview {
-    background: var(--surface2);
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    border: 1px solid var(--border);
-    margin-top: 12px;
-  }
-
-  .preview-logo-box {
-    width: 52px; height: 52px;
-    border-radius: 10px;
-    background: var(--primary);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-    overflow: hidden;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-
-  .preview-logo-box img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-
-  .preview-site-name {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.2rem;
-    font-weight: 800;
-  }
-
-  .preview-site-tagline {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  /* ===== AUDIO PLAYER PREVIEW ===== */
-  .audio-preview {
-    background: var(--surface2);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    border: 1px solid var(--border);
-    margin-top: 12px;
-  }
-
-  .audio-play-btn {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--admin-accent);
-    border: none;
-    color: #fff;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-
-  .audio-play-btn:hover { transform: scale(1.1); background: #7c3aed; }
-
-  .audio-info { flex: 1; }
-  .audio-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
-
-  .audio-bar {
-    height: 4px;
-    background: var(--surface3);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .audio-bar-fill {
-    height: 100%;
-    width: 35%;
-    background: linear-gradient(90deg, var(--admin-accent), var(--primary));
-    border-radius: 2px;
-  }
-
-  .audio-duration {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  /* ===== RESPONSIVE ===== */
-  @media (max-width: 1100px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  @media (max-width: 768px) {
-    .admin-sidebar { width: 60px; overflow: hidden; }
-    .admin-sidebar .admin-nav-item span,
-    .admin-sidebar .admin-logo-area .admin-site-name span,
-    .admin-sidebar .admin-nav-group,
-    .admin-sidebar .admin-badge-pill,
-    .admin-sidebar .admin-user-info div,
-    .admin-sidebar .btn-logout span,
-    .admin-sidebar .admin-nav-badge { display: none; }
-    .admin-main { margin-left: 60px; }
-    .admin-nav-item { justify-content: center; padding: 13px; }
-    .admin-nav-icon { width: auto; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .form-row { grid-template-columns: 1fr; }
-    .admin-page { padding: 20px; }
-  }
+/* ============================================================
+   ADMIN.HTML — Inline styles (admin-specific only)
+   ============================================================ */
+
+/* ===== BASE ===== */
+body.admin-body {
+  background: var(--admin-bg);
+  font-family: 'Sarabun', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ===== ADMIN TOPBAR ===== */
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 64px;
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.admin-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-topbar-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #e8445a, #c73248);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.admin-topbar-title {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.admin-topbar-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-view-web {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-view-web:hover {
+  background: var(--admin-card);
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ===== ADMIN LAYOUT ===== */
+.admin-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+
+/* ===== STATS BAR (4 cards) ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 110px;
+}
+
+/* Ghost icon ขวาล่าง */
+.stat-card::after {
+  content: attr(data-icon);
+  position: absolute;
+  right: 14px;
+  bottom: 8px;
+  font-size: 52px;
+  opacity: 0.12;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.stat-card-novels {
+  background: linear-gradient(135deg, #3d0c1a 0%, #1e0a12 100%);
+  border: 1px solid rgba(232,68,90,0.2);
+}
+.stat-card-eps {
+  background: linear-gradient(135deg, #0a2e1a 0%, #071a0f 100%);
+  border: 1px solid rgba(34,197,94,0.2);
+}
+.stat-card-views {
+  background: linear-gradient(135deg, #0a1a3d 0%, #070f24 100%);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.stat-card-members {
+  background: linear-gradient(135deg, #1a0a3d 0%, #0f0724 100%);
+  border: 1px solid rgba(139,92,246,0.2);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+.stat-card-novels .stat-icon { background: rgba(232,68,90,0.2); }
+.stat-card-eps    .stat-icon { background: rgba(34,197,94,0.2); }
+.stat-card-views  .stat-icon { background: rgba(59,130,246,0.2); }
+.stat-card-members.stat-icon  { background: rgba(139,92,246,0.2); }
+
+.stat-value {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-card-novels  .stat-value { color: #ff6b85; }
+.stat-card-eps     .stat-value { color: #4ade80; }
+.stat-card-views   .stat-value { color: #60a5fa; }
+.stat-card-members .stat-value { color: #a78bfa; }
+
+.stat-unit {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ===== MAIN 2-COLUMN LAYOUT ===== */
+.admin-main {
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ===== LEFT PANEL — Novel List ===== */
+.panel-left {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.panel-left-header {
+  padding: 20px 20px 0;
+}
+
+.panel-left-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.panel-left-badge {
+  width: 28px;
+  height: 28px;
+  background: #3b82f6;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Chakra Petch', sans-serif;
+}
+
+.panel-left-title h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.panel-left-title p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.panel-left-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.btn-add-novel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-add-novel:hover { background: #2563eb; }
+
+.btn-manage-admin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  color: var(--gold);
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-manage-admin:hover { background: rgba(245,197,66,0.1); }
+.btn-manage-admin.active {
+  background: rgba(245,197,66,0.15);
+  border-color: var(--gold);
+}
+
+.panel-left-search {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 16px;
+}
+
+.search-input-wrap {
+  flex: 1;
+  position: relative;
+}
+.search-input-wrap input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Sarabun', sans-serif;
+  outline: none;
+}
+.search-input-wrap input::placeholder { color: var(--muted); }
+.search-input-wrap::before {
+  content: '🔍';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.status-filter {
+  padding: 8px 10px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Sarabun', sans-serif;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ===== NOVEL LIST ITEMS ===== */
+.novel-list {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.novel-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.novel-list-item:hover { border-color: rgba(255,255,255,0.15); }
+.novel-list-item.selected {
+  border-color: #3b82f6;
+  background: rgba(59,130,246,0.07);
+}
+
+.novel-list-cover {
+  width: 58px;
+  height: 78px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--surface3);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  overflow: hidden;
+}
+.novel-list-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.novel-list-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.novel-list-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.novel-list-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.novel-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.badge-ongoing  { background: rgba(34,197,94,0.15); color: #4ade80; }
+.badge-pending  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.badge-complete { background: rgba(59,130,246,0.15); color: #60a5fa; }
+
+.novel-list-author {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.novel-list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.novel-list-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.novel-list-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-edit-sm {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-edit-sm:hover { background: #2563eb; }
+
+.btn-del-sm {
+  width: 30px;
+  height: 28px;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.btn-del-sm:hover { background: rgba(239,68,68,0.25); }
+
+/* ===== PAGINATION ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.page-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Sarabun', sans-serif;
+  transition: all 0.2s;
+}
+.page-btn:hover { background: var(--admin-card); color: var(--text); }
+.page-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  font-weight: 700;
+}
+.page-btn.dots {
+  border: none;
+  background: transparent;
+  cursor: default;
+  color: var(--muted);
+}
+
+/* ===== RIGHT PANEL ===== */
+.panel-right {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 500px;
+}
+
+/* === EDIT FORM === */
+.edit-form-wrap {
+  padding: 24px;
+}
+
+.edit-breadcrumb {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.edit-breadcrumb span { color: var(--text-secondary); }
+.edit-breadcrumb .current { color: var(--text); }
+
+.edit-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.edit-form-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.edit-form-header-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-view-front {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-view-front:hover { background: var(--admin-card); color: var(--text); }
+
+.btn-delete-novel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 7px;
+  background: rgba(239,68,68,0.15);
+  color: #f87171;
+  font-size: 13px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-delete-novel:hover { background: rgba(239,68,68,0.25); }
+
+.edit-form-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.edit-cover-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.edit-cover-img {
+  width: 130px;
+  height: 175px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--admin-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+  position: relative;
+}
+.edit-cover-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-cover-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.edit-cover-meta {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.btn-change-cover {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.btn-change-cover:hover { background: var(--admin-card); color: var(--text); }
+
+.edit-fields-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.field-group input,
+.field-group textarea,
+.field-group select {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field-group input:focus,
+.field-group textarea:focus,
+.field-group select:focus {
+  border-color: #3b82f6;
+}
+.field-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+.field-group select { cursor: pointer; }
+
+.edit-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-save {
+  padding: 9px 20px;
+  background: var(--gold);
+  border: none;
+  border-radius: 8px;
+  color: #111;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.btn-save:hover { filter: brightness(1.1); }
+
+.btn-cancel {
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cancel:hover { background: var(--admin-card); color: var(--text); }
+
+/* ===== EPISODE LIST ===== */
+.episode-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.episode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.episode-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.btn-add-ep {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--gold);
+  border: none;
+  border-radius: 7px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.btn-add-ep:hover { filter: brightness(1.1); }
+
+.ep-group {
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.ep-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: rgba(245,197,66,0.08);
+  cursor: pointer;
+  user-select: none;
+}
+.ep-group-header:hover { background: rgba(245,197,66,0.12); }
+
+.ep-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.ep-group-toggle {
+  font-size: 12px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.ep-group-toggle.open { transform: rotate(180deg); }
+
+.ep-items {
+  border-top: 1px solid var(--admin-border);
+}
+
+.ep-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--admin-border);
+}
+.ep-item:last-child { border-bottom: none; }
+
+.ep-item-num {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 50px;
+  font-weight: 600;
+}
+
+.ep-item-icon { font-size: 14px; }
+
+.ep-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ep-item-time {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+.ep-item-no-file {
+  flex: 1;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ep-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-ep-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(245,197,66,0.15);
+  border: 1px solid rgba(245,197,66,0.3);
+  border-radius: 6px;
+  color: var(--gold);
+  font-size: 11px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-ep-edit:hover { background: rgba(245,197,66,0.25); }
+
+.btn-ep-del {
+  width: 28px;
+  height: 26px;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.btn-ep-del:hover { background: rgba(239,68,68,0.22); }
+
+/* ===== ADMIN MANAGEMENT PANEL ===== */
+.admin-mgmt-wrap {
+  padding: 24px;
+  display: none;
+}
+.admin-mgmt-wrap.visible { display: block; }
+
+.admin-mgmt-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.admin-mgmt-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+.admin-mgmt-header p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.super-admin-badge {
+  padding: 3px 10px;
+  background: rgba(245,197,66,0.15);
+  border: 1px solid rgba(245,197,66,0.4);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* Add admin form */
+.add-admin-form {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.add-admin-form h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.add-admin-form p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.add-admin-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.btn-add-admin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: #22c55e;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-add-admin:hover { background: #16a34a; }
+
+.btn-clear-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-clear-form:hover { background: var(--admin-surface); color: var(--text); }
+
+/* Admin list table */
+.admin-list-section {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-list-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-list-header h3 { font-size: 14px; font-weight: 700; }
+.admin-list-header p  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--admin-border);
+  vertical-align: middle;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+
+.admin-row-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.admin-row-info strong { display: block; font-size: 13px; }
+.admin-row-info span   { font-size: 11px; color: var(--text-secondary); }
+
+.role-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.role-super { background: #7c3aed; color: #fff; }
+.role-admin { background: #1d4ed8; color: #fff; }
+.role-mod   { background: #15803d; color: #fff; }
+
+.btn-del-admin {
+  width: 30px;
+  height: 28px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.btn-del-admin:hover { background: rgba(239,68,68,0.2); }
+.btn-del-admin:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ===== PLACEHOLDER (ยังไม่เลือกนิยาย) ===== */
+.panel-right-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--muted);
+  gap: 12px;
+  font-size: 14px;
+}
+.panel-right-placeholder .ph-icon { font-size: 48px; opacity: 0.3; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .admin-main { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+}
 </style>
 </head>
-<body>
+<body class="admin-body">
 
-<!-- ADMIN PANEL -->
-<div id="admin-panel">
-
-  <!-- Sidebar -->
-  <div class="admin-sidebar">
-    <div class="admin-logo-area">
-      <div class="admin-badge-pill">⚡ ADMIN</div>
-      <div class="admin-badge-pill" id="superadmin-badge" style="display:none;background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b;margin-top:4px">👑 SUPER ADMIN</div>
-      <div class="admin-site-name">
-        <div class="admin-site-logo" id="sidebar-logo" style="background:none;padding:0"><img src="data:image/png;base64,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" style="width:36px;height:36px;object-fit:contain;border-radius:8px"></div>
-        <span id="sidebar-sitename">The Golden Hoard Novels</span>
-      </div>
+<!-- ===== TOPBAR ===== -->
+<header class="admin-topbar">
+  <div class="admin-topbar-left">
+    <div class="admin-topbar-icon">📊</div>
+    <div>
+      <div class="admin-topbar-title">แดชบอร์ด</div>
+      <div class="admin-topbar-sub">จัดการเว็บไซต์มังงะของคุณ</div>
     </div>
+  </div>
+  <div class="admin-topbar-right">
+    <a href="index.html" class="btn-view-web">🌐 ดูหน้าเว็บ</a>
+  </div>
+</header>
 
-    <nav class="admin-nav">
-      <div class="admin-nav-group">หลัก</div>
-      <button class="admin-nav-item active" onclick="showPage('dashboard', this)">
-        <span class="admin-nav-icon">📊</span>
-        <span>แดชบอร์ด</span>
-      </button>
-      <button class="admin-nav-item" onclick="showPage('novels', this)">
-        <span class="admin-nav-icon">📚</span>
-        <span>นิยายทั้งหมด</span>
-        <span class="admin-nav-badge" id="novel-count-badge">8</span>
-      </button>
+<!-- ===== MAIN WRAPPER ===== -->
+<div class="admin-wrapper">
 
-      <div class="admin-nav-group" style="margin-top:8px">จัดการ</div>
-      <button class="admin-nav-item" onclick="showPage('upload', this)">
-        <span class="admin-nav-icon">⬆️</span>
-        <span>เพิ่มนิยายใหม่</span>
-      </button>
-      <button class="admin-nav-item" id="nav-manage-eps" style="display:none" onclick="showPage('manage-eps', this)">
-        <span class="admin-nav-icon">🎵</span>
-        <span id="nav-manage-eps-label">จัดการตอน</span>
-      </button>
-      <div class="admin-nav-group" style="margin-top:8px">Super Admin</div>
-      <button class="admin-nav-item" id="nav-manage-admins" style="display:none" onclick="showPage('manage-admins', this)">
-        <span class="admin-nav-icon">👑</span>
-        <span>จัดการแอดมิน</span>
-      </button>
-    </nav>
-
-    <div class="admin-logout-area">
-      <div class="admin-user-info">
-        <div class="admin-avatar" id="admin-avatar-text">A</div>
-        <div>
-          <div class="admin-user-name" id="admin-user-name">Admin</div>
-          <div class="admin-user-role" id="admin-user-role">Super Admin</div>
-        </div>
-      </div>
-      <button class="btn-logout" onclick="doAdminLogout()">
-        <span>🚪</span>
-        <span>ออกจากระบบ</span>
-      </button>
+  <!-- ===== STATS BAR ===== -->
+  <div class="stats-grid">
+    <div class="stat-card stat-card-novels" data-icon="📚">
+      <div class="stat-icon">📚</div>
+      <div class="stat-label">นิยายทั้งหมด</div>
+      <div class="stat-value" id="statNovels">—</div>
+      <div class="stat-unit">เรื่อง</div>
+    </div>
+    <div class="stat-card stat-card-eps" data-icon="▶">
+      <div class="stat-icon">▶️</div>
+      <div class="stat-label">ตอนทั้งหมด</div>
+      <div class="stat-value" id="statEps">—</div>
+      <div class="stat-unit">ตอน</div>
+    </div>
+    <div class="stat-card stat-card-views" data-icon="👁">
+      <div class="stat-icon">👁</div>
+      <div class="stat-label">ยอดวิวรวม</div>
+      <div class="stat-value" id="statViews">—</div>
+      <div class="stat-unit">วิว</div>
+    </div>
+    <div class="stat-card stat-card-members" data-icon="👥">
+      <div class="stat-icon">👥</div>
+      <div class="stat-label">สมาชิก</div>
+      <div class="stat-value" id="statMembers">—</div>
+      <div class="stat-unit">คน</div>
     </div>
   </div>
 
-  <!-- Main Content -->
+  <!-- ===== MAIN 2-COLUMN ===== -->
   <div class="admin-main">
-    <div class="admin-topbar">
-      <div class="topbar-left">
-        <div class="page-title" id="page-title"><span>📊</span> แดชบอร์ด</div>
-        <div class="page-subtitle" id="page-subtitle">ภาพรวมระบบ The Golden Hoard Novels</div>
+
+    <!-- LEFT: Novel List -->
+    <div class="panel-left">
+      <div class="panel-left-header">
+        <div class="panel-left-title">
+          <div class="panel-left-badge" id="novelCountBadge">0</div>
+          <div>
+            <h2>หน้านิยาย (Manage Novel)</h2>
+            <p>แสดงข้อมูลนิยายทั้งหมด (แก้ไขได้)</p>
+          </div>
+        </div>
+        <div class="panel-left-actions">
+          <button class="btn-add-novel" id="btnAddNovel">+ เพิ่มนิยาย</button>
+          <button class="btn-manage-admin" id="btnManageAdmin">👑 จัดการแอดมิน</button>
+        </div>
       </div>
-      <div class="topbar-actions">
-        <a href="index.html" class="btn-back-site">🌐 ดูหน้าเว็บ</a>
+      <div class="panel-left-search">
+        <div class="search-input-wrap">
+          <input type="text" id="adminSearchInput" placeholder="ค้นหาชื่อเรื่อง, ผู้แต่ง...">
+        </div>
+        <select class="status-filter" id="statusFilter">
+          <option value="">ทุกสถานะ</option>
+          <option value="ongoing">กำลังดำเนิน</option>
+          <option value="pending">รอเริ่มเรื่อง</option>
+          <option value="complete">จบแล้ว</option>
+        </select>
       </div>
+      <div class="novel-list" id="novelListContainer">
+        <!-- Rendered by JS -->
+        <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">กำลังโหลด...</div>
+      </div>
+      <div class="pagination" id="paginationContainer"></div>
     </div>
 
-    <!-- ===== DASHBOARD PAGE ===== -->
-    <div class="admin-page active" id="page-dashboard">
-      <div class="admin-stats-bar">
-        <div class="stat-card stat-card-novels">
-          <div class="stat-card-icon">📚</div>
-          <div class="stat-card-body">
-            <div class="stat-card-value" id="stat-novels">—</div>
-            <div class="stat-card-label">นิยายทั้งหมด</div>
-          </div>
-        </div>
-        <div class="stat-card stat-card-eps">
-          <div class="stat-card-icon">▶️</div>
-          <div class="stat-card-body">
-            <div class="stat-card-value" id="stat-eps">—</div>
-            <div class="stat-card-label">ตอนทั้งหมด</div>
-          </div>
-        </div>
-        <div class="stat-card stat-card-views">
-          <div class="stat-card-icon">👁️</div>
-          <div class="stat-card-body">
-            <div class="stat-card-value" id="stat-views">—</div>
-            <div class="stat-card-label">ยอดวิวรวม</div>
-          </div>
-        </div>
-        <div class="stat-card stat-card-members">
-          <div class="stat-card-icon">👥</div>
-          <div class="stat-card-body">
-            <div class="stat-card-value" id="stat-members">—</div>
-            <div class="stat-card-label">สมาชิก</div>
-          </div>
-        </div>
+    <!-- RIGHT: Edit Form / Admin Management -->
+    <div class="panel-right" id="panelRight">
+
+      <!-- Placeholder -->
+      <div class="panel-right-placeholder" id="rightPlaceholder">
+        <div class="ph-icon">📋</div>
+        <div>เลือกนิยายเพื่อแก้ไข หรือกด "จัดการแอดมิน"</div>
       </div>
 
-      <!-- HERO IMAGE MANAGER -->
-      <div class="recent-section" style="margin-bottom:24px">
-        <div class="section-head">
-          <div class="section-head-title">🖼️ รูปภาพ Hero Banner</div>
-        </div>
-        <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;padding:16px;background:var(--admin-card);border:1px solid var(--border);border-radius:12px">
-          <div id="hero-preview-box" style="width:200px;height:140px;border-radius:10px;background:var(--admin-surface);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-            <span id="hero-preview-placeholder" style="font-size:2.5rem">👑</span>
-            <img id="hero-preview-img" style="display:none;width:100%;height:100%;object-fit:cover" src="" alt="Hero">
-          </div>
-          <div style="flex:1;min-width:200px">
-            <div style="font-size:0.9rem;font-weight:700;margin-bottom:6px;color:var(--text)">อัพโหลดรูป Hero Banner</div>
-            <div style="font-size:0.78rem;color:var(--muted);margin-bottom:14px">รูปที่แสดงบนหน้าหลักตรงส่วน Hero (แนะนำ 400×500px ขึ้นไป)</div>
-            <label style="display:inline-flex;align-items:center;gap:8px;background:var(--admin-surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--text)">
-              📁 เลือกไฟล์รูป
-              <input type="file" id="hero-file-input" accept="image/*" style="display:none" onchange="previewHeroImage(event)">
-            </label>
-            <button onclick="uploadHeroImage()" id="hero-upload-btn" style="margin-left:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:0.85rem;font-weight:700;cursor:pointer">⬆️ บันทึก</button>
-            <div id="hero-upload-status" style="margin-top:10px;font-size:0.8rem;color:var(--muted)"></div>
+      <!-- Edit Form (hidden by default) -->
+      <div class="edit-form-wrap" id="editFormWrap" style="display:none;">
+        <div class="edit-breadcrumb">หน้ารายนิยาย / จัดการนิยาย / <span class="current" id="breadcrumbTitle">—</span></div>
+        <div class="edit-form-header">
+          <div class="edit-form-title" id="editFormTitle">จัดการนิยาย: —</div>
+          <div class="edit-form-header-btns">
+            <button class="btn-view-front" id="btnViewFront">🌐 ดูหน้าบ้าน</button>
+            <button class="btn-delete-novel" id="btnDeleteNovelForm">🗑 ลบเรื่องนี้</button>
           </div>
         </div>
-      </div>
 
-      <div class="recent-section">
-        <div class="section-head">
-          <div class="section-head-title">📋 นิยายล่าสุด</div>
-          <button class="btn-action btn-secondary" style="padding:7px 16px;font-size:0.8rem;" onclick="showPage('upload', document.querySelector('.admin-nav-item:nth-child(5)'))">+ อัพโหลดใหม่</button>
-        </div>
-        <table class="recent-table" id="dashboard-table">
-          <thead>
-            <tr>
-              <th>นิยาย</th>
-              <th>แท็ก</th>
-              <th>ตอน</th>
-              <th>ยอดวิว</th>
-              <th>สถานะ</th>
-            </tr>
-          </thead>
-          <tbody id="dashboard-tbody"></tbody>
-        </table>
-      </div>
-    </div>
+        <div class="edit-form-body">
+          <!-- Cover col -->
+          <div class="edit-cover-col">
+            <div class="edit-cover-img" id="editCoverPreview">📖</div>
+            <div class="edit-cover-badge badge-ongoing" id="editStatusBadge">กำลังดำเนิน</div>
+            <div class="edit-cover-meta" id="editCoverMeta">ผู้แต่ง: —<br>🎵 0 ตอน &nbsp; 👁 0 วิว</div>
+            <button class="btn-change-cover" id="btnChangeCover">✏️ เปลี่ยนรูปปก</button>
+            <input type="file" id="coverFileInput" accept="image/*" style="display:none;">
+          </div>
 
-    <!-- ===== NOVELS LIST PAGE ===== -->
-    <div class="admin-page" id="page-novels">
-      <div class="admin-two-col">
-        <!-- ซ้าย: Novel List (ADM-3) -->
-        <div class="admin-col-left">
-          <!-- Header -->
-          <div class="left-panel-header">
-            <div class="left-panel-title">
-              <div class="left-panel-badge" id="novels-count-badge">2</div>
-              <div>
-                <div style="font-family:'Chakra Petch',sans-serif;font-size:1rem;font-weight:800">หน้านิยาย <span style="color:var(--muted2);font-weight:400">(Manage Novel)</span></div>
-                <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">แสดงข้อมูลนิยายทั้งหมด (แก้ไขได้)</div>
-              </div>
+          <!-- Fields col -->
+          <div class="edit-fields-col">
+            <div class="field-group">
+              <label>ชื่อเรื่อง</label>
+              <input type="text" id="editTitle" placeholder="ชื่อเรื่อง">
+            </div>
+            <div class="field-group">
+              <label>ผู้แต่ง</label>
+              <input type="text" id="editAuthor" placeholder="ชื่อผู้แต่ง">
+            </div>
+            <div class="field-group">
+              <label>คำอธิบาย</label>
+              <textarea id="editDesc" placeholder="คำอธิบายเรื่องย่อ..."></textarea>
+            </div>
+            <div class="field-group">
+              <label>สถานะ</label>
+              <select id="editStatus">
+                <option value="ongoing">กำลังดำเนิน</option>
+                <option value="pending">รอเริ่มเรื่อง</option>
+                <option value="complete">จบแล้ว</option>
+              </select>
+            </div>
+            <div class="edit-form-actions">
+              <button class="btn-save" id="btnSaveNovel">💾 บันทึกการแก้ไข</button>
+              <button class="btn-cancel" id="btnCancelEdit">ยกเลิก</button>
             </div>
           </div>
+        </div>
 
-          <!-- Buttons -->
-          <div style="display:flex;gap:10px;margin-bottom:14px">
-            <button class="btn-action btn-save" style="padding:9px 18px;font-size:0.85rem" onclick="openEditForm(null)">+ เพิ่มนิยาย</button>
-            <button class="btn-action" id="btn-manage-admins" style="border:1px solid var(--yellow);color:var(--yellow);background:transparent;padding:9px 18px;font-size:0.85rem" onclick="openAdminPanel()">👑 จัดการแอดมิน</button>
+        <!-- Episode List -->
+        <div class="episode-section">
+          <div class="episode-header">
+            <h3 id="epSectionTitle">รายการตอน (0)</h3>
+            <button class="btn-add-ep" id="btnAddEpisode">+ เพิ่มตอน</button>
           </div>
+          <div id="epListContainer">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
 
-          <!-- Search + Filter -->
-          <div class="novel-list-toolbar">
-            <div class="novel-search-wrap">
-              <span class="search-icon">🔍</span>
-              <input type="text" id="novel-search-input" placeholder="ค้นหาชื่อเรื่อง, ผู้แต่ง..." oninput="filterNovelList()">
+      <!-- Admin Management Panel (hidden by default) -->
+      <div class="admin-mgmt-wrap" id="adminMgmtWrap">
+        <div class="admin-mgmt-header">
+          <div>👑</div>
+          <div>
+            <h2>จัดการแอดมิน</h2>
+            <p>เพิ่ม ลบ หรือแก้ไขผู้ที่เป็นแอดมิน — เฉพาะ Super Admin เท่านั้น</p>
+          </div>
+          <div style="margin-left:auto;">
+            <span class="super-admin-badge">SUPER ADMIN ONLY</span>
+          </div>
+        </div>
+
+        <!-- Add Admin Form -->
+        <div class="add-admin-form">
+          <h3>+ เพิ่มแอดมินใหม่</h3>
+          <p>สร้างบัญชีแอดมินใหม่ในระบบ</p>
+          <div class="form-row-2">
+            <div class="field-group">
+              <label>ชื่อแอดมิน *</label>
+              <input type="text" id="newAdminName" placeholder="เช่น Editor1">
             </div>
-            <select class="novel-filter-select" id="novel-filter-status" onchange="filterNovelList()">
-              <option value="">ทุกสถานะ</option>
-              <option value="ongoing">กำลังดำเนิน</option>
-              <option value="done">จบแล้ว</option>
-              <option value="new">ใหม่</option>
-              <option value="hiatus">หยุดพัก</option>
-            </select>
+            <div class="field-group">
+              <label>EMAIL / ADMIN *</label>
+              <input type="email" id="newAdminEmail" placeholder="email@example.com">
+            </div>
           </div>
-
-          <!-- Novel List -->
-          <div class="novel-list-v" id="novels-grid"></div>
-
-          <!-- Pagination -->
-          <div class="novel-pagination" id="novels-pagination"></div>
-        </div>
-        <!-- ขวา: Edit Form / Admin Panel (toggle) -->
-        <div class="admin-col-right hidden" id="novels-right-panel">
-          <!-- เนื้อหาใส่ใน ADM-4 -->
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== UPLOAD PAGE ===== -->
-    <div class="admin-page" id="page-upload">
-      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px">อัพโหลดนิยายเสียง</div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:24px">เพิ่มนิยายเสียงใหม่พร้อมรายละเอียด</div>
-
-      <!-- Novel Info -->
-      <div class="form-card">
-        <div class="form-card-title">📝 ข้อมูลนิยาย</div>
-        <div class="form-card-sub">ใส่ชื่อ เนื้อเรื่องย่อ และแท็กที่เกี่ยวข้อง</div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">ชื่อนิยาย *</label>
-            <input type="text" class="form-input" id="novel-title" placeholder="เช่น ตัวเอกพวกนั้นฉันฆ่าเองแหละ!">
+          <div class="form-row-2">
+            <div class="field-group">
+              <label>รหัสผ่าน *</label>
+              <input type="password" id="newAdminPassword" placeholder="อย่างน้อย 6 ตัวอักษร">
+            </div>
+            <div class="field-group">
+              <label>ระดับสิทธิ์ *</label>
+              <select id="newAdminRole">
+                <option value="admin">🛡 Admin</option>
+                <option value="moderator">⚡ Moderator</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">ผู้แต่ง</label>
-            <input type="text" class="form-input" id="novel-author" placeholder="ชื่อผู้แต่ง">
+          <div class="add-admin-actions">
+            <button class="btn-add-admin" id="btnCreateAdmin">+ เพิ่มแอดมิน</button>
+            <button class="btn-clear-form" id="btnClearAdminForm">🗑 ล้างฟอร์ม</button>
           </div>
+          <div id="adminFormMsg" style="font-size:13px;margin-top:10px;"></div>
         </div>
 
-        <div class="form-group full" style="grid-column:1/-1">
-          <label class="form-label">เนื้อเรื่องย่อ *</label>
-          <textarea class="form-input" id="novel-synopsis" placeholder="เขียนเนื้อเรื่องย่อที่น่าดึงดูด...&#10;&#10;เช่น ชายหนุ่มผู้ถูกชะตาเล่นตลก ได้ตื่นมาพบว่าตัวเองอยู่ในโลกแฟนตาซีในฐานะตัวร้ายที่ถูกกำหนดให้ตาย..."></textarea>
-        </div>
-
-        <div class="form-group full" style="grid-column:1/-1">
-          <label class="form-label">แท็ก *</label>
-          <div class="tags-container" id="tags-container" onclick="document.getElementById('tag-input').focus()">
-            <input type="text" class="tag-input-field" id="tag-input" placeholder="พิมพ์แท็กแล้วกด Enter..." onkeydown="handleTagInput(event)">
+        <!-- Admin List -->
+        <div class="admin-list-section">
+          <div class="admin-list-header">
+            <h3>📋 รายชื่อแอดมินทั้งหมด</h3>
+            <p>คลิก 🗑 เพื่อถอดสิทธิ์แอดมิน (ไม่สามารถถอด Super Admin ได้)</p>
           </div>
-          <div class="tag-suggestions">
-            <span style="font-size:0.78rem;color:var(--muted);margin-right:4px">แนะนำ:</span>
-            <button class="tag-suggest" onclick="addTag('แฟนตาซี')">แฟนตาซี</button>
-            <button class="tag-suggest" onclick="addTag('แอ็กชัน')">แอ็กชัน</button>
-            <button class="tag-suggest" onclick="addTag('ระบบ')">ระบบ</button>
-            <button class="tag-suggest" onclick="addTag('พระเอกเก่ง')">พระเอกเก่ง</button>
-            <button class="tag-suggest" onclick="addTag('เกิดใหม่')">เกิดใหม่</button>
-            <button class="tag-suggest" onclick="addTag('ต่างโลก')">ต่างโลก</button>
-            <button class="tag-suggest" onclick="addTag('โรแมนซ์')">โรแมนซ์</button>
-            <button class="tag-suggest" onclick="addTag('ดาร์ก')">ดาร์ก</button>
-            <button class="tag-suggest" onclick="addTag('ฮาเร็ม')">ฮาเร็ม</button>
-            <button class="tag-suggest" onclick="addTag('เวทมนตร์')">เวทมนตร์</button>
-            <button class="tag-suggest" onclick="addTag('กีฬา')">กีฬา</button>
-            <button class="tag-suggest" onclick="addTag('ย้อนเวลา')">ย้อนเวลา</button>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">จำนวนตอน</label>
-            <input type="number" class="form-input" id="novel-eps" placeholder="เช่น 42" min="1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">สถานะ</label>
-            <select class="form-input" id="novel-status">
-              <option value="ongoing">กำลังดำเนินเรื่อง</option>
-              <option value="done">จบแล้ว</option>
-              <option value="new">ใหม่</option>
-              <option value="hiatus">หยุดพัก</option>
-            </select>
-          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ชื่อแอดมิน</th>
+                <th>อีเมล / Admin</th>
+                <th>ระดับสิทธิ์</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody">
+              <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Cover Image Upload -->
-      <div class="form-card">
-        <div class="form-card-title">🖼️ รูปปกนิยาย</div>
-        <div class="form-card-sub">แนะนำรูปขนาด 800×1200px รองรับ JPG, PNG, WebP</div>
+    </div><!-- /panel-right -->
+  </div><!-- /admin-main -->
+</div><!-- /admin-wrapper -->
 
-        <div class="upload-zone" id="cover-zone">
-          <input type="file" accept="image/*" onchange="handleCoverUpload(event)" id="cover-input">
-          <div class="upload-icon">🖼️</div>
-          <div class="upload-text">คลิกหรือลากรูปปกมาวาง</div>
-          <div class="upload-hint">JPG, PNG, WebP • แนะนำ 800×1200px</div>
-        </div>
-
-        <div class="upload-preview" id="cover-preview" style="display:none">
-          <div class="preview-thumb" id="cover-thumb">🖼️</div>
-          <div class="preview-info">
-            <div class="preview-name" id="cover-name">-</div>
-            <div class="preview-size" id="cover-size">-</div>
-          </div>
-          <button class="preview-remove" onclick="removeCover()">✕ ลบ</button>
-        </div>
-      </div>
-
-      <!-- Audio Files Upload -->
-      <div class="form-card">
-        <div class="form-card-title">🎵 ไฟล์เสียงนิยาย</div>
-        <div class="form-card-sub">อัพโหลดไฟล์เสียง MP3, M4A, WAV, OGG สำหรับแต่ละตอน</div>
-
-        <div class="upload-zone" id="audio-zone">
-          <input type="file" accept="audio/*" multiple onchange="handleAudioUpload(event)" id="audio-input">
-          <div class="upload-icon">🎧</div>
-          <div class="upload-text">คลิกหรือลากไฟล์เสียงมาวาง</div>
-          <div class="upload-hint">MP3, M4A, WAV, OGG • รองรับหลายไฟล์พร้อมกัน</div>
-        </div>
-
-        <div id="audio-list" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
-      </div>
-
-      <!-- Submit -->
-      <div class="form-card" style="background:rgba(168,85,247,0.04);border-color:rgba(168,85,247,0.2)">
-        <div class="form-card-title">🚀 เผยแพร่นิยาย</div>
-        <div class="form-card-sub">ตรวจสอบข้อมูลให้ครบก่อนเผยแพร่</div>
-        <div class="action-bar">
-          <button class="btn-action btn-publish" onclick="publishNovel()">✅ เผยแพร่นิยาย</button>
-          <button class="btn-action btn-secondary" onclick="saveDraft()">💾 บันทึกฉบับร่าง</button>
-          <button class="btn-action btn-secondary" onclick="clearForm()">🗑️ ล้างฟอร์ม</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== SETTINGS PAGE ===== -->
-    <!-- ===== MANAGE ADMINS PAGE ===== -->
-    <div class="admin-page" id="page-manage-admins">
-      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px">
-        <span style="color:#f59e0b">👑</span> จัดการแอดมิน
-        <span style="font-size:0.7rem;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#f59e0b;padding:2px 10px;border-radius:10px;font-weight:700">SUPER ADMIN ONLY</span>
-      </div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:24px">เพิ่ม ลบ หรือแก้ไขสิทธิ์แอดมิน — เฉพาะ Super Admin เท่านั้น</div>
-
-      <!-- Add Admin Card -->
-      <div class="form-card" style="margin-bottom:24px">
-        <div class="form-card-title">➕ เพิ่มแอดมินใหม่</div>
-        <div class="form-card-sub">สร้างบัญชีแอดมินใหม่ในระบบ</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">ชื่อแอดมิน *</label>
-            <input type="text" class="form-input" id="new-admin-name" placeholder="เช่น Editor1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email / Admin ID *</label>
-            <input type="email" class="form-input" id="new-admin-email" placeholder="email@example.com">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">รหัสผ่าน *</label>
-            <input type="text" class="form-input" id="new-admin-pass" placeholder="อย่างน้อย 6 ตัวอักษร">
-          </div>
-          <div class="form-group">
-            <label class="form-label">ระดับสิทธิ์</label>
-            <select class="form-input" id="new-admin-role" style="cursor:pointer">
-              <option value="admin">🛡️ Admin (ทั่วไป)</option>
-            </select>
-          </div>
-        </div>
-        <div class="action-bar" style="margin-top:12px">
-          <button class="btn-action btn-publish" onclick="addNewAdmin()">➕ เพิ่มแอดมิน</button>
-          <button class="btn-action btn-secondary" onclick="clearNewAdminForm()">🗑️ ล้างฟอร์ม</button>
-        </div>
-      </div>
-
-      <!-- Admin List -->
-      <div class="form-card">
-        <div class="form-card-title">📋 รายชื่อแอดมินทั้งหมด</div>
-        <div class="form-card-sub">คลิก 🗑️ เพื่อถอดสิทธิ์แอดมิน (ไม่สามารถลบ Super Admin ได้)</div>
-        <div id="admin-list-container" style="margin-top:16px"></div>
-      </div>
-    </div>
-
-    <!-- ===== MANAGE EPISODES PAGE ===== -->
-    <div class="admin-page" id="page-manage-eps">
-      <div id="manage-eps-content">
-        <div style="text-align:center;padding:40px;color:var(--muted)">กรุณาเลือกนิยายจากหน้านิยายทั้งหมด</div>
-      </div>
-    </div>
-
-  </div><!-- end admin-main -->
-</div><!-- end admin-panel -->
-
-<!-- Toast -->
-<div class="toast" id="toast">
-  <span id="toast-icon">✅</span>
-  <span class="toast-msg" id="toast-msg">บันทึกสำเร็จ!</span>
-</div>
-
+<!-- ===== JAVASCRIPT ===== -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword }
+                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc,
+         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch }
+                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* ===== FIREBASE INIT ===== */
 const app = initializeApp({
-  apiKey:"AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
-  authDomain:"login-24acc.firebaseapp.com",
-  projectId:"login-24acc",
-  storageBucket:"login-24acc.firebasestorage.app",
-  messagingSenderId:"440213309587",
-  appId:"1:440213309587:web:072857c31c2e6bd5062566"
+  apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
+  authDomain:        "login-24acc.firebaseapp.com",
+  projectId:         "login-24acc",
+  storageBucket:     "login-24acc.firebasestorage.app",
+  messagingSenderId: "440213309587",
+  appId:             "1:440213309587:web:072857c31c2e6bd5062566"
 });
 const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+const db   = getFirestore(app);
 
-const CLOUDINARY_CLOUD = 'dmr6ln5hy';
-const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; // ต้องตั้งค่า unsigned preset ใน Cloudinary
+const ADMIN_EMAILS   = ['momoppl01@gmail.com', 'admin@memonster.com'];
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmr6ln5hy/image/upload';
+const CLOUDINARY_PRESET = 'ml_default';
 
-// Admin emails ที่มีสิทธิ์เข้าใช้
-const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
-const SUPERADMIN_EMAIL = 'momoppl01@gmail.com';
+/* ===== STATE ===== */
+let allNovels       = [];
+let filteredNovels  = [];
+let currentPage     = 1;
+const PAGE_SIZE     = 5;
+let selectedNovelId = null;
+let currentUser     = null;
+let isSuperAdmin    = false;
 
-let currentAdmin = null;
-let novels = [];
-let tags = [];
-let audioFiles = [];
-let coverFile = null;
-let logoFile = null;
-let siteSettings = { name:'The Golden Hoard Novels', tagline:'สนุกไปกับนิยายที่คุณชอบ', logo:'🦁', color:'#e8445a' };
-const EMOJIS = ['🦁','🐉','⚔️','📚','🌙','🔥','🌑','✨','👑','🗡️','🛡️','🧙‍♂️','🎭','🎪','⭐','🌟'];
-const COLORS = ['#e8445a','#a855f7','#3b82f6','#22c55e','#f59e0b','#ec4899','#06b6d4','#f97316'];
-
-onAuthStateChanged(auth, (user) => {
-  if (user && ADMIN_EMAILS.includes(user.email)) {
-    currentAdmin = { email: user.email, name: user.displayName || user.email.split('@')[0], role: user.email === SUPERADMIN_EMAIL ? 'superadmin' : 'admin' };
-    showAdminPanel();
-  } else if (user && !ADMIN_EMAILS.includes(user.email)) {
-    // login แล้วแต่ไม่ใช่ admin → กลับหน้าหลัก
-    window.location.href = 'index.html';
-  } else {
-    // ยังไม่ได้ login → ไปหน้า login
-    window.location.href = 'login.html';
+/* ===== AUTH GUARD ===== */
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
+  isSuperAdmin = ADMIN_EMAILS.includes(user.email);
+  if (!isSuperAdmin) {
+    // Check if user is in admins collection
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    if (!snap.exists()) { window.location.href = 'index.html'; return; }
   }
+  initAdmin();
 });
 
-function showAdminPanel() {
-  document.getElementById('admin-panel').classList.add('show');
-  document.getElementById('admin-user-name').textContent = currentAdmin.name;
-  document.getElementById('admin-user-role').textContent = currentAdmin.role === 'superadmin' ? '👑 Super Admin' : '🛡️ Admin';
-  document.getElementById('admin-avatar-text').textContent = currentAdmin.name.substring(0,2).toUpperCase();
-  if (currentAdmin.role === 'superadmin') {
-    const saBadge = document.getElementById('superadmin-badge');
-    if (saBadge) saBadge.style.display = 'flex';
-    const navManage = document.getElementById('nav-manage-admins');
-    if (navManage) navManage.style.display = 'flex';
-  }
-  loadNovels();
-  initAdmin();
-}
-
-window.doAdminLogout = async function() {
-  await signOut(auth);
-};
-
-function loadNovels() {
-  const q = query(collection(db,'novels'), orderBy('createdAt','desc'));
-  onSnapshot(q, (snap) => {
-    novels = snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderDashboard();
-  }, (err) => {
-    console.warn('Firestore read error:', err);
-    showToast('ไม่สามารถโหลดข้อมูลได้: '+err.code, '⚠️', 'error');
-  });
-}
-
-window.publishNovel = async function() {
-  const title = document.getElementById('novel-title').value.trim();
-  const synopsis = document.getElementById('novel-synopsis').value.trim();
-  if (!title) { showToast('กรุณาใส่ชื่อนิยาย', '⚠️', 'error'); return; }
-  if (!synopsis) { showToast('กรุณาใส่เนื้อเรื่องย่อ', '⚠️', 'error'); return; }
-  if (tags.length === 0) { showToast('กรุณาใส่แท็กอย่างน้อย 1 อัน', '⚠️', 'error'); return; }
-
-  showToast('กำลังอัพโหลด...', '⏳', 'info');
-
-  let coverUrl = null;
-  // Upload cover to Cloudinary
-  if (coverFile) {
-    try {
-      const fd = new FormData();
-      fd.append('file', coverFile);
-      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      fd.append('cloud_name', CLOUDINARY_CLOUD);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
-      const data = await res.json();
-      if (data.secure_url) coverUrl = data.secure_url;
-    } catch(e) { console.warn('Cover upload failed:', e); }
-  }
-
-  // Upload audio files to Cloudinary (raw resource type for audio)
-  const audioMeta = [];
-  for (let i = 0; i < audioFiles.length; i++) {
-    const f = audioFiles[i];
-    showToast(`กำลังอัพโหลดเสียงตอนที่ ${i+1}/${audioFiles.length}...`, '🎵', 'info');
-    try {
-      const fd = new FormData();
-      fd.append('file', f);
-      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      fd.append('cloud_name', CLOUDINARY_CLOUD);
-      // ใช้ video resource_type เพื่อให้ browser สามารถ stream audio ได้
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`, { method:'POST', body:fd });
-      const data = await res.json();
-      if (data.secure_url) {
-        audioMeta.push({ name: f.name, url: data.secure_url, size: f.size, duration: null });
-      } else {
-        console.warn('Audio upload failed:', data);
-        audioMeta.push({ name: f.name, url: null, size: f.size });
-      }
-    } catch(e) {
-      console.warn('Audio upload failed:', e);
-      audioMeta.push({ name: f.name, url: null, size: f.size });
-    }
-  }
-
-  const emojiList=['📖','🐉','⚔️','🌙','🔮','🌸','🚀','👻','🐲','🗡️','🧙‍♂️','⚾','🛡️','🎩','🌑','🐜'];
-  const newNovel = {
-    title,
-    author: document.getElementById('novel-author').value || 'Unknown',
-    emoji: coverFile ? null : emojiList[Math.floor(Math.random()*emojiList.length)],
-    coverUrl,
-    tags: [...tags],
-    eps: parseInt(document.getElementById('novel-eps').value) || audioFiles.length || 0,
-    views: '0',
-    status: document.getElementById('novel-status').value,
-    synopsis,
-    audioFiles: audioMeta,
-    createdBy: currentAdmin.email,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-
-  try {
-    await addDoc(collection(db,'novels'), newNovel);
-    showToast(`เผยแพร่ "${title}" สำเร็จ!`, '🎉', 'success');
-    clearForm();
-    showPage('dashboard', document.querySelectorAll('.admin-nav-item')[0]);
-  } catch(e) {
-    showToast('บันทึกล้มเหลว: '+e.message, '❌', 'error');
-  }
-};
-
-window.deleteNovel = async function(id) {
-  if (!confirm('ต้องการลบนิยายนี้?')) return;
-  try {
-    await deleteDoc(doc(db,'novels',id));
-    showToast('ลบนิยายแล้ว','🗑️','error');
-  } catch(e) {
-    showToast('ลบล้มเหลว: '+e.message,'❌','error');
-  }
-};
-
-window.showPage = function(pageId, navEl) {
-  document.querySelectorAll('.admin-page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.admin-nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+pageId).classList.add('active');
-  if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'📊 แดชบอร์ด','manage-admins':'👑 จัดการแอดมิน',novels:'📚 นิยายทั้งหมด',upload:'⬆️ เพิ่มนิยายใหม่','manage-eps':'🎵 จัดการตอน'};
-  document.getElementById('page-title').innerHTML='<span>'+titles[pageId]+'</span>';
-  if(pageId==='novels') renderNovelsGrid();
-  if(pageId==='dashboard') renderDashboard();
-  if(pageId==='manage-eps') renderManageEps();
-};
-
+/* ===== INIT ===== */
 function initAdmin() {
-  renderDashboard();
-  renderEmojiPicker();
-  renderColorSwatches();
-  updatePreview();
+  loadStats();
+  loadNovels();
+  loadAdminList();
+  bindEvents();
+  if (!isSuperAdmin) {
+    document.getElementById('btnManageAdmin').style.display = 'none';
+  }
 }
 
-function statusBadge(s) {
-  const map={ongoing:['active','กำลังดำเนิน'],done:['done','จบแล้ว'],new:['new','ใหม่'],hiatus:['new','หยุดพัก']};
-  const [cls,txt]=map[s]||['new',s];
-  return `<span class="status-badge status-${cls}">● ${txt}</span>`;
-}
-
-async function loadDashboardStats() {
-  const novelEl = document.getElementById('stat-novels');
-  if(novelEl) novelEl.textContent = novels.length.toLocaleString();
-  let totalEps = 0, totalViews = 0;
-  novels.forEach(n => {
-    totalEps += Number(n.eps) || 0;
-    totalViews += Number(n.views) || 0;
-  });
-  const epsEl = document.getElementById('stat-eps');
-  if(epsEl) epsEl.textContent = totalEps.toLocaleString();
-  const viewsEl = document.getElementById('stat-views');
-  if(viewsEl) viewsEl.textContent = totalViews.toLocaleString();
+/* ===== STATS ===== */
+async function loadStats() {
   try {
-    const usersSnap = await getDocs(collection(db, 'users'));
-    const membersEl = document.getElementById('stat-members');
-    if(membersEl) membersEl.textContent = usersSnap.size.toLocaleString();
-  } catch(e) {
-    const membersEl = document.getElementById('stat-members');
-    if(membersEl) membersEl.textContent = '—';
-  }
+    const novSnap = await getDocs(collection(db, 'novels'));
+    let totalEps = 0, totalViews = 0;
+    novSnap.forEach(d => {
+      const data = d.data();
+      totalEps   += (data.episodeCount || 0);
+      totalViews += (data.views || 0);
+    });
+    document.getElementById('statNovels').textContent = novSnap.size;
+    document.getElementById('statEps').textContent    = totalEps.toLocaleString();
+    document.getElementById('statViews').textContent  = totalViews >= 10000
+      ? (totalViews / 10000).toFixed(1) + ' แสน'
+      : totalViews.toLocaleString();
+
+    // Members — count from users collection if exists
+    try {
+      const usrSnap = await getDocs(collection(db, 'users'));
+      document.getElementById('statMembers').textContent = usrSnap.size.toLocaleString();
+    } catch { document.getElementById('statMembers').textContent = '—'; }
+  } catch(e) { console.error('loadStats:', e); }
 }
 
-function renderDashboard() {
-  loadDashboardStats();
-  const badgeEl = document.getElementById('novels-count-badge');
-  if(badgeEl) badgeEl.textContent=novels.length;
-  const tbody=document.getElementById('dashboard-tbody');
-  if(!tbody) return;
-  tbody.innerHTML=novels.map(n=>`
-    <tr>
-      <td><div class="novel-row-info">
-        <div class="novel-row-cover" style="${n.coverUrl?'padding:0;overflow:hidden':''}">${n.coverUrl?`<img src="${n.coverUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:(n.emoji||n.cover||'📖')}</div>
-        <div><div class="novel-row-title">${n.title}</div><div class="novel-row-meta">${n.author}</div></div>
-      </div></td>
-      <td style="font-size:0.8rem;color:var(--muted)">${(n.tags||[]).slice(0,2).join(', ')}</td>
-      <td>${n.eps||0} ตอน</td>
-      <td>${n.views||0}</td>
-      <td>${statusBadge(n.status)}</td>
-    </tr>
-  `).join('');
-}
-
-// ===== ADM-3: Novel List State =====
-let novelListPage = 1;
-const NOVELS_PER_PAGE = 6;
-let activeNovelId = null;
-
-function renderNovelsGrid() {
-  const filtered = getFilteredNovels();
-  const grid = document.getElementById('novels-grid');
-  if (!grid) return;
-
-  // Update badge
-  const badge = document.getElementById('novels-count-badge');
-  if (badge) badge.textContent = filtered.length;
-
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filtered.length / NOVELS_PER_PAGE));
-  if (novelListPage > totalPages) novelListPage = totalPages;
-  const start = (novelListPage - 1) * NOVELS_PER_PAGE;
-  const paged = filtered.slice(start, start + NOVELS_PER_PAGE);
-
-  if (paged.length === 0) {
-    grid.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.9rem">ไม่พบนิยายที่ค้นหา</div>`;
-  } else {
-    grid.innerHTML = paged.map(n => {
-      const isActive = activeNovelId === n.id;
-      const coverHtml = n.coverUrl
-        ? `<img src="${n.coverUrl}" alt="">`
-        : `<span style="font-size:1.8rem">${n.emoji||n.cover||'📖'}</span>`;
-      return `
-        <div class="novel-h-card${isActive?' active':''}" onclick="openEditForm('${n.id}')">
-          <div class="novel-h-cover">${coverHtml}</div>
-          <div class="novel-h-body">
-            <div class="novel-h-title">${n.title}</div>
-            <div class="novel-h-author">ผู้แต่ง: ${n.author||'—'}</div>
-            <div style="margin-bottom:5px">${statusBadge(n.status)}</div>
-            <div class="novel-h-meta">
-              <span>🎵 ${n.eps||0} ตอน</span>
-              <span>👁 ${n.views||0}</span>
-            </div>
-          </div>
-          <div class="novel-h-actions" onclick="event.stopPropagation()">
-            <button class="h-btn h-btn-edit" onclick="openEditForm('${n.id}')">✏️ แก้ไข</button>
-            <button class="h-btn h-btn-delete" onclick="deleteNovel('${n.id}')">🗑️</button>
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  renderNovelPagination(totalPages);
-}
-
-function getFilteredNovels() {
-  const q = (document.getElementById('novel-search-input')?.value || '').toLowerCase();
-  const s = document.getElementById('novel-filter-status')?.value || '';
-  return novels.filter(n => {
-    const matchQ = !q || (n.title||'').toLowerCase().includes(q) || (n.author||'').toLowerCase().includes(q);
-    const matchS = !s || n.status === s;
-    return matchQ && matchS;
+/* ===== NOVELS ===== */
+function loadNovels() {
+  const q = query(collection(db, 'novels'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, snap => {
+    allNovels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('novelCountBadge').textContent = allNovels.length;
+    applyFilter();
   });
 }
 
-window.filterNovelList = function() {
-  novelListPage = 1;
-  renderNovelsGrid();
-};
+function applyFilter() {
+  const search = document.getElementById('adminSearchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  filteredNovels = allNovels.filter(n => {
+    const matchSearch = !search
+      || (n.title || '').toLowerCase().includes(search)
+      || (n.author || '').toLowerCase().includes(search);
+    const matchStatus = !status || n.status === status;
+    return matchSearch && matchStatus;
+  });
+  currentPage = 1;
+  renderNovelList();
+  renderPagination();
+}
 
-function renderNovelPagination(totalPages) {
-  const el = document.getElementById('novels-pagination');
-  if (!el || totalPages <= 1) { if(el) el.innerHTML=''; return; }
-  let html = `<button class="page-btn" onclick="goNovelPage(${novelListPage-1})" ${novelListPage===1?'disabled':''}>‹</button>`;
-  for (let i = 1; i <= totalPages; i++) {
-    if (totalPages > 5 && i > 2 && i < totalPages - 1 && Math.abs(i - novelListPage) > 1) {
-      if (i === 3) html += `<span class="page-btn" style="cursor:default">…</span>`;
-      continue;
-    }
-    html += `<button class="page-btn${i===novelListPage?' active':''}" onclick="goNovelPage(${i})">${i}</button>`;
+function renderNovelList() {
+  const container = document.getElementById('novelListContainer');
+  if (!filteredNovels.length) {
+    container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">ไม่พบนิยาย</div>';
+    return;
   }
-  html += `<button class="page-btn" onclick="goNovelPage(${novelListPage+1})" ${novelListPage===totalPages?'disabled':''}>›</button>`;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = filteredNovels.slice(start, start + PAGE_SIZE);
+
+  container.innerHTML = page.map(n => {
+    const statusMap = {
+      ongoing:  { label: 'กำลังดำเนิน', cls: 'badge-ongoing' },
+      pending:  { label: 'รอเริ่มเรื่อง', cls: 'badge-pending' },
+      complete: { label: 'จบแล้ว',        cls: 'badge-complete' },
+    };
+    const s = statusMap[n.status] || statusMap.ongoing;
+    const coverEl = n.coverUrl
+      ? `<img src="${n.coverUrl}" alt="cover" loading="lazy">`
+      : '📖';
+    const selected = n.id === selectedNovelId ? 'selected' : '';
+    return `
+    <div class="novel-list-item ${selected}" data-id="${n.id}" onclick="selectNovel('${n.id}')">
+      <div class="novel-list-cover">${coverEl}</div>
+      <div class="novel-list-info">
+        <div class="novel-list-top">
+          <div class="novel-list-name">${n.title || 'ไม่มีชื่อ'}</div>
+          <span class="novel-status-badge ${s.cls}">${s.label}</span>
+        </div>
+        <div class="novel-list-author">ผู้แต่ง: ${n.author || '—'}</div>
+        <div class="novel-list-meta">
+          <div class="novel-list-stats">
+            <span>🎵 ${n.episodeCount || 0} ตอน</span>
+            <span>👁 ${n.views || 0}</span>
+          </div>
+          <div class="novel-list-btns">
+            <button class="btn-edit-sm" onclick="event.stopPropagation();openEdit('${n.id}')">✏️ แก้ไข</button>
+            <button class="btn-del-sm"  onclick="event.stopPropagation();deleteNovelConfirm('${n.id}','${(n.title||'').replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPagination() {
+  const total = Math.ceil(filteredNovels.length / PAGE_SIZE);
+  const el    = document.getElementById('paginationContainer');
+  if (total <= 1) { el.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      html += `<button class="page-btn dots">...</button>`;
+    }
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
   el.innerHTML = html;
 }
 
-window.goNovelPage = function(p) {
-  const total = Math.max(1, Math.ceil(getFilteredNovels().length / NOVELS_PER_PAGE));
+window.goPage = function(p) {
+  const total = Math.ceil(filteredNovels.length / PAGE_SIZE);
   if (p < 1 || p > total) return;
-  novelListPage = p;
-  renderNovelsGrid();
+  currentPage = p;
+  renderNovelList();
+  renderPagination();
 };
 
-window.openAdminPanel = function() {
-  const panel = document.getElementById('novels-right-panel');
-  if (!panel) return;
-  panel.classList.remove('hidden');
-  // render admin panel content (ADM-6 — will fill later)
-  panel.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">
-    <div style="font-size:2rem;margin-bottom:8px">👑</div>
-    <div style="font-weight:700;margin-bottom:4px">จัดการแอดมิน</div>
-    <div style="font-size:0.8rem">Coming in ADM-6</div>
-  </div>`;
-  activeNovelId = null;
-  renderNovelsGrid();
+/* ===== SELECT NOVEL ===== */
+window.selectNovel = function(id) {
+  selectedNovelId = id;
+  openEdit(id);
 };
 
-window.openEditForm = function(novelId) {
-  activeNovelId = novelId;
-  const panel = document.getElementById('novels-right-panel');
-  if (!panel) return;
-  panel.classList.remove('hidden');
-  // ADM-4 will fill this with full edit form
-  const n = novelId ? novels.find(x => x.id === novelId) : null;
-  panel.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">
-    <div style="font-size:2rem;margin-bottom:8px">✏️</div>
-    <div style="font-weight:700;margin-bottom:4px">${n ? 'แก้ไขนิยาย: '+n.title : 'เพิ่มนิยายใหม่'}</div>
-    <div style="font-size:0.8rem">Edit form coming in ADM-4</div>
-  </div>`;
-  renderNovelsGrid();
-};
+window.openEdit = async function(id) {
+  selectedNovelId = id;
+  // Hide admin panel, show edit form
+  document.getElementById('adminMgmtWrap').classList.remove('visible');
+  document.getElementById('rightPlaceholder').style.display = 'none';
+  document.getElementById('editFormWrap').style.display = 'block';
+  document.getElementById('btnManageAdmin').classList.remove('active');
 
-window.showEditNovel = function(id) {
-  const n = novels.find(x=>x.id===id);
-  if(!n) return;
-  showPage('upload', null);
-  document.getElementById('novel-title').value = n.title||'';
-  document.getElementById('novel-author').value = n.author||'';
-  document.getElementById('novel-synopsis').value = n.synopsis||'';
-  document.getElementById('novel-eps').value = n.eps||'';
-  document.getElementById('novel-status').value = n.status||'ongoing';
-  tags = [...(n.tags||[])];
-  renderTags();
-  // Change publish button to update
-  const publishBtn = document.querySelector('[onclick="publishNovel()"]');
-  if(publishBtn) {
-    publishBtn.textContent = '✅ บันทึกการแก้ไข';
-    publishBtn.onclick = async function() {
-      const updates = {
-        title: document.getElementById('novel-title').value.trim(),
-        author: document.getElementById('novel-author').value||'Unknown',
-        synopsis: document.getElementById('novel-synopsis').value.trim(),
-        eps: parseInt(document.getElementById('novel-eps').value)||n.eps||0,
-        status: document.getElementById('novel-status').value,
-        tags:[...tags], updatedAt:serverTimestamp()
-      };
-      try {
-        await updateDoc(doc(db,'novels',id), updates);
-        showToast('แก้ไขสำเร็จ!','✅','success');
-        clearForm();
-        publishBtn.textContent='🚀 เผยแพร่นิยาย';
-        publishBtn.onclick = publishNovel;
-      } catch(e) { showToast('แก้ไขล้มเหลว: '+e.message,'❌','error'); }
-    };
+  // Mark selected
+  document.querySelectorAll('.novel-list-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === id);
+  });
+
+  const novel = allNovels.find(n => n.id === id);
+  if (!novel) return;
+
+  // Fill form
+  document.getElementById('breadcrumbTitle').textContent = novel.title || '—';
+  document.getElementById('editFormTitle').textContent   = `จัดการนิยาย: ${novel.title || '—'}`;
+  document.getElementById('editTitle').value   = novel.title  || '';
+  document.getElementById('editAuthor').value  = novel.author || '';
+  document.getElementById('editDesc').value    = novel.description || '';
+  document.getElementById('editStatus').value  = novel.status || 'ongoing';
+
+  // Cover
+  const coverPreview = document.getElementById('editCoverPreview');
+  if (novel.coverUrl) {
+    coverPreview.innerHTML = `<img src="${novel.coverUrl}" alt="cover">`;
+  } else {
+    coverPreview.innerHTML = '📖';
   }
-};
 
-window.handleTagInput = function(e) {
-  if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(',','');if(val)addTag(val);e.target.value='';}
-  else if(e.key==='Backspace'&&!e.target.value&&tags.length){tags.pop();renderTags();}
-};
-window.addTag = function(val) { val=val.trim(); if(!val||tags.includes(val))return; tags.push(val); renderTags(); document.getElementById('tag-input').value=''; };
-window.removeTag = function(tag) { tags=tags.filter(t=>t!==tag); renderTags(); };
-function renderTags() {
-  const container=document.getElementById('tags-container');
-  const input=document.getElementById('tag-input');
-  container.innerHTML='';
-  tags.forEach(t=>{const el=document.createElement('span');el.className='tag-item';el.innerHTML=`${t} <span class="tag-remove" onclick="removeTag('${t}')">×</span>`;container.appendChild(el);});
-  container.appendChild(input);
-}
+  // Status badge
+  const badgeEl = document.getElementById('editStatusBadge');
+  const badgeMap = { ongoing:'badge-ongoing', pending:'badge-pending', complete:'badge-complete' };
+  const labelMap = { ongoing:'กำลังดำเนิน', pending:'รอเริ่มเรื่อง', complete:'จบแล้ว' };
+  badgeEl.className = `edit-cover-badge ${badgeMap[novel.status]||'badge-ongoing'}`;
+  badgeEl.textContent = labelMap[novel.status] || 'กำลังดำเนิน';
 
-window.handleCoverUpload = function(e) {
-  const file=e.target.files[0]; if(!file)return; coverFile=file;
-  const url=URL.createObjectURL(file);
-  document.getElementById('cover-zone').style.display='none';
-  const preview=document.getElementById('cover-preview'); preview.style.display='flex';
-  document.getElementById('cover-thumb').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
-  document.getElementById('cover-name').textContent=file.name;
-  document.getElementById('cover-size').textContent=formatSize(file.size);
-};
-window.removeCover = function() { coverFile=null; document.getElementById('cover-zone').style.display='block'; document.getElementById('cover-preview').style.display='none'; document.getElementById('cover-input').value=''; };
+  // Meta
+  document.getElementById('editCoverMeta').innerHTML =
+    `ผู้แต่ง: ${novel.author||'—'}<br>🎵 ${novel.episodeCount||0} ตอน &nbsp; 👁 ${novel.views||0} วิว`;
 
-window.handleAudioUpload = function(e) {
-  const files=Array.from(e.target.files);
-  files.forEach(f=>{if(!audioFiles.find(x=>x.name===f.name))audioFiles.push(f);});
-  renderAudioList();
-};
-function renderAudioList() {
-  const list=document.getElementById('audio-list');
-  list.innerHTML=audioFiles.map((f,i)=>`
-    <div class="audio-preview">
-      <button class="audio-play-btn">▶</button>
-      <div class="audio-info"><div class="audio-title">ตอนที่ ${i+1} — ${f.name}</div><div class="audio-bar"><div class="audio-bar-fill" style="width:0%"></div></div><div class="audio-duration">${formatSize(f.size)}</div></div>
-      <button class="preview-remove" onclick="removeAudio(${i})">✕</button>
-    </div>`).join('');
-}
-window.removeAudio = function(i){audioFiles.splice(i,1);renderAudioList();};
-
-window.clearForm = function() {
-  document.getElementById('novel-title').value='';
-  document.getElementById('novel-author').value='';
-  document.getElementById('novel-synopsis').value='';
-  document.getElementById('novel-eps').value='';
-  document.getElementById('novel-status').value='ongoing';
-  tags=[]; renderTags(); audioFiles=[]; renderAudioList(); removeCover();
-};
-window.saveDraft = function(){showToast(`บันทึกฉบับร่าง "${document.getElementById('novel-title').value||'ฉบับร่าง'}" แล้ว`,'💾','info');};
-
-window.updatePreview = function() {
-  const name=document.getElementById('site-name').value||'The Golden Hoard Novels';
-  const tagline=document.getElementById('site-tagline').value||'';
-  const pn=document.getElementById('preview-site-name'); if(pn)pn.textContent=name;
-  const pt=document.getElementById('preview-tagline'); if(pt)pt.textContent=tagline;
-  const sn=document.getElementById('sidebar-sitename'); if(sn)sn.textContent=name;
-};
-window.handleLogoUpload = function(e){
-  const file=e.target.files[0]; if(!file)return; logoFile=file;
-  const url=URL.createObjectURL(file);
-  document.getElementById('logo-zone').style.display='none';
-  const preview=document.getElementById('logo-preview'); preview.style.display='flex';
-  document.getElementById('logo-thumb').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
-  document.getElementById('logo-name').textContent=file.name;
-  document.getElementById('logo-size').textContent=formatSize(file.size);
-  const imgHtml=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
-  const plb=document.getElementById('preview-logo-box'); if(plb)plb.innerHTML=imgHtml;
-  const sl=document.getElementById('sidebar-logo'); if(sl)sl.innerHTML=imgHtml;
-};
-window.removeLogo = function(){
-  logoFile=null;
-  document.getElementById('logo-zone').style.display='block';
-  document.getElementById('logo-preview').style.display='none';
-  document.getElementById('logo-input').value='';
-  const plb=document.getElementById('preview-logo-box'); if(plb)plb.textContent=siteSettings.logo;
-  const sl=document.getElementById('sidebar-logo'); if(sl)sl.textContent=siteSettings.logo;
-};
-function renderEmojiPicker(){
-  const el=document.getElementById('emoji-picker'); if(!el)return;
-  el.innerHTML=EMOJIS.map(em=>`<button onclick="selectEmoji('${em}')" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-size:1.3rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='var(--admin-accent)'" onmouseout="this.style.borderColor='var(--border)'">${em}</button>`).join('');
-}
-window.selectEmoji = function(em){
-  siteSettings.logo=em;
-  const plb=document.getElementById('preview-logo-box'); if(plb)plb.textContent=em;
-  const sl=document.getElementById('sidebar-logo'); if(sl)sl.textContent=em;
-  removeLogo();
-};
-function renderColorSwatches(){
-  const el=document.getElementById('color-swatches'); if(!el)return;
-  el.innerHTML=COLORS.map(c=>`<button onclick="applyColor('${c}')" style="width:36px;height:36px;border-radius:50%;background:${c};border:3px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></button>`).join('');
-}
-window.applyColor = function(hex){
-  const cp=document.getElementById('color-picker'); if(cp)cp.value=hex;
-  const ch=document.getElementById('color-hex'); if(ch)ch.value=hex;
-  document.documentElement.style.setProperty('--primary',hex);
-  siteSettings.color=hex;
-};
-window.saveSettings = function(){
-  siteSettings.name=document.getElementById('site-name').value;
-  siteSettings.tagline=document.getElementById('site-tagline').value;
-  document.title=siteSettings.name+' — Admin';
-  showToast('บันทึกการตั้งค่าแล้ว','✅','success');
-};
-window.resetSettings = function(){
-  document.getElementById('site-name').value='The Golden Hoard Novels';
-  document.getElementById('site-tagline').value='สนุกไปกับนิยายที่คุณชอบ';
-  applyColor('#e8445a'); selectEmoji('🦁'); updatePreview();
-  showToast('รีเซ็ตการตั้งค่าแล้ว','↩️','info');
-};
-
-window.renderAdminList = function(){
-  const container=document.getElementById('admin-list-container'); if(!container)return;
-  const admins=[{email:'momoppl01@gmail.com',name:'Naruchit',role:'superadmin'},{email:'admin@memonster.com',name:'Admin',role:'admin'}];
-  container.innerHTML=admins.map((a,i)=>{
-    const isSelf=a.email===currentAdmin.email;
-    const isSA=a.role==='superadmin';
-    const roleLabel=isSA?'<span style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:0.72rem;font-weight:700">👑 Super Admin</span>':'<span style="background:var(--admin-accent-dim);border:1px solid rgba(168,85,247,0.3);color:var(--admin-accent);padding:2px 10px;border-radius:8px;font-size:0.72rem;font-weight:700">🛡️ Admin</span>';
-    return `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:10px">
-      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--admin-accent),var(--primary));display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0">${a.name.substring(0,2).toUpperCase()}</div>
-      <div style="flex:1"><div style="font-weight:700;font-size:0.9rem">${a.name} ${isSelf?'<span style="font-size:0.72rem;color:var(--muted)">(คุณ)</span>':''}</div><div style="font-size:0.78rem;color:var(--muted)">${a.email}</div></div>
-      <div>${roleLabel}</div>
-      ${!isSA&&!isSelf?'<button style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">🗑️ ถอดสิทธิ์</button>':'<div style="width:90px;height:36px;display:flex;align-items:center;justify-content:center;opacity:0.35;font-size:0.75rem;color:var(--muted)">🔒 ลบไม่ได้</div>'}
-    </div>`;
-  }).join('');
-};
-
-/* ── manage episodes ── */
-let currentManageNovelId = null;
-
-window.openManageEps = function(id) {
-  currentManageNovelId = id;
-  const navBtn = document.getElementById('nav-manage-eps');
-  const n = novels.find(x => x.id === id);
-  if (navBtn) {
-    navBtn.style.display = 'flex';
-    document.getElementById('nav-manage-eps-label').textContent = n ? `ตอน: ${n.title.substring(0,12)}...` : 'จัดการตอน';
-  }
-  showPage('manage-eps', navBtn);
-};
-
-window.renderManageEps = function() {
-  const n = novels.find(x => x.id === currentManageNovelId);
-  const container = document.getElementById('manage-eps-content');
-  if (!n) { container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบนิยาย</div>'; return; }
-  const eps = n.audioFiles || [];
-  container.innerHTML = `
-    <div style="margin-bottom:20px">
-      <div style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem;font-weight:800">${n.title}</div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-top:3px">${eps.length} ตอน • คลิกตอนเพื่อแก้ไข หรือเพิ่มตอนใหม่</div>
-    </div>
-    <div class="form-card" style="margin-bottom:16px">
-      <div class="form-card-title">➕ เพิ่มตอนใหม่</div>
-      <div class="form-card-sub">อัพโหลดไฟล์เสียงสำหรับตอนใหม่</div>
-      <div class="upload-zone" id="new-ep-zone">
-        <input type="file" accept="audio/*" multiple onchange="handleNewEpUpload(event)" id="new-ep-input">
-        <div class="upload-icon">🎵</div>
-        <div class="upload-text">คลิกหรือลากไฟล์เสียงมาวาง</div>
-        <div class="upload-hint">MP3, M4A, WAV, OGG</div>
-      </div>
-      <div id="new-ep-list" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
-      <div class="action-bar" style="margin-top:12px">
-        <button class="btn-action btn-publish" onclick="saveNewEps()">💾 บันทึกตอนใหม่</button>
-      </div>
-    </div>
-    <div class="form-card">
-      <div class="form-card-title">📋 รายการตอนทั้งหมด (${eps.length})</div>
-      <div class="form-card-sub">คลิก ✏️ แก้ไขชื่อตอน หรือ 🗑️ ลบตอน</div>
-      <div id="ep-list-admin" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-        ${eps.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--muted)">ยังไม่มีตอน</div>' :
-          eps.map((ep, i) => `
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px" id="ep-row-${i}">
-            <span style="font-size:1rem;flex-shrink:0">🎵</span>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.88rem;font-weight:600" id="ep-name-display-${i}">${ep.name || `ตอนที่ ${i+1}`}</div>
-              ${ep.url ? '<div style="font-size:0.72rem;color:var(--muted)">มีไฟล์เสียง ✅</div>' : '<div style="font-size:0.72rem;color:var(--primary)">ไม่มีไฟล์ ⚠️</div>'}
-            </div>
-            <button onclick="startEditEpName(${i})" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--admin-accent);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:inherit">✏️ แก้ชื่อ</button>
-            <button onclick="replaceEpAudio(${i})" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:inherit">🔄 เปลี่ยนไฟล์</button>
-            <button onclick="deleteEp(${i})" style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:inherit">🗑️</button>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  // re-bind drag&drop for new-ep-zone
-  const zone = document.getElementById('new-ep-zone');
-  if (zone) {
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); zone.classList.remove('drag-over');
-      const evt = {target:{files:e.dataTransfer.files}};
-      handleNewEpUpload(evt);
-    });
-  }
-};
-
-let newEpFiles = [];
-window.handleNewEpUpload = function(e) {
-  const files = Array.from(e.target.files);
-  files.forEach(f => { if (!newEpFiles.find(x => x.name === f.name)) newEpFiles.push(f); });
-  const list = document.getElementById('new-ep-list');
-  if (list) list.innerHTML = newEpFiles.map((f,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px">
-      <span>🎵</span>
-      <div style="flex:1;font-size:0.85rem">${f.name}</div>
-      <button onclick="removeNewEp(${i})" style="background:rgba(232,68,90,0.1);border:1px solid rgba(232,68,90,0.3);color:var(--primary);border-radius:6px;padding:4px 8px;cursor:pointer;font-family:inherit">✕</button>
-    </div>`).join('');
-};
-window.removeNewEp = function(i) { newEpFiles.splice(i,1); handleNewEpUpload({target:{files:[]}}); };
-
-window.saveNewEps = async function() {
-  if (!currentManageNovelId || newEpFiles.length === 0) { showToast('กรุณาเลือกไฟล์เสียง','⚠️','error'); return; }
-  const n = novels.find(x => x.id === currentManageNovelId);
-  const existingEps = [...(n.audioFiles || [])];
-  showToast('กำลังอัพโหลด...','⏳','info');
-  for (let i = 0; i < newEpFiles.length; i++) {
-    const f = newEpFiles[i];
-    showToast(`อัพโหลดตอน ${i+1}/${newEpFiles.length}...`,'🎵','info');
-    try {
-      const fd = new FormData();
-      fd.append('file', f);
-      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`, { method:'POST', body:fd });
-      const data = await res.json();
-      if (data.secure_url) {
-        existingEps.push({ name: f.name, url: data.secure_url, size: f.size, duration: null });
-      }
-    } catch(e) { console.warn('Upload failed:', e); }
-  }
-  try {
-    await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: existingEps, eps: existingEps.length, updatedAt: serverTimestamp() });
-    newEpFiles = [];
-    showToast(`เพิ่ม ${newEpFiles.length} ตอนสำเร็จ!`,'🎉','success');
-    renderManageEps();
-  } catch(e) { showToast('บันทึกล้มเหลว: '+e.message,'❌','error'); }
-};
-
-window.deleteEp = async function(idx) {
-  if (!confirm(`ต้องการลบตอนที่ ${idx+1}?`)) return;
-  const n = novels.find(x => x.id === currentManageNovelId);
-  const eps = [...(n.audioFiles || [])];
-  eps.splice(idx, 1);
-  try {
-    await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: eps, eps: eps.length, updatedAt: serverTimestamp() });
-    showToast('ลบตอนแล้ว','🗑️','info');
-  } catch(e) { showToast('ลบล้มเหลว','❌','error'); }
-};
-
-window.startEditEpName = function(idx) {
-  const display = document.getElementById(`ep-name-display-${idx}`);
-  const row = document.getElementById(`ep-row-${idx}`);
-  if (!display) return;
-  const current = display.textContent;
-  display.innerHTML = `<input type="text" value="${current}" id="ep-name-input-${idx}" style="background:var(--surface3);border:1px solid var(--admin-accent);border-radius:6px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.88rem;width:100%" onblur="saveEpName(${idx})" onkeydown="if(event.key==='Enter')saveEpName(${idx})">`;
-  document.getElementById(`ep-name-input-${idx}`).focus();
-};
-
-window.saveEpName = async function(idx) {
-  const input = document.getElementById(`ep-name-input-${idx}`);
-  if (!input) return;
-  const newName = input.value.trim() || `ตอนที่ ${idx+1}`;
-  const n = novels.find(x => x.id === currentManageNovelId);
-  const eps = [...(n.audioFiles || [])];
-  if (eps[idx]) eps[idx] = { ...eps[idx], name: newName };
-  try {
-    await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: eps, updatedAt: serverTimestamp() });
-    showToast('บันทึกชื่อแล้ว','✅','success');
-  } catch(e) { showToast('บันทึกล้มเหลว','❌','error'); }
-};
-
-window.replaceEpAudio = function(idx) {
-  const input = document.createElement('input');
-  input.type = 'file'; input.accept = 'audio/*';
-  input.onchange = async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    showToast(`กำลังอัพโหลด ${f.name}...`,'⏳','info');
-    try {
-      const fd = new FormData();
-      fd.append('file', f);
-      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`, { method:'POST', body:fd });
-      const data = await res.json();
-      if (!data.secure_url) throw new Error('Upload failed');
-      const n = novels.find(x => x.id === currentManageNovelId);
-      const eps = [...(n.audioFiles || [])];
-      if (eps[idx]) eps[idx] = { ...eps[idx], url: data.secure_url, name: f.name, size: f.size };
-      await updateDoc(doc(db,'novels',currentManageNovelId), { audioFiles: eps, updatedAt: serverTimestamp() });
-      showToast('เปลี่ยนไฟล์สำเร็จ!','✅','success');
-    } catch(e) { showToast('อัพโหลดล้มเหลว','❌','error'); }
+  // View front button
+  document.getElementById('btnViewFront').onclick = () => {
+    window.open(`novel.html?id=${id}`, '_blank');
   };
-  input.click();
+
+  // Load episodes
+  await loadEpisodes(id, novel);
 };
 
-function formatSize(bytes){ if(bytes<1024)return bytes+' B'; if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB'; return(bytes/1048576).toFixed(1)+' MB'; }
-let toastTimer;
-function showToast(msg,icon='✅',type='success'){
-  const t=document.getElementById('toast');
-  document.getElementById('toast-icon').textContent=icon;
-  document.getElementById('toast-msg').textContent=msg;
-  t.className='toast show toast-'+type;
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
-}
-window.showToast = showToast;
+/* ===== EPISODES ===== */
+async function loadEpisodes(novelId, novel) {
+  const epContainer = document.getElementById('epListContainer');
+  epContainer.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px;">กำลังโหลด...</div>';
+  try {
+    const snap = await getDocs(
+      query(collection(db, 'novels', novelId, 'episodes'), orderBy('order','asc'))
+    );
+    const eps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('epSectionTitle').textContent = `รายการตอน (${eps.length})`;
 
-// Drag & drop
-['cover-zone','audio-zone','logo-zone'].forEach(id=>{
-  const zone=document.getElementById(id); if(!zone)return;
-  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
-  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
-  zone.addEventListener('drop',e=>{
-    e.preventDefault(); zone.classList.remove('drag-over');
-    const input=zone.querySelector('input[type=file]');
-    if(input&&e.dataTransfer.files.length){
-      const evt={target:{files:e.dataTransfer.files}};
-      if(id==='cover-zone')handleCoverUpload(evt);
-      else if(id==='audio-zone')handleAudioUpload(evt);
-      else if(id==='logo-zone')handleLogoUpload(evt);
+    if (!eps.length) {
+      epContainer.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px;">ยังไม่มีตอน</div>';
+      return;
+    }
+
+    // Group: show all in one accordion for now
+    epContainer.innerHTML = `
+    <div class="ep-group">
+      <div class="ep-group-header" onclick="toggleEpGroup(this)">
+        <div class="ep-group-label">🎵 ตอนที่ 1 - ${eps.length}</div>
+        <div class="ep-group-toggle open">▲</div>
+      </div>
+      <div class="ep-items" id="epItems_${novelId}">
+        ${eps.map(ep => {
+          const hasFile = ep.audioUrl || ep.fileName;
+          return `
+          <div class="ep-item">
+            <div class="ep-item-num">ตอนที่ ${ep.order || '—'}</div>
+            ${hasFile
+              ? `<div class="ep-item-icon">▶</div>
+                 <div class="ep-item-name">${ep.fileName || ep.title || 'ไม่มีชื่อ'}</div>
+                 <div class="ep-item-time">0:00</div>`
+              : `<div class="ep-item-icon">🔒</div>
+                 <div class="ep-item-no-file">ไม่มีไฟล์</div>`
+            }
+            <div class="ep-btns">
+              <button class="btn-ep-edit" onclick="editEpisode('${novelId}','${ep.id}')">✏️ แก้ไขตอน</button>
+              <button class="btn-ep-del"  onclick="deleteEpisode('${novelId}','${ep.id}','${ep.order||''}')">🗑</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  } catch(e) {
+    epContainer.innerHTML = '<div style="color:#f87171;font-size:13px;padding:8px;">โหลดตอนล้มเหลว</div>';
+    console.error(e);
+  }
+}
+
+window.toggleEpGroup = function(header) {
+  const items  = header.nextElementSibling;
+  const toggle = header.querySelector('.ep-group-toggle');
+  const isOpen = toggle.classList.contains('open');
+  if (isOpen) {
+    items.style.display  = 'none';
+    toggle.classList.remove('open');
+    toggle.textContent = '▼';
+  } else {
+    items.style.display  = 'block';
+    toggle.classList.add('open');
+    toggle.textContent = '▲';
+  }
+};
+
+/* ===== SAVE NOVEL ===== */
+async function saveNovel() {
+  if (!selectedNovelId) return;
+  const title  = document.getElementById('editTitle').value.trim();
+  const author = document.getElementById('editAuthor').value.trim();
+  const desc   = document.getElementById('editDesc').value.trim();
+  const status = document.getElementById('editStatus').value;
+  if (!title) { alert('กรุณากรอกชื่อเรื่อง'); return; }
+  try {
+    await updateDoc(doc(db, 'novels', selectedNovelId), { title, author, description: desc, status });
+    alert('บันทึกเรียบร้อย ✅');
+  } catch(e) { alert('บันทึกล้มเหลว: ' + e.message); }
+}
+
+/* ===== DELETE NOVEL ===== */
+window.deleteNovelConfirm = function(id, title) {
+  if (!confirm(`ลบนิยาย "${title}" ? การกระทำนี้ไม่สามารถยกเลิกได้`)) return;
+  deleteDoc(doc(db, 'novels', id))
+    .then(() => {
+      if (selectedNovelId === id) {
+        selectedNovelId = null;
+        document.getElementById('editFormWrap').style.display = 'none';
+        document.getElementById('rightPlaceholder').style.display = 'flex';
+      }
+    })
+    .catch(e => alert('ลบล้มเหลว: ' + e.message));
+};
+
+/* ===== EPISODE ACTIONS (stubs) ===== */
+window.editEpisode = function(novelId, epId) {
+  alert(`แก้ไขตอน ${epId} — ฟีเจอร์นี้อยู่ระหว่างพัฒนา`);
+};
+window.deleteEpisode = async function(novelId, epId, order) {
+  if (!confirm(`ลบตอนที่ ${order}?`)) return;
+  try {
+    await deleteDoc(doc(db, 'novels', novelId, 'episodes', epId));
+    openEdit(novelId);
+  } catch(e) { alert('ลบล้มเหลว: ' + e.message); }
+};
+
+/* ===== ADD NOVEL (stub) ===== */
+function addNovel() {
+  const title = prompt('ชื่อนิยายใหม่:');
+  if (!title) return;
+  const author = prompt('ชื่อผู้แต่ง:') || '';
+  const newNovel = {
+    title, author,
+    description: '',
+    status: 'pending',
+    episodeCount: 0,
+    views: 0,
+    createdAt: new Date()
+  };
+  setDoc(doc(collection(db, 'novels')), newNovel)
+    .then(() => alert('เพิ่มนิยายเรียบร้อย ✅'))
+    .catch(e => alert('ล้มเหลว: ' + e.message));
+}
+
+/* ===== CHANGE COVER ===== */
+function changeCover() {
+  document.getElementById('coverFileInput').click();
+}
+
+document.getElementById('coverFileInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file || !selectedNovelId) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  try {
+    const res  = await fetch(CLOUDINARY_URL, { method:'POST', body: formData });
+    const data = await res.json();
+    if (!data.secure_url) throw new Error('ไม่ได้รับ URL จาก Cloudinary');
+    await updateDoc(doc(db, 'novels', selectedNovelId), { coverUrl: data.secure_url });
+    document.getElementById('editCoverPreview').innerHTML = `<img src="${data.secure_url}" alt="cover">`;
+    alert('เปลี่ยนรูปปกเรียบร้อย ✅');
+  } catch(e) { alert('อัพโหลดรูปล้มเหลว: ' + e.message); }
+});
+
+/* ===== ADMIN MANAGEMENT ===== */
+async function loadAdminList() {
+  if (!isSuperAdmin) return;
+  try {
+    const snap = await getDocs(collection(db, 'admins'));
+    const admins = [];
+    snap.forEach(d => admins.push({ id: d.id, ...d.data() }));
+
+    const superAdmins = ADMIN_EMAILS.map((email, i) => ({
+      id: `super_${i}`, email, displayName: 'Super Admin', role: 'super', isSuper: true
+    }));
+
+    const all = [...superAdmins, ...admins.filter(a => !ADMIN_EMAILS.includes(a.email))];
+    renderAdminTable(all);
+  } catch(e) { console.error('loadAdminList:', e); }
+}
+
+function renderAdminTable(admins) {
+  const colors = ['#7c3aed','#1d4ed8','#15803d','#b45309','#0e7490'];
+  const tbody  = document.getElementById('adminTableBody');
+  if (!admins.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีแอดมิน</td></tr>';
+    return;
+  }
+  tbody.innerHTML = admins.map((a, i) => {
+    const color  = colors[i % colors.length];
+    const letter = (a.displayName || a.email || '?')[0].toUpperCase();
+    const roleLabel = a.role === 'super' ? 'Super Admin' : a.role === 'admin' ? 'Admin' : 'Moderator';
+    const roleCls   = a.role === 'super' ? 'role-super' : a.role === 'admin' ? 'role-admin' : 'role-mod';
+    return `
+    <tr>
+      <td>
+        <div class="admin-row-name">
+          <div class="admin-avatar-sm" style="background:${color}">${letter}</div>
+          <div class="admin-row-info">
+            <strong>${a.displayName || 'ไม่มีชื่อ'}</strong>
+            ${a.isSuper ? '<span>🔒 เจ้าของระบบ</span>' : ''}
+          </div>
+        </div>
+      </td>
+      <td style="color:var(--text-secondary);font-size:12px;">${a.email || '—'}</td>
+      <td><span class="role-badge ${roleCls}">${roleLabel}</span></td>
+      <td>
+        <button class="btn-del-admin" ${a.isSuper ? 'disabled' : `onclick="removeAdmin('${a.id}')"`}>🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.removeAdmin = async function(uid) {
+  if (!confirm('ถอดสิทธิ์แอดมินคนนี้?')) return;
+  try {
+    await deleteDoc(doc(db, 'admins', uid));
+    loadAdminList();
+  } catch(e) { alert('ล้มเหลว: ' + e.message); }
+};
+
+/* ===== CREATE ADMIN ===== */
+async function createAdmin() {
+  const name     = document.getElementById('newAdminName').value.trim();
+  const email    = document.getElementById('newAdminEmail').value.trim();
+  const password = document.getElementById('newAdminPassword').value;
+  const role     = document.getElementById('newAdminRole').value;
+  const msgEl    = document.getElementById('adminFormMsg');
+
+  if (!name || !email || !password) {
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = '❌ กรุณากรอกข้อมูลให้ครบ';
+    return;
+  }
+  if (password.length < 6) {
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = '❌ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+    return;
+  }
+  try {
+    msgEl.style.color = 'var(--gold)';
+    msgEl.textContent = '⏳ กำลังสร้าง...';
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, 'admins', cred.user.uid), { displayName: name, email, role, createdAt: new Date() });
+    msgEl.style.color = '#4ade80';
+    msgEl.textContent = '✅ เพิ่มแอดมินเรียบร้อย';
+    document.getElementById('newAdminName').value     = '';
+    document.getElementById('newAdminEmail').value    = '';
+    document.getElementById('newAdminPassword').value = '';
+    loadAdminList();
+  } catch(e) {
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = '❌ ' + (e.message || 'เกิดข้อผิดพลาด');
+  }
+}
+
+/* ===== BIND EVENTS ===== */
+function bindEvents() {
+  document.getElementById('adminSearchInput').addEventListener('input', applyFilter);
+  document.getElementById('statusFilter').addEventListener('change', applyFilter);
+  document.getElementById('btnAddNovel').addEventListener('click', addNovel);
+  document.getElementById('btnSaveNovel').addEventListener('click', saveNovel);
+  document.getElementById('btnCancelEdit').addEventListener('click', () => {
+    document.getElementById('editFormWrap').style.display = 'none';
+    document.getElementById('rightPlaceholder').style.display = 'flex';
+    selectedNovelId = null;
+    document.querySelectorAll('.novel-list-item').forEach(el => el.classList.remove('selected'));
+  });
+  document.getElementById('btnDeleteNovelForm').addEventListener('click', () => {
+    if (!selectedNovelId) return;
+    const novel = allNovels.find(n => n.id === selectedNovelId);
+    deleteNovelConfirm(selectedNovelId, novel?.title || '');
+  });
+  document.getElementById('btnChangeCover').addEventListener('click', changeCover);
+  document.getElementById('btnAddEpisode').addEventListener('click', () => {
+    alert('เพิ่มตอน — ฟีเจอร์อยู่ระหว่างพัฒนา');
+  });
+  document.getElementById('btnManageAdmin').addEventListener('click', () => {
+    const isActive = document.getElementById('btnManageAdmin').classList.contains('active');
+    if (isActive) {
+      document.getElementById('adminMgmtWrap').classList.remove('visible');
+      document.getElementById('btnManageAdmin').classList.remove('active');
+      if (selectedNovelId) {
+        document.getElementById('editFormWrap').style.display = 'block';
+      } else {
+        document.getElementById('rightPlaceholder').style.display = 'flex';
+      }
+    } else {
+      document.getElementById('adminMgmtWrap').classList.add('visible');
+      document.getElementById('editFormWrap').style.display = 'none';
+      document.getElementById('rightPlaceholder').style.display = 'none';
+      document.getElementById('btnManageAdmin').classList.add('active');
+      loadAdminList();
     }
   });
-});
-
-
-/* ===== HERO IMAGE FUNCTIONS ===== */
-function previewHeroImage(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById('hero-preview-img');
-    const ph  = document.getElementById('hero-preview-placeholder');
-    img.src = e.target.result;
-    img.style.display = 'block';
-    ph.style.display  = 'none';
-  };
-  reader.readAsDataURL(file);
+  document.getElementById('btnCreateAdmin').addEventListener('click', createAdmin);
+  document.getElementById('btnClearAdminForm').addEventListener('click', () => {
+    document.getElementById('newAdminName').value     = '';
+    document.getElementById('newAdminEmail').value    = '';
+    document.getElementById('newAdminPassword').value = '';
+    document.getElementById('newAdminRole').value     = 'admin';
+    document.getElementById('adminFormMsg').textContent = '';
+  });
 }
-
-async function uploadHeroImage() {
-  const fileInput = document.getElementById('hero-file-input');
-  const statusEl  = document.getElementById('hero-upload-status');
-  const btn       = document.getElementById('hero-upload-btn');
-  if (!fileInput.files[0]) { statusEl.textContent = '⚠️ กรุณาเลือกไฟล์ก่อน'; return; }
-  btn.disabled = true;
-  statusEl.textContent = '⏳ กำลังอัพโหลด...';
-  try {
-    const fd = new FormData();
-    fd.append('file', fileInput.files[0]);
-    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('cloud_name', CLOUDINARY_CLOUD);
-    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
-    const data = await res.json();
-    if (!data.secure_url) throw new Error('Upload failed');
-    await setDoc(doc(db, 'settings', 'hero'), { imageUrl: data.secure_url, updatedAt: serverTimestamp() });
-    statusEl.style.color = '#4ade80';
-    statusEl.textContent = '✅ บันทึกรูป Hero สำเร็จ!';
-  } catch(e) {
-    statusEl.style.color = 'var(--primary)';
-    statusEl.textContent = '❌ อัพโหลดไม่สำเร็จ: ' + e.message;
-  }
-  btn.disabled = false;
-}
-
-async function loadCurrentHeroImage() {
-  try {
-    const snap = await getDocs(query(collection(db,'settings')));
-    snap.forEach(d => {
-      if (d.id === 'hero' && d.data().imageUrl) {
-        const img = document.getElementById('hero-preview-img');
-        const ph  = document.getElementById('hero-preview-placeholder');
-        if (img) { img.src = d.data().imageUrl; img.style.display='block'; if(ph) ph.style.display='none'; }
-      }
-    });
-  } catch(e) { console.warn('Load hero:', e); }
-}
-loadCurrentHeroImage();
-/* ================================ */
-
-// Login on Enter
-document.addEventListener('keydown', e => {
-
-});
 </script>
 </body>
 </html>
