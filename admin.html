@@ -1067,6 +1067,40 @@ body.admin-body {
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .form-row-2 { grid-template-columns: 1fr; }
 }
+
+/* ===== EPISODE MODAL ===== */
+.ep-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 9999;
+  align-items: center; justify-content: center;
+}
+.ep-modal-overlay.open { display: flex; }
+.ep-modal {
+  background: var(--admin-card); border: 1px solid var(--admin-border);
+  border-radius: 16px; padding: 28px; width: 480px; max-width: 95vw;
+}
+.ep-modal h3 { color: #fff; margin: 0 0 20px; font-size: 17px; }
+.ep-modal label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; margin-top: 14px; }
+.ep-modal input, .ep-modal textarea {
+  width: 100%; background: var(--admin-surface); border: 1px solid var(--admin-border);
+  border-radius: 8px; color: #fff; padding: 9px 12px; font-size: 14px; box-sizing: border-box;
+}
+.ep-modal input:focus, .ep-modal textarea:focus { outline: none; border-color: var(--gold); }
+.ep-modal .ep-modal-file-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.ep-modal .ep-modal-file-name { color: var(--muted); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ep-modal .ep-modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+.ep-modal .btn-ep-save {
+  background: var(--gold); color: #1a1200; border: none;
+  padding: 9px 22px; border-radius: 8px; font-weight: 700; cursor: pointer;
+}
+.ep-modal .btn-ep-cancel {
+  background: transparent; color: var(--muted); border: 1px solid var(--admin-border);
+  padding: 9px 18px; border-radius: 8px; cursor: pointer;
+}
+.ep-modal .upload-btn {
+  background: #2563eb; color: #fff; border: none;
+  padding: 8px 14px; border-radius: 7px; font-size: 13px; cursor: pointer; white-space: nowrap;
+}
 </style>
 </head>
 <body class="admin-body">
@@ -1623,9 +1657,81 @@ window.deleteNovelConfirm = function(id, title) {
     .catch(e => alert('ลบล้มเหลว: ' + e.message));
 };
 
-/* ===== EPISODE ACTIONS (stubs) ===== */
-window.editEpisode = function(novelId, epId) {
-  alert(`แก้ไขตอน ${epId} — ฟีเจอร์นี้อยู่ระหว่างพัฒนา`);
+/* ===== EPISODE MODAL STATE ===== */
+let _epModalNovelId = null;
+let _epModalEpId    = null; // null = add, string = edit
+let _epModalFile    = null;
+
+function openEpModal(novelId, epId, epData) {
+  _epModalNovelId = novelId;
+  _epModalEpId    = epId || null;
+  _epModalFile    = null;
+  document.getElementById('epModalTitle').textContent  = epId ? 'แก้ไขตอน' : 'เพิ่มตอนใหม่';
+  document.getElementById('epModalEpTitle').value      = epData?.title || '';
+  document.getElementById('epModalOrder').value        = epData?.order || '';
+  document.getElementById('epModalFileName').textContent = epData?.fileName || 'ยังไม่ได้เลือกไฟล์';
+  document.getElementById('epModal').classList.add('open');
+}
+window.closeEpModal = function() {
+  document.getElementById('epModal').classList.remove('open');
+};
+window.onEpFileChange = function(input) {
+  _epModalFile = input.files[0] || null;
+  document.getElementById('epModalFileName').textContent = _epModalFile ? _epModalFile.name : 'ยังไม่ได้เลือกไฟล์';
+};
+window.saveEpisode = async function() {
+  const title = document.getElementById('epModalEpTitle').value.trim();
+  const order = parseInt(document.getElementById('epModalOrder').value) || 0;
+  if (!title) { alert('กรุณากรอกชื่อตอน'); return; }
+
+  const btn = document.getElementById('epModalSaveBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+
+  try {
+    let audioUrl = null, fileName = null;
+
+    // Upload audio to Cloudinary if file selected
+    if (_epModalFile) {
+      const fd = new FormData();
+      fd.append('file', _epModalFile);
+      fd.append('upload_preset', 'ml_default');
+      const res  = await fetch(`https://api.cloudinary.com/v1_1/dmr6ln5hy/video/upload`, { method:'POST', body: fd });
+      const json = await res.json();
+      audioUrl = json.secure_url;
+      fileName = _epModalFile.name;
+    }
+
+    const epData = { title, order, updatedAt: new Date() };
+    if (audioUrl) { epData.audioUrl = audioUrl; epData.fileName = fileName; }
+
+    if (_epModalEpId) {
+      // Edit existing
+      await updateDoc(doc(db, 'novels', _epModalNovelId, 'episodes', _epModalEpId), epData);
+    } else {
+      // Add new
+      epData.createdAt = new Date();
+      await setDoc(doc(collection(db, 'novels', _epModalNovelId, 'episodes')), epData);
+      // Update episodeCount
+      const novel = allNovels.find(n => n.id === _epModalNovelId);
+      const newCount = (novel?.episodeCount || 0) + 1;
+      await updateDoc(doc(db, 'novels', _epModalNovelId), { episodeCount: newCount });
+    }
+
+    closeEpModal();
+    openEdit(_epModalNovelId); // reload edit form
+  } catch(e) {
+    alert('บันทึกล้มเหลว: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 บันทึก';
+  }
+};
+
+/* ===== EPISODE ACTIONS ===== */
+window.editEpisode = async function(novelId, epId) {
+  try {
+    const snap = await getDoc(doc(db, 'novels', novelId, 'episodes', epId));
+    openEpModal(novelId, epId, snap.exists() ? snap.data() : {});
+  } catch(e) { alert('โหลดข้อมูลตอนล้มเหลว: ' + e.message); }
 };
 window.deleteEpisode = async function(novelId, epId, order) {
   if (!confirm(`ลบตอนที่ ${order}?`)) return;
@@ -1785,7 +1891,11 @@ function bindEvents() {
   });
   document.getElementById('btnChangeCover').addEventListener('click', changeCover);
   document.getElementById('btnAddEpisode').addEventListener('click', () => {
-    alert('เพิ่มตอน — ฟีเจอร์อยู่ระหว่างพัฒนา');
+    if (!selectedNovelId) return;
+    // Calculate next order number
+    const epItems = document.querySelectorAll('.ep-item');
+    const nextOrder = epItems.length + 1;
+    openEpModal(selectedNovelId, null, { order: nextOrder });
   });
   document.getElementById('btnManageAdmin').addEventListener('click', () => {
     const isActive = document.getElementById('btnManageAdmin').classList.contains('active');
@@ -1815,5 +1925,25 @@ function bindEvents() {
   });
 }
 </script>
+
+<!-- ===== EPISODE MODAL ===== -->
+<div class="ep-modal-overlay" id="epModal">
+  <div class="ep-modal">
+    <h3 id="epModalTitle">เพิ่มตอนใหม่</h3>
+    <label>ชื่อตอน</label>
+    <input type="text" id="epModalEpTitle" placeholder="เช่น ตอนที่ 1 — เริ่มต้น">
+    <label>ลำดับตอน (order)</label>
+    <input type="number" id="epModalOrder" placeholder="1, 2, 3 ...">
+    <div class="ep-modal-file-row">
+      <button class="upload-btn" onclick="document.getElementById('epModalFileInput').click()">📁 เลือกไฟล์เสียง</button>
+      <span class="ep-modal-file-name" id="epModalFileName">ยังไม่ได้เลือกไฟล์</span>
+      <input type="file" id="epModalFileInput" accept="audio/*" style="display:none" onchange="onEpFileChange(this)">
+    </div>
+    <div class="ep-modal-actions">
+      <button class="btn-ep-cancel" onclick="closeEpModal()">ยกเลิก</button>
+      <button class="btn-ep-save" id="epModalSaveBtn" onclick="saveEpisode()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
