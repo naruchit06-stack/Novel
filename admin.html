@@ -1336,7 +1336,7 @@ import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/fir
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, doc,
-         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch }
+         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch, addDoc }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ===== FIREBASE INIT ===== */
@@ -1710,7 +1710,7 @@ window.saveEpisode = async function() {
     } else {
       // Add new
       epData.createdAt = new Date();
-      await setDoc(doc(collection(db, 'novels', _epModalNovelId, 'episodes')), epData);
+      await addDoc(collection(db, 'novels', _epModalNovelId, 'episodes'), epData);
       // Update episodeCount
       const novel = allNovels.find(n => n.id === _epModalNovelId);
       const newCount = (novel?.episodeCount || 0) + 1;
