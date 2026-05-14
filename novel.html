@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กำลังโหลด... — The Golden Hoard Novels</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0f0f;--s1:#1a1a1a;--s2:#222;--s3:#2a2a2a;
+    --bd:#2e2e2e;--ac:#c8963e;--ac2:#e0a84a;
+    --t:#e8e8e8;--t2:#a0a0a0;--t3:#666;--green:#4caf7d;--ph:72px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;padding-bottom:calc(var(--ph)+32px)}
+
+  /* NAVBAR */
+  .navbar{position:sticky;top:0;z-index:200;height:64px;background:rgba(15,15,15,0.95);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;padding:0 32px;gap:24px}
+  .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+  .nav-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#f5c542,#e8a000);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 2px 12px rgba(245,197,66,0.3)}
+  .nav-logo-text{font-size:1.05rem;font-weight:700;color:#e8e8e8;line-height:1}
+  .nav-logo-text span{color:#e8445a}
+  .nav-links{display:flex;align-items:center;gap:4px;flex:1}
+  .nav-links a{padding:8px 14px;border-radius:8px;color:#a0a0a0;text-decoration:none;font-size:0.9rem;font-weight:600;transition:all .18s;white-space:nowrap;position:relative}
+  .nav-links a:hover{color:#e8e8e8;background:#1a1a28}
+  .nav-links a.active{color:#e8445a}
+  .nav-links a.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;background:#e8445a;border-radius:2px}
+  .nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .nav-btn{padding:8px 18px;border-radius:9px;font-size:0.85rem;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;border:none;font-family:'Noto Sans Thai',sans-serif;white-space:nowrap}
+  .nav-btn-outline{background:none;border:1.5px solid rgba(255,255,255,0.08);color:#e8e8e8}
+  .nav-btn-outline:hover{border-color:#e8445a;color:#e8445a}
+  .nav-btn-fill{background:#e8445a;color:#fff}
+  .nav-btn-fill:hover{background:#c73248}
+  .nav-user{position:relative}
+  .nav-avatar{width:36px;height:36px;border-radius:50%;background:#e8445a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700;cursor:pointer;border:2px solid rgba(232,68,90,0.25);overflow:hidden}
+  .nav-avatar img{width:100%;height:100%;object-fit:cover}
+  .nav-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:#1a1a28;border:1px solid rgba(255,255,255,0.08);border-radius:12px;min-width:180px;box-shadow:0 16px 40px rgba(0,0,0,0.4);display:none;flex-direction:column;overflow:hidden}
+  .nav-user:hover .nav-dropdown{display:flex}
+  .nav-dropdown a{padding:11px 16px;color:#a0a0a0;text-decoration:none;font-size:0.88rem;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:10px}
+  .nav-dropdown a:hover{background:#22223a;color:#e8e8e8}
+  .nav-dropdown a.danger{color:#e8445a}
+  .hamburger-btn{display:none;background:none;border:none;color:#e8e8e8;font-size:1.4rem;cursor:pointer;padding:4px 8px;margin-left:auto}
+  .nav-mobile-drawer{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(15,15,15,0.98);border-bottom:1px solid rgba(255,255,255,0.08);flex-direction:column;gap:4px;padding:16px;z-index:199}
+  .nav-mobile-drawer a{padding:10px 14px;border-radius:8px;color:#a0a0a0;text-decoration:none;font-size:0.95rem;font-weight:600}
+  .nav-mobile-drawer a.active{color:#e8445a}
+  @media(max-width:768px){
+    .navbar{padding:0 16px;gap:12px}
+    .nav-links{display:none}
+    .nav-actions{display:none}
+    .nav-user{display:none}
+    .hamburger-btn{display:block}
+    .nav-mobile-drawer.open{display:flex}
+  }
+
+  /* LAYOUT */
+  .main{padding:32px 32px 0;max-width:1100px;margin:0 auto}
+  .back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--t2);font-size:13px;text-decoration:none;margin-bottom:20px;transition:color .2s}
+  .back-btn:hover{color:var(--ac)}
+
+  /* LOADING / ERROR */
+  .state-box{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:14px;color:var(--t2)}
+  .spinner{width:36px;height:36px;border:3px solid var(--s3);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err-icon{font-size:2.5rem}
+
+  /* COVER */
+  .novel-header{display:flex;gap:32px;align-items:flex-start;margin-bottom:32px}
+  .cover{width:200px;height:280px;border-radius:12px;background:linear-gradient(160deg,#1c1c2e,#2d1b4e,#1a0a2e);box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
+  .cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(200,150,62,.15),transparent 60%)}
+  .cover img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:12px}
+  .cover-title{font-size:20px;font-weight:700;color:var(--ac);text-align:center;line-height:1.4;padding:0 16px;z-index:1;text-shadow:0 2px 12px rgba(200,150,62,.4)}
+  .cover-sub{font-size:11px;color:var(--t3);margin-top:8px;z-index:1}
+
+  /* INFO */
+  .novel-info{flex:1;min-width:0}
+  .novel-title-el{font-size:26px;font-weight:700;line-height:1.3;margin-bottom:8px}
+  .novel-author-el{font-size:14px;color:var(--t2);margin-bottom:12px}
+  .meta-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;color:var(--t2);flex-wrap:wrap}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+  .badge-done   {background:rgba(76,175,125,.15);color:var(--green);border:1px solid rgba(76,175,125,.3)}
+  .badge-ongoing{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+  .badge-new    {background:rgba(200,150,62,.15);color:var(--ac);border:1px solid rgba(200,150,62,.3)}
+  .badge-hiatus {background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+  .badge-ep     {background:rgba(200,150,62,.15);color:var(--ac);border:1px solid rgba(200,150,62,.3)}
+  .synopsis{font-size:14px;color:var(--t2);line-height:1.8;margin-bottom:16px;max-height:100px;overflow-y:auto}
+  .tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--s2);border:1px solid var(--bd);color:var(--t2)}
+
+  /* BUTTONS */
+  .action-row{display:flex;gap:10px;margin-bottom:14px}
+  .btn{display:flex;align-items:center;gap:8px;padding:11px 22px;border-radius:8px;background:var(--ac);border:none;color:#0f0f0f;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+  .btn:hover{background:var(--ac2)}
+  .btn-sec{background:var(--s2);border:1px solid var(--bd);color:var(--t)}
+  .btn-sec:hover{background:var(--s3)}
+  .reaction-row{display:flex;gap:10px}
+  .reaction-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;background:var(--s2);border:1px solid var(--bd);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s}
+  .reaction-btn:hover{border-color:var(--ac);color:var(--ac)}
+
+  /* EPISODE LIST */
+  .section-title{font-size:17px;font-weight:700;margin:28px 0 14px}
+  .ep-list{display:flex;flex-direction:column;gap:6px}
+
+  .ep-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:10px;background:var(--s1);border:1px solid var(--bd);cursor:pointer;transition:all .2s}
+  .ep-item:hover{background:var(--s2);border-color:#3a3a3a}
+  .ep-item.active{background:rgba(200,150,62,.08);border-color:rgba(200,150,62,.3)}
+  .ep-item.no-audio{opacity:.5;cursor:default}
+  .ep-icon{font-size:15px;color:var(--t2);width:20px;text-align:center;flex-shrink:0}
+  .ep-item.active .ep-icon{color:var(--ac)}
+  .ep-label{font-size:14px;font-weight:500;flex:1}
+  .ep-dur{font-size:11px;color:var(--t3)}
+
+  /* PLAYER BAR */
+  #player-bar{position:fixed;bottom:0;left:200px;right:0;height:var(--ph);background:#141414;border-top:1px solid var(--bd);display:none;align-items:center;padding:0 24px;gap:20px;backdrop-filter:blur(12px);z-index:200}
+  #player-bar.visible{display:flex}
+  .player-thumb{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,#1c1c2e,#2d1b4e);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.4);overflow:hidden}
+  .player-thumb img{width:100%;height:100%;object-fit:cover}
+  .player-info{min-width:0;flex-shrink:0;width:160px}
+  .player-ep{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t)}
+  .player-sub{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .seek-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+  .time-row{display:flex;justify-content:space-between;font-size:10px;color:var(--t3)}
+  .seek-bar{width:100%;height:4px;background:var(--s3);border-radius:2px;cursor:pointer;-webkit-appearance:none;appearance:none;outline:none;border:none;accent-color:var(--ac)}
+  .seek-bar::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ac);cursor:pointer;box-shadow:0 0 6px rgba(200,150,62,.5)}
+  .controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .ctrl{width:36px;height:36px;border-radius:50%;background:none;border:none;cursor:pointer;color:var(--t2);font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .ctrl:hover{color:var(--t);background:var(--s2)}
+  .ctrl.main{width:42px;height:42px;background:var(--ac);color:#0f0f0f;font-size:20px;border:none}
+  .ctrl.main:hover{background:var(--ac2)}
+
+  @media(max-width:768px){
+    .sidebar{display:none}
+    .main{margin-left:0;padding:20px 16px 0}
+    #player-bar{left:0}
+    .novel-header{flex-direction:column;align-items:center}
+    .cover{width:160px;height:224px}
+    .novel-title-el{font-size:20px}
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar" id="novelNavbar">
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">👑</div>
+    <div class="nav-logo-text">The Golden <span>Hoard</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">หน้าแรก</a>
+    <a href="index.html" class="active">นิยายทั้งหมด</a>
+    <a href="#" id="nav-favorites-link">รายการโปรด</a>
+  </div>
+  <div class="nav-actions" id="navGuestActions">
+    <a href="login.html" class="nav-btn nav-btn-outline">เข้าสู่ระบบ</a>
+    <a href="login.html" class="nav-btn nav-btn-fill">สมัครสมาชิก</a>
+  </div>
+  <div class="nav-user" id="navUserMenu" style="display:none">
+    <div class="nav-avatar" id="navAvatar">U</div>
+    <div class="nav-dropdown">
+      <a href="#" id="navUserName" style="cursor:default;pointer-events:none;color:#e8e8e8;font-weight:700">ผู้ใช้</a>
+      <a href="admin.html" id="navAdminBtn" style="display:none">⚙️ จัดการนิยาย</a>
+      <a href="#" class="danger" onclick="handleSignOut&&handleSignOut()">🚪 ออกจากระบบ</a>
+    </div>
+  </div>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="document.getElementById('mobileDrawer').classList.toggle('open')">☰</button>
+</nav>
+<div class="nav-mobile-drawer" id="mobileDrawer">
+  <a href="index.html">🏠 หน้าแรก</a>
+  <a href="index.html" class="active">📚 นิยายทั้งหมด</a>
+  <a href="#" id="mobile-favorites-link">⭐ รายการโปรด</a>
+</div>
+
+<main class="main">
+  <a href="index.html" class="back-btn">← กลับหน้าหลัก</a>
+
+  <div id="stateLoading" class="state-box">
+    <div class="spinner"></div>
+    <span>กำลังโหลด...</span>
+  </div>
+
+  <div id="stateError" class="state-box" style="display:none">
+    <div class="err-icon">⚠️</div>
+    <span id="errMsg">ไม่พบนิยายนี้</span>
+    <a href="index.html" class="btn btn-sec" style="margin-top:8px;text-decoration:none">กลับหน้าหลัก</a>
+  </div>
+
+  <div id="stateContent" style="display:none">
+    <div class="novel-header">
+      <div class="cover" id="coverBox">
+        <div class="cover-title" id="coverTitle"></div>
+        <div class="cover-sub">THE GOLDEN HOARD NOVELS</div>
+      </div>
+      <div class="novel-info">
+        <div class="novel-title-el" id="novelTitle">-</div>
+        <div class="novel-author-el" id="novelAuthor">-</div>
+        <div class="meta-row" id="metaRow"></div>
+        <div class="synopsis" id="novelSynopsis"></div>
+        <div class="tags-row" id="tagsRow"></div>
+        <div class="action-row">
+          <button class="btn" id="playFirstBtn">▶ ฟังทั้งหมด</button>
+        </div>
+        <div class="reaction-row">
+          <button class="reaction-btn">👍 <span id="likesEl">0</span></button>
+          <button class="reaction-btn">💬 0</button>
+          <button class="reaction-btn">👎 0</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" id="epSectionTitle">รายการตอน</div>
+    <div class="ep-list" id="epList"></div>
+  </div>
+</main>
+
+<audio id="audio"></audio>
+
+<div id="player-bar">
+  <div class="player-thumb" id="playerThumb">🎧</div>
+  <div class="player-info">
+    <div class="player-ep" id="playerEp">-</div>
+    <div class="player-sub" id="playerSub">-</div>
+  </div>
+  <div class="seek-wrap">
+    <input type="range" class="seek-bar" id="seekBar" value="0" min="0" max="100" step="0.1">
+    <div class="time-row"><span id="timeNow">0:00</span><span id="timeTot">0:00</span></div>
+  </div>
+  <div class="controls">
+    <button class="ctrl" id="prevBtn">⏮</button>
+    <button class="ctrl main" id="playBtn">▶</button>
+    <button class="ctrl" id="nextBtn">⏭</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseApp = initializeApp({
+  apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
+  authDomain:        "login-24acc.firebaseapp.com",
+  projectId:         "login-24acc",
+  storageBucket:     "login-24acc.firebasestorage.app",
+  messagingSenderId: "440213309587",
+  appId:             "1:440213309587:web:072857c31c2e6bd5062566"
+});
+const db = getFirestore(firebaseApp);
+
+/* helpers */
+const $ = id => document.getElementById(id);
+const fmt = s => {
+  if (!s || isNaN(s)) return '0:00';
+  s = s|0;
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sc=s%60;
+  return h
+    ? `${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`
+    : `${m}:${String(sc).padStart(2,'0')}`;
+};
+const STATUS_LABEL = { ongoing:'กำลังดำเนิน', done:'จบแล้ว', new:'ใหม่', hiatus:'หยุดพัก' };
+const STATUS_CLS   = { ongoing:'badge-ongoing', done:'badge-done', new:'badge-new', hiatus:'badge-hiatus' };
+
+/* state */
+let novel      = null;
+let audioFiles = [];
+let curIdx     = -1;
+const audio    = $('audio');
+
+/* ── load ── */
+const novelId = new URLSearchParams(location.search).get('id');
+if (!novelId) {
+  showErr('ไม่พบ ID นิยาย — กรุณากลับหน้าหลัก');
+} else {
+  (async () => {
+    try {
+      const snap = await getDoc(doc(db, 'novels', novelId));
+      if (!snap.exists()) { showErr('ไม่พบนิยายนี้ในฐานข้อมูล'); return; }
+      novel = { id: snap.id, ...snap.data() };
+      const epSnap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order', 'asc')));
+      audioFiles = epSnap.docs.map(d => ({ url: d.data().audioUrl, name: d.data().title, ...d.data() }));
+      render(novel);
+    } catch(e) {
+      console.error(e);
+      showErr('โหลดข้อมูลไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+    }
+  })();
+}
+
+function showErr(msg) {
+  $('stateLoading').style.display = 'none';
+  $('stateError').style.display   = 'flex';
+  $('errMsg').textContent = msg;
+}
+
+/* ── render ── */
+function render(n) {
+  document.title = `${n.title} — The Golden Hoard Novels`;
+
+  /* cover */
+  if (n.coverUrl) {
+    const img = new Image();
+    img.src = n.coverUrl; img.alt = n.title;
+    $('coverBox').appendChild(img);
+    $('coverTitle').style.display = 'none';
+  } else {
+    $('coverTitle').textContent = n.title;
+  }
+
+  $('novelTitle').textContent  = n.title;
+  $('novelAuthor').textContent = '✍️ ' + (n.author || 'Unknown');
+  $('novelSynopsis').textContent = n.synopsis || '';
+  $('likesEl').textContent = n.likes || 0;
+
+  const st    = n.status || 'ongoing';
+  const epCnt = Math.max(n.eps || 0, audioFiles.length);
+  $('metaRow').innerHTML =
+    `<span class="badge ${STATUS_CLS[st]||'badge-ongoing'}">${STATUS_LABEL[st]||st}</span>
+     <span class="badge badge-ep">${epCnt} ตอน</span>
+     ${n.views ? `<span>• 👁 ${n.views}</span>` : ''}`;
+
+  if (n.tags && n.tags.length)
+    $('tagsRow').innerHTML = n.tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+  $('epSectionTitle').textContent = `รายการตอน (${epCnt})`;
+  buildEpList(epCnt);
+
+  $('stateLoading').style.display  = 'none';
+  $('stateContent').style.display  = 'block';
+}
+
+/* ── episode list ── */
+function buildEpList(epCount) {
+  const list = $('epList');
+  list.innerHTML = '';
+  if (epCount === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--t3)">⏳ ยังไม่มีตอน</div>`;
+    return;
+  }
+  for (let i = 0; i < epCount; i++) {
+    const af  = audioFiles[i];
+    const ok  = af && af.url;
+    const lbl = af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`;
+    const item = document.createElement('div');
+    item.className = 'ep-item' + (ok ? '' : ' no-audio');
+    item.id = 'ep-' + i;
+    item.innerHTML = `<span class="ep-icon">${ok ? '▶' : '⏳'}</span>
+      <span class="ep-label">${lbl}</span>
+      <span class="ep-dur">${ok ? fmt(af.duration) : ''}</span>`;
+    if (ok) item.addEventListener('click', () => playEp(i));
+    list.appendChild(item);
+  }
+}
+
+/* ── play ── */
+function playEp(idx) {
+  curIdx = idx;
+  const af = audioFiles[idx];
+  if (!af || !af.url) return;
+
+  document.querySelectorAll('.ep-item').forEach(el => {
+    el.classList.remove('active');
+    const ic = el.querySelector('.ep-icon');
+    if (ic) ic.textContent = '▶';
+  });
+  const activeEl = $('ep-' + idx);
+  if (activeEl) {
+    activeEl.classList.add('active');
+    const ic = activeEl.querySelector('.ep-icon');
+    if (ic) ic.textContent = '⏸';
+    activeEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  let src = af.url;
+  if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
+    src = src.replace('/raw/upload/', '/video/upload/');
+  audio.src = src; audio.load();
+  audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
+
+  const lbl = af.name || `ตอนที่ ${idx+1}`;
+  $('playerEp').textContent  = lbl;
+  $('playerSub').textContent = novel?.title || '';
+  const thumb = $('playerThumb');
+  thumb.innerHTML = novel?.coverUrl
+    ? `<img src="${novel.coverUrl}" alt="">`
+    : (novel?.emoji || '🎧');
+  $('player-bar').classList.add('visible');
+  updateMS(lbl);
+
+  /* บันทึก state ไว้ให้ index.html */
+  savePlayerState();
+}
+
+function savePlayerState() {
+  if (!novel) return;
+  const af = audioFiles[curIdx];
+  if (!af || !af.url) return;
+  sessionStorage.setItem('ghPlayerState', JSON.stringify({
+    novelId:   novel.id,
+    novelTitle: novel.title,
+    coverUrl:  novel.coverUrl || '',
+    epIdx:     curIdx,
+    epLabel:   af.name || `ตอนที่ ${curIdx + 1}`,
+    audioUrl:  af.url,
+    currentTime: audio.currentTime || 0,
+    audioFiles: audioFiles
+  }));
+}
+
+$('playFirstBtn').addEventListener('click', () => {
+  const i = audioFiles.findIndex(af => af && af.url);
+  if (i >= 0) playEp(i);
+});
+
+/* controls */
+$('playBtn').addEventListener('click', () => {
+  if (!audio.src) return;
+  audio.paused ? audio.play() : audio.pause();
+});
+$('prevBtn').addEventListener('click', () => { if (curIdx > 0) playEp(curIdx-1); });
+$('nextBtn').addEventListener('click', () => {
+  const max = Math.max(novel?.eps||0, audioFiles.length) - 1;
+  if (curIdx < max) playEp(curIdx+1);
+});
+
+audio.addEventListener('play',  () => { $('playBtn').textContent = '⏸'; });
+audio.addEventListener('pause', () => { $('playBtn').textContent = '▶'; });
+audio.addEventListener('ended', () => {
+  const max = Math.max(novel?.eps||0, audioFiles.length) - 1;
+  if (curIdx < max) playEp(curIdx+1);
+});
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  $('seekBar').value = (audio.currentTime / audio.duration) * 100;
+  $('timeNow').textContent = fmt(audio.currentTime);
+  $('timeTot').textContent = fmt(audio.duration);
+  /* save ทุก 5 วิ */
+  if (Math.floor(audio.currentTime) % 5 === 0) savePlayerState();
+});
+$('seekBar').addEventListener('input', () => {
+  if (audio.duration) audio.currentTime = ($('seekBar').value/100) * audio.duration;
+});
+
+/* media session */
+function updateMS(lbl) {
+  if (!('mediaSession' in navigator) || !novel) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: lbl, artist: novel.author||'The Golden Hoard Novels', album: novel.title,
+    artwork: novel.coverUrl ? [{src:novel.coverUrl,sizes:'512x512',type:'image/jpeg'}] : []
+  });
+  navigator.mediaSession.setActionHandler('play',          () => audio.play());
+  navigator.mediaSession.setActionHandler('pause',         () => audio.pause());
+  navigator.mediaSession.setActionHandler('previoustrack', () => { if (curIdx>0) playEp(curIdx-1); });
+  navigator.mediaSession.setActionHandler('nexttrack',     () => {
+    const max = Math.max(novel?.eps||0, audioFiles.length)-1;
+    if (curIdx<max) playEp(curIdx+1);
+  });
+}
+</script>
+</body>
+</html>
