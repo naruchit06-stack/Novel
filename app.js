@@ -275,7 +275,7 @@ window.openModal = function(id) {
     (n.tags || []).map(t => `<span class="player-tag">${t}</span>`).join('');
 
   audioFiles_modal = n.audioFiles || [];
-  const epCount = Math.max(n.eps || 0, audioFiles_modal.length);
+  const epCount = Math.max(n.episodeCount || 0, audioFiles_modal.length);
   const epList  = document.getElementById('episodeList');
 
   if (epCount === 0) {
@@ -340,7 +340,7 @@ window.toggleGroup = function(el, startIdx) {
   if (!isOpen) {
     const n              = currentNovel;
     const audioFiles_local = n.audioFiles || [];
-    const epCount        = Math.max(n.eps || 0, audioFiles_local.length);
+    const epCount        = Math.max(n.episodeCount || 0, audioFiles_local.length);
     const endIdx         = Math.min(startIdx + 49, epCount - 1);
 
     sublist.innerHTML = Array.from({ length: endIdx - startIdx + 1 }, (_, i) => {
