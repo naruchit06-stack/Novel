@@ -1737,6 +1737,10 @@ window.deleteEpisode = async function(novelId, epId, order) {
   if (!confirm(`ลบตอนที่ ${order}?`)) return;
   try {
     await deleteDoc(doc(db, 'novels', novelId, 'episodes', epId));
+    // ลด episodeCount ใน novel document
+    const novel = allNovels.find(n => n.id === novelId);
+    const newCount = Math.max((novel?.episodeCount || 1) - 1, 0);
+    await updateDoc(doc(db, 'novels', novelId), { episodeCount: newCount });
     openEdit(novelId);
   } catch(e) { alert('ลบล้มเหลว: ' + e.message); }
 };

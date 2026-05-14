@@ -63,6 +63,8 @@ onAuthStateChanged(auth, (user) => {
     if (adminBtn && ADMIN_EMAILS.includes(user.email)) {
       adminBtn.style.display = 'flex';
     }
+    // แสดงประวัติการฟัง
+    renderHistory();
   } else {
     // แสดงปุ่ม login/register
     if (loginBtn)    loginBtn.style.display    = 'inline-flex';
@@ -142,7 +144,7 @@ function cardHTML(n) {
       <div class="novel-card-title">${n.title}</div>
       <div class="novel-card-desc">${n.desc || n.description || ''}</div>
       <div class="novel-card-meta">
-        <span>📖 ${n.eps || 0} ตอน</span>
+        <span>📖 ${n.episodeCount || 0} ตอน</span>
         <span>👁 ${n.views || 0}</span>
       </div>
       <div class="novel-card-rating">${rating}</div>
@@ -590,3 +592,52 @@ window.setTheme = function(t) {
     console.warn('restorePlayer error:', e);
   }
 })();
+
+/* ===== [IDX-NEW-3] HISTORY — saveHistory + renderHistory ===== */
+
+const HISTORY_KEY = 'gh_history';
+const HISTORY_MAX = 10;
+
+window.saveHistory = function(novelId, novelTitle, coverUrl, epLabel, progress) {
+  if (!novelId) return;
+  try {
+    let list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    // ลบรายการเดิมถ้ามีอยู่แล้ว
+    list = list.filter(h => h.novelId !== novelId);
+    // เพิ่มล่าสุดไว้หน้าสุด
+    list.unshift({ novelId, novelTitle, coverUrl, epLabel, progress: progress || 0, ts: Date.now() });
+    // จำกัดไว้ 10 รายการ
+    if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  } catch(e) { console.warn('saveHistory error:', e); }
+};
+
+window.renderHistory = function() {
+  const bar   = document.getElementById('historyBar');
+  const items = document.getElementById('historyItems');
+  if (!bar || !items) return;
+  try {
+    const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!list.length) { bar.classList.remove('visible'); return; }
+    items.innerHTML = list.map(h => {
+      const pct = Math.min(100, Math.round((h.progress || 0) * 100));
+      return `
+        <div class="history-item" onclick="window.location.href='novel.html?id=${h.novelId}'">
+          <img class="history-item-cover"
+               src="${h.coverUrl || 'https://placehold.co/60x80/1a1a2e/e2b96b?text=📖'}"
+               alt="${h.novelTitle}" loading="lazy">
+          <div class="history-item-info">
+            <div class="history-item-title">${h.novelTitle || '—'}</div>
+            <div class="history-item-ep">${h.epLabel || ''}</div>
+            <div class="history-progress-wrap">
+              <div class="history-progress-bar">
+                <div class="history-progress-fill" style="width:${pct}%"></div>
+              </div>
+              <span class="history-progress-pct">${pct}%</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+    bar.classList.add('visible');
+  } catch(e) { console.warn('renderHistory error:', e); }
+};
