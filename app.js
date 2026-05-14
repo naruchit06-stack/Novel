@@ -543,3 +543,50 @@ window.setTheme = function(t) {
     if (document.readyState !== 'loading') setTheme(saved);
   }
 })();
+
+/* ===== 12. RESTORE PLAYER จาก novel.html ===== */
+(function restorePlayerFromNovel() {
+  const raw = sessionStorage.getItem('ghPlayerState');
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    if (!s.audioUrl || !s.novelTitle) return;
+
+    /* inject novel + audioFiles เข้า context */
+    currentNovel      = { id: s.novelId, title: s.novelTitle, coverUrl: s.coverUrl };
+    audioFiles_modal  = s.audioFiles || [];
+    currentEpIdx      = s.epIdx || 0;
+
+    /* set audio src + seek */
+    let src = s.audioUrl;
+    if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
+      src = src.replace('/raw/upload/', '/video/upload/');
+    audio.src = src;
+    audio.load();
+    audio.currentTime = s.currentTime || 0;
+
+    /* อัปเดต UI */
+    const coverHtml = s.coverUrl
+      ? `<img src="${s.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover">`
+      : `<span style="font-size:3rem">🎧</span>`;
+    ['npCover','npExpandCover'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = coverHtml;
+    });
+    const titleEl = document.getElementById('npTitle');
+    const epEl    = document.getElementById('npEp');
+    if (titleEl) titleEl.textContent = s.novelTitle;
+    if (epEl)    epEl.textContent    = s.epLabel;
+
+    const etEl  = document.getElementById('npExpandTitle');
+    const eeEl  = document.getElementById('npExpandEp');
+    if (etEl) etEl.textContent = s.novelTitle;
+    if (eeEl) eeEl.textContent = s.epLabel;
+
+    /* แสดง player bar — หยุด (ไม่ autoplay) ให้ user กด play เอง */
+    document.getElementById('nowPlaying').classList.add('visible');
+    syncPlayBtn(false);
+  } catch(e) {
+    console.warn('restorePlayer error:', e);
+  }
+})();
