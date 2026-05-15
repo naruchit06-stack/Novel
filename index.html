@@ -13,15 +13,15 @@
 <nav class="navbar" id="mainNavbar">
 
   <!-- Logo ซ้าย -->
-  <a class="nav-logo" href="index.html">
+  <a class="nav-logo" href="/" onclick="navigate(event,'/')">
     <div class="nav-logo-icon">👑</div>
     <div class="nav-logo-text">The Golden <span>Hoard</span></div>
   </a>
 
   <!-- เมนูกลาง -->
   <div class="nav-links">
-    <a href="index.html" class="active">หน้าแรก</a>
-    <a href="#">นิยายทั้งหมด</a>
+    <a href="/" id="nav-home-link" onclick="navigate(event,'/')">หน้าแรก</a>
+    <a href="/library" id="nav-library-link" onclick="navigate(event,'/library')">นิยายทั้งหมด</a>
     <a href="#" id="nav-favorites-link">รายการโปรด</a>
   </div>
 
@@ -54,8 +54,8 @@
 
 <!-- Mobile nav drawer -->
 <div class="nav-mobile-drawer" id="mobileDrawer">
-  <a href="index.html" class="active">🏠 หน้าแรก</a>
-  <a href="#">📚 นิยายทั้งหมด</a>
+  <a href="/" onclick="navigate(event,'/')">🏠 หน้าแรก</a>
+  <a href="/library" onclick="navigate(event,'/library')">📚 นิยายทั้งหมด</a>
   <a href="#" id="mobile-favorites-link">⭐ รายการโปรด</a>
   <div class="nav-mobile-search">
     <span>🔍</span>
@@ -66,6 +66,9 @@
     <a href="login.html" class="nav-btn nav-btn-fill"><span>สมัครสมาชิก</span></a>
   </div>
 </div>
+
+<!-- ========== APP VIEW (SPA content area) ========== -->
+<div id="app-view">
 
 <!-- [IDX-2] HERO SECTION -->
 <section class="hero" id="heroSection">
@@ -260,6 +263,8 @@
   </div>
 </footer>
 
+</div><!-- /#app-view -->
+
 <!-- PLAYER MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
   <div class="player-modal" id="playerModal">
@@ -337,6 +342,27 @@ document.addEventListener('click', function(e) {
   const btn = document.getElementById('hamburgerBtn');
   if (drawer && btn && !drawer.contains(e.target) && !btn.contains(e.target)) {
     drawer.classList.remove('open');
+  }
+});
+
+/* ========== SPA ROUTER (Shell) ==========
+   navigate() — เปลี่ยน URL โดยไม่ reload
+   router ตัวจริงอยู่ใน app.js (handleRoute)
+   ฟังก์ชันนี้เป็น bridge ให้ inline onclick ใช้ได้ก่อน module โหลด */
+function navigate(e, path) {
+  if (e) e.preventDefault();
+  history.pushState({}, '', path);
+  /* handleRoute() จะถูก app.js export ให้ window */
+  if (typeof window.handleRoute === 'function') window.handleRoute(path);
+  /* ปิด mobile drawer เมื่อ navigate */
+  const drawer = document.getElementById('mobileDrawer');
+  if (drawer) drawer.classList.remove('open');
+}
+
+/* รับ back/forward browser */
+window.addEventListener('popstate', function() {
+  if (typeof window.handleRoute === 'function') {
+    window.handleRoute(location.pathname);
   }
 });
 </script>

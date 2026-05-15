@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>กำลังโหลด... — The Golden Hoard Novels</title>
+<script>
+  // [SPA-7] Redirect novel.html?id=xxx → index.html then navigate to /novels/xxx
+  (function() {
+    const id = new URLSearchParams(location.search).get('id');
+    if (id) {
+      location.replace('/index.html?_novel=' + encodeURIComponent(id));
+    } else {
+      location.replace('/index.html');
+    }
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{

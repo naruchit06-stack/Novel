@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กำลังโหลด... — The Golden Hoard Novels</title>
+<script>
+  // [SPA-9] GitHub Pages Deep Link Trick
+  // เมื่อ user เปิด URL เช่น /novels/abc123 ตรง
+  // GitHub Pages จะ serve 404.html แทน
+  // Script นี้จะ redirect กลับไป index.html พร้อมเก็บ path ไว้ใน ?_r=
+  (function() {
+    var path = window.location.pathname;
+    var search = window.location.search;
+    var hash = window.location.hash;
+    // เก็บ path เดิมไว้ใน query param _r แล้ว redirect ไป root
+    var redirectUrl = '/?_r=' + encodeURIComponent(path + search + hash);
+    window.location.replace(redirectUrl);
+  })();
+</script>
+</head>
+<body></body>
+</html>

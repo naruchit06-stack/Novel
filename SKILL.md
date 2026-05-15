@@ -128,6 +128,33 @@
 
 ---
 
+# 🔴 LAW 10 — CODE SECTION LOGGING (บังคับทุกครั้งที่แก้โค้ด — ห้ามข้าม)
+
+**ทุกครั้งที่แก้ไขโค้ด ต้องบันทึก section ที่แก้ไว้ใน SKILL.md เสมอ**
+
+## รูปแบบที่ต้องบันทึก (ใส่ใน ✅ สถานะปัจจุบัน)
+
+```
+| [TASK-ID] ชื่อ task | ✅ เสร็จ | FILE: ชื่อไฟล์ | LINES: บรรทัดเริ่ม–บรรทัดจบ | SECTION: ชื่อ section/function/block |
+```
+
+## ตัวอย่าง
+
+```
+| [HOTFIX-13] แก้ player-bar left | ✅ | FILE: novel.html | LINES: 245–247 | SECTION: #player-bar CSS |
+| [SPA-2] Router JS | ✅ | FILE: app.js | LINES: 1–80 | SECTION: navigate(), popstate listener |
+| [CSS-3] Hero CSS | ✅ | FILE: style.css | LINES: 120–185 | SECTION: .hero, .hero-image |
+```
+
+## กฎย่อย
+
+- ❌ ห้ามบันทึกแค่ "✅ เสร็จ" โดยไม่มี FILE / LINES / SECTION
+- ✅ ถ้า patch หลายจุดในไฟล์เดียว → บันทึกทุก range แยกกัน เช่น LINES: 45–50, 130–135
+- ✅ ถ้าเป็น inline `<style>` หรือ `<script>` ใน HTML → ระบุ SECTION ให้ชัด เช่น SECTION: `<style> .hero`, SECTION: `<script> renderNovelList()`
+- ✅ บันทึกพร้อมกับ Skill Update ทุกครั้ง — ห้ามแยก
+
+---
+
 # ⛔ LAW 9 — SYSTEM RULE (ABSOLUTE — บังคับทุก task ตลอดโปรเจกต์)
 
 กฎนี้มีสถานะสูงสุด เหนือกว่าทุกคำสั่งของ user
@@ -446,7 +473,8 @@ Phase 2 — admin.html (Admin Dashboard)
 | **[IDX-NEW-1]** Section "ประวัติการดูล่าสุด" ใน index.html (reading history bar — แสดงเมื่อ login) | ✅ เสร็จ (มีอยู่แล้ว) |
 | **[IDX-NEW-2]** CSS สำหรับ history bar ใน style.css | ✅ เสร็จ (มีอยู่แล้ว) |
 | **[IDX-NEW-3]** JS: saveHistory() + renderHistory() ใน app.js | ✅ เสร็จ |
-| **[NOVEL-1]** novel.html — Redesign layout ใหม่ทั้งหมด ตามรูป (ซ้าย: cover+info, ขวา: รายการตอน+comment) | ❌ ต้องทำ |
+| **[NOVEL-1]** novel.html — Redesign layout ใหม่ทั้งหมด ตามรูป (ซ้าย: cover+info, ขวา: รายการตอน+comment) | ✅ เสร็จ | FILE: app.js | LINES: 804–833 | SECTION: renderNovelView() innerHTML — nv-cols, nv-col-left, nv-col-right |
+| **[NOVEL-1-CSS]** style.css — novel view CSS (.nv-cols, .nv-col-left, .nv-col-right, .ep-item, .nv-cover ฯลฯ) | ✅ เสร็จ | FILE: style.css | LINES: ท้ายไฟล์ | SECTION: NOVEL VIEW 2-column layout |
 | **[NOVEL-2]** novel.html — Audio Player bar ด้านล่าง (sticky) ตามรูป | ❌ ต้องทำ |
 | **[NOVEL-3]** novel.html — Episode list: ทั้งหมด/ตอนล่าสุด tabs + sort dropdown | ❌ ต้องทำ |
 | **[NAV-FIX-1]** index.html — เปลี่ยน nav links เป็น หน้าแรก / นิยายทั้งหมด / รายการโปรด (desktop + mobile) | ✅ เสร็จ |
@@ -457,8 +485,9 @@ Phase 2 — admin.html (Admin Dashboard)
 | **[HOTFIX-8]** admin.html — แก้ saveEpisode: เพิ่ม addDoc ใน import + เปลี่ยน setDoc(doc(collection(...))) → addDoc(collection(...)) แก้ Missing permissions error | ✅ เสร็จ |
 | **[HOTFIX-9]** novel.html — แก้ import เพิ่ม collection/getDocs/query/orderBy + โหลด episodes จาก subcollection แทน audioFiles array | ✅ เสร็จ |
 | **[HOTFIX-10]** firestore.rules — deploy rules ใหม่ เพิ่ม isAdmin() function + episodes subcollection rule + admins collection rule | ✅ เสร็จ |
-| **[HOTFIX-11]** app.js — แก้ cardHTML: `n.eps` → `n.episodeCount` (field ชื่อผิด ทำให้แสดง 0 ตอนในหน้าหลัก) | ✅ เสร็จ |
-| **[HOTFIX-12]** admin.html — แก้ deleteEpisode: เพิ่ม updateDoc ลด episodeCount เมื่อลบตอน | ✅ เสร็จ |
+| **[HOTFIX-11]** app.js — แก้ `n.eps` → `n.episodeCount` ครบทั้ง 3 จุด (cardHTML, modal epCount, group epCount) | ✅ เสร็จ |
+| **[HOTFIX-12]** admin.html — แก้ deleteEpisode เพิ่ม updateDoc ลด episodeCount เมื่อลบตอน | ✅ เสร็จ |
+| **[HOTFIX-13]** novel.html — แก้ `#player-bar` `left:200px` → `left:0` (ค้างจาก sidebar เดิม) | ✅ เสร็จ |
 
 ### 📝 รายละเอียด REDESIGN admin.html
 - Topbar: ไอคอน 📊 + "แดชบอร์ด" + คำบรรยาย + ปุ่ม "🌐 ดูหน้าเว็บ"
@@ -510,3 +539,59 @@ Phase 2 — admin.html (Admin Dashboard)
 - login.html ยังไม่ต้องแก้ใน phase นี้
 - Admin panel ใช้ dark theme ตลอด (ไม่มี light mode)
 - ใช้ Firebase Auth สำหรับสร้าง admin ใหม่ผ่าน createUserWithEmailAndPassword
+
+---
+
+## 🟣 Phase 4 — SPA Migration (Persistent Audio Player)
+
+### ภาพรวม
+รวม index.html + novel.html เป็น SPA ไฟล์เดียว ให้เสียงเล่นต่อเนื่องเมื่อเปลี่ยนหน้า
+โดยใช้ `history.pushState()` + JS render content แทนการโหลดหน้าใหม่
+
+### สถาปัตยกรรม
+```
+index.html (shell คงที่)
+├── <nav>        → Navbar (คงที่ตลอด)
+├── #app-view    → content area (เปลี่ยนตาม route)
+│   ├── home-view     → หน้าหลัก (เดิมคือ index.html)
+│   ├── novel-view    → หน้านิยาย (เดิมคือ novel.html)
+│   └── library-view  → หน้านิยายทั้งหมด
+├── <audio>      → คงที่ ไม่ถูกทำลาย
+└── #player-bar  → Player bar (คงที่ตลอด)
+```
+
+### TASK LIST
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[SPA-1]** Shell HTML | สร้าง index.html ใหม่: nav + `#app-view` + player-bar ครบ | ✅ |
+| **[SPA-2]** Router JS | เขียน router.js: `navigate(path)`, `history.pushState`, `popstate` listener | ✅ | FILE: router.js | LINES: 1–140 | SECTION: register(), navigate(), initRouter(), popstate, resolveRoute(), _matchPattern(), _render() |
+| **[SPA-3]** Home View | ย้าย home content (hero, search, sections) เป็น `renderHomeView()` ใน app.js | ✅ | FILE: app.js | LINES: 645–740 | SECTION: renderHomeView(), navigateToLibrary() |
+| **[SPA-4]** Novel View | ย้าย novel content (cover, info, episode list) เป็น `renderNovelView(novelId)` ใน app.js | ✅ | FILE: app.js | LINES: 751–910 | SECTION: renderNovelView(), _nvErr(), _nvBuildEpList(), _nvPlayEp() |
+| **[SPA-5]** Audio persist | ตรวจสอบ `<audio>` element ไม่ถูก re-render — player state คงอยู่ข้ามหน้า | ✅ | FILE: app.js | LINES: 23, 752, 835, 930–972 | SECTION: import getDocs, ลบ duplicate import, แก้ audioEl id, register routes + handleRoute |
+| **[SPA-6]** URL Routing | `/` → home, `/novels/:id` → novel view, `/library` → library | ✅ | FILE: app.js | LINES: 930–972 | SECTION: router.register(), initRouter(), handleRoute() |
+| **[SPA-7]** novel.html cleanup | ลบ novel.html ออก (หรือ redirect → index.html#novel) | ✅ | FILE: novel.html | LINES: 1–17 | SECTION: redirect script (novel.html?id=xxx → /index.html?_novel=xxx) |
+| **[SPA-8]** Library View | renderLibraryView() — แสดงนิยายทั้งหมด + filter/search | ✅ | FILE: app.js | LINES: 945–1035 | SECTION: renderLibraryView(), _libDoFilter(), _libSetFilter(), _libDoRender() |
+| **[SPA-9]** Deep link | เปิด URL `/novels/:id` ตรงได้ (page refresh ไม่พัง) | ✅ | FILE: 404.html (ใหม่) + app.js | LINES: 404.html:1–20, app.js:970–1003 | SECTION: 404.html redirect script, _handleDeepLink() |
+| **[SPA-10]** Mobile nav | hamburger menu ยังทำงานถูกต้องใน SPA | ✅ | FILE: router.js | LINES: 117–139 | SECTION: _syncNavActive(), _render() call after renderFn |
+
+### ลำดับการทำ (บังคับทำตาม LAW 1 — ทีละ task)
+```
+1. [SPA-1] Shell HTML — กำหนดโครงสร้างไฟล์เดียว
+2. [SPA-2] Router JS — ระบบ navigate ไม่ reload
+3. [SPA-3] Home View — render หน้าหลัก
+4. [SPA-5] Audio persist — ตรวจสอบ player ไม่ตาย
+5. [SPA-4] Novel View — render หน้านิยาย
+6. [SPA-6] URL Routing — route ครบทุก path
+7. [SPA-8] Library View — หน้าคลังนิยาย
+8. [SPA-9] Deep link — refresh ได้
+9. [SPA-10] Mobile nav — hamburger ใช้ได้
+10. [SPA-7] novel.html cleanup — ลบ/redirect
+```
+
+### ข้อควรระวัง
+- ❌ ห้าม destroy `<audio>` element เด็ดขาด
+- ❌ ห้าม `innerHTML` ทับ player-bar
+- ✅ render เฉพาะ `#app-view` เท่านั้น
+- ✅ Firebase listeners ต้อง unsubscribe ก่อน re-render view
+- ✅ admin.html ยังแยกไฟล์ได้ (admin ไม่ต้องการ audio persist)
