@@ -579,11 +579,29 @@ window.nextEp = function() {
 
 
 /* ===== 9. PROGRESS BAR & TIME ===== */
+let _lastSaveTime = 0;
 audio.addEventListener('timeupdate', () => {
   if (!audio.duration) return;
   const pct = (audio.currentTime / audio.duration) * 100;
   const cur = formatTime(audio.currentTime);
   const dur = formatTime(audio.duration);
+
+  /* === RESUME-1: save position ทุก 5 วินาที === */
+  if (currentNovel && audio.src && audio.currentTime - _lastSaveTime >= 5) {
+    _lastSaveTime = audio.currentTime;
+    const af = audioFiles_modal[currentEpIdx];
+    try {
+      localStorage.setItem('ghPlayerState', JSON.stringify({
+        novelId:    currentNovel.id,
+        novelTitle: currentNovel.title,
+        coverUrl:   currentNovel.coverUrl || '',
+        audioFiles: audioFiles_modal,
+        epIdx:      currentEpIdx,
+        audioUrl:   af ? af.url : audio.src,
+        currentTime: audio.currentTime
+      }));
+    } catch(e) {}
+  }
 
   const fill  = document.getElementById('npBarFill');
   const thumb = document.getElementById('npBarThumb');
@@ -679,7 +697,7 @@ window.setTheme = function(t) {
 
 /* ===== 12. RESTORE PLAYER จาก novel.html ===== */
 (function restorePlayerFromNovel() {
-  const raw = sessionStorage.getItem('ghPlayerState');
+  const raw = localStorage.getItem('ghPlayerState');
   if (!raw) return;
   try {
     const s = JSON.parse(raw);

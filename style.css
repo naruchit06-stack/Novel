@@ -823,11 +823,11 @@ body {
    ======================================== */
 .novel-card-h {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 14px;
+  overflow: hidden;
   transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
   text-decoration: none;
   color: inherit;
@@ -836,16 +836,15 @@ body {
 
 .novel-card-h:hover {
   border-color: rgba(232,68,90,0.45);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
 }
 
-/* Cover — ใหญ่ขึ้นตามรูป */
+/* Cover — เต็มความกว้าง ratio 2/3 แบบในรูป */
 .novel-card-cover {
-  flex-shrink: 0;
-  width: 100px;
-  height: 140px;
-  border-radius: 8px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 0;
   overflow: hidden;
   background: var(--surface2);
   position: relative;
@@ -890,6 +889,7 @@ body {
   flex-direction: column;
   gap: 5px;
   min-width: 0;
+  padding: 10px 12px 12px;
 }
 
 .novel-card-top {
