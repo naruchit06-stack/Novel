@@ -1689,10 +1689,22 @@ window.saveEpisode = async function() {
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
 
   try {
-    let audioUrl = null, fileName = null;
+    let audioUrl = null, fileName = null, duration = null;
+
+    // [HOTFIX-24a] Helper: อ่าน duration จาก audio file ก่อน upload
+    function getAudioDuration(file) {
+      return new Promise(resolve => {
+        const url = URL.createObjectURL(file);
+        const a = new Audio();
+        a.onloadedmetadata = () => { URL.revokeObjectURL(url); resolve(Math.round(a.duration) || 0); };
+        a.onerror = () => { URL.revokeObjectURL(url); resolve(0); };
+        a.src = url;
+      });
+    }
 
     // Upload audio to Cloudinary if file selected
     if (_epModalFile) {
+      duration = await getAudioDuration(_epModalFile);
       const fd = new FormData();
       fd.append('file', _epModalFile);
       fd.append('upload_preset', 'ml_default');
@@ -1703,7 +1715,7 @@ window.saveEpisode = async function() {
     }
 
     const epData = { title, order, updatedAt: new Date() };
-    if (audioUrl) { epData.audioUrl = audioUrl; epData.fileName = fileName; }
+    if (audioUrl) { epData.audioUrl = audioUrl; epData.fileName = fileName; epData.duration = duration; }
 
     if (_epModalEpId) {
       // Edit existing

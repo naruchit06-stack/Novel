@@ -787,7 +787,7 @@ window.renderNovelView = async function({ id: novelId }) {
       <div class="nv-state-box" id="nvStateError" style="display:none">
         <span class="nv-err-icon">⚠️</span>
         <p id="nvErrMsg">เกิดข้อผิดพลาด</p>
-        <a href="/" onclick="event.preventDefault();import('./router.js').then(r=>r.navigate('/'))" class="nv-back-btn">← กลับหน้าหลัก</a>
+        <a href="/" onclick="event.preventDefault();window.handleRoute('/')" class="nv-back-btn">← กลับหน้าหลัก</a>
       </div>
       <div id="nvContent" style="display:none"></div>
     </div>`;
@@ -829,7 +829,7 @@ window.renderNovelView = async function({ id: novelId }) {
 
   document.getElementById('nvContent').innerHTML = `
     <div class="nv-main">
-      <a href="/" class="nv-back-btn" onclick="event.preventDefault();import('./router.js').then(r=>r.navigate('/'))">← ย้อนกลับ</a>
+      <a href="/" class="nv-back-btn" onclick="event.preventDefault();window.handleRoute('/')">← ย้อนกลับ</a>
 
       <div class="nv-cols">
         <div class="nv-col-left">
@@ -929,6 +929,19 @@ function _nvBuildEpList(epCnt, audioFiles, novel) {
       <span class="ep-dur">${ok ? fmtNV(af.duration) : ''}</span>`;
     if (ok) item.addEventListener('click', () => window._nvPlayEp(i, audioFiles, novel));
     list.appendChild(item);
+
+    // [HOTFIX-24b] lazy load duration ถ้าไม่มี field (ข้อมูลเก่า)
+    if (ok && (!af.duration || af.duration === 0)) {
+      const durEl = item.querySelector('.ep-dur');
+      const a = new Audio();
+      a.onloadedmetadata = () => {
+        const d = Math.round(a.duration) || 0;
+        af.duration = d; // cache ไว้ใน object
+        if (durEl) durEl.textContent = fmtNV(d);
+      };
+      a.preload = 'metadata';
+      a.src = af.url;
+    }
   });
 
   // [UX-3] restore active state ถ้ามี ep ที่กำลังเล่นอยู่
