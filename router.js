@@ -78,10 +78,12 @@ export function register(pattern, renderFn) {
  * ปลอดภัย: ไม่แตะ <audio> / #player-bar
  */
 export function navigate(path) {
-  const fullPath = BASE_PATH + path;
-  if (window.location.pathname === fullPath) return; // ไม่ navigate ซ้ำ
+  // strip BASE_PATH ถ้า path มีอยู่แล้ว — ป้องกัน /Novel/Novel/
+  const cleanPath = _stripBase(path.startsWith('/') ? path : '/' + path);
+  const fullPath  = BASE_PATH + cleanPath;
+  if (window.location.pathname === fullPath) return;
   history.pushState(null, '', fullPath);
-  _render(path); // ส่ง path สั้น (ไม่มี BASE_PATH) เข้า _render
+  _render(cleanPath);
 }
 
 /**

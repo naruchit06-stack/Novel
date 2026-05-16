@@ -1730,3 +1730,34 @@ body {
   0%,100% { opacity:1; }
   50%      { opacity:.45; }
 }
+
+/* [BUG-PLAYER-MOBILE] Player bar mobile */
+@media (max-width: 768px) {
+  .np-main-row {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    gap: 8px;
+    min-height: unset;
+  }
+  /* row 1: cover + info (flex:1) + play button */
+  .np-left  { flex: 1; min-width: 0; order: 1; }
+  .np-center {
+    order: 2; flex-shrink: 0;
+    gap: 4px;
+  }
+  /* row 2: time + speed + sleep — full width */
+  .np-right {
+    order: 3; width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  /* ซ่อน volume + chevron บน mobile (ใช้ expanded panel แทน) */
+  .np-volume-wrap { display: none; }
+  .np-chevron     { display: none; }
+  /* ปรับขนาด pill btn ให้พอดี */
+  .np-pill-btn { padding: 3px 8px; font-size: 0.7rem; }
+  .np-time-text { font-size: 0.7rem; }
+  .np-ctrl-btn  { width: 30px; height: 30px; font-size: 0.8rem; }
+  .np-play      { width: 38px; height: 38px; font-size: 0.9rem; }
+  .np-cover     { width: 38px; height: 38px; }
+}

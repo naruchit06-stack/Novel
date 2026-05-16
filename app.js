@@ -805,6 +805,11 @@ window.navigateToLibrary = function() {
 };
 
 window.renderHistory = function() {
+  // helper: วินาที → "m:ss"
+  function _fmtTime(s) {
+    s = Math.floor(s || 0);
+    return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  }
   const bar   = document.getElementById('historyBar');
   const items = document.getElementById('historyItems');
   if (!bar || !items) return;
@@ -813,11 +818,16 @@ window.renderHistory = function() {
     if (!list.length) { bar.classList.remove('visible'); return; }
     items.innerHTML = list.map(h => {
       const pct = Math.min(100, Math.round((h.progress || 0) * 100));
+      const cur = h.currentTime ? _fmtTime(h.currentTime) : '—';
+      const dur = h.duration    ? _fmtTime(h.duration)    : '—';
       return `
         <div class="history-item" data-novel-id="${h.novelId}" onclick="window._spaNavigate(this)">
-          <img class="history-item-cover"
-               src="${h.coverUrl || 'https://placehold.co/60x80/1a1a2e/e2b96b?text=📖'}"
-               alt="${h.novelTitle}" loading="lazy">
+          <div class="history-item-cover">
+            📖
+            <img src="${h.coverUrl || ''}" alt="${h.novelTitle || ''}"
+                 loading="lazy" onerror="this.style.display='none'"
+                 ${h.coverUrl ? '' : 'style="display:none"'}>
+          </div>
           <div class="history-item-info">
             <div class="history-item-title">${h.novelTitle || '—'}</div>
             <div class="history-item-ep">${h.epLabel || ''}</div>
@@ -825,9 +835,10 @@ window.renderHistory = function() {
               <div class="history-progress-bar">
                 <div class="history-progress-fill" style="width:${pct}%"></div>
               </div>
-              <span class="history-progress-pct">${pct}%</span>
+              <span class="history-progress-pct">${cur} / ${dur}</span>
             </div>
           </div>
+          <span class="history-item-heart">❤️</span>
         </div>`;
     }).join('');
     bar.classList.add('visible');
