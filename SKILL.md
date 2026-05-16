@@ -495,8 +495,14 @@ Phase 2 — admin.html (Admin Dashboard)
 | **[HOTFIX-17]** index.html + admin.html — แก้ relative path `admin.html`/`index.html` → `./admin.html`/`./index.html` แก้ `/Novel/Novel/` double path | ✅ เสร็จ | FILE: index.html | LINES: 45 | SECTION: navAdminBtn href | FILE: admin.html | LINES: 1118, 1375 | SECTION: btn-view-web href, location.href |
 | **[HOTFIX-18]** router.js — แก้ BASE_PATH IIFE ใช้ script[src*="router.js"] detect แทน window.location.pathname — แก้ bug URL ซ้ำ `/Novel/Novel/Novel/` เมื่อ navigate | ✅ เสร็จ | FILE: router.js | LINES: 27–47 | SECTION: BASE_PATH IIFE |
 | **[HOTFIX-19]** index.html + admin.html — แก้ href `./admin.html` / `./index.html` → JS onclick ที่ detect BASE จาก script[src*="app.js"] — แก้ path ซ้ำเมื่ออยู่ใน SPA route | ✅ เสร็จ | FILE: index.html | LINES: 45 | SECTION: navAdminBtn onclick | FILE: admin.html | LINES: 1118, 1375 | SECTION: btn-view-web onclick, auth guard redirect |
-| **[HOTFIX-20]** router.js + app.js + index.html — expose window._navigate ใน router.js, แทน dynamic import('./router.js') ทุกจุดใน app.js, ลบ pushState ซ้ำ + popstate ซ้ำใน index.html | ✅ เสร็จ | FILE: router.js | LINES: 90–95 | SECTION: window._navigate | FILE: app.js | LINES: 718, 780, 810, 1124, 1128 | SECTION: navigate calls | FILE: index.html | LINES: 352–368 | SECTION: navigate() bridge |
-| **[HOTFIX-21]** app.js + admin.html + index.html — expose window._BASE จาก import.meta.url ใน app.js และ admin.html, แก้ onclick ทุกจุดใช้ window._BASE | ✅ เสร็จ | FILE: app.js | LINES: 28 | SECTION: window._BASE | FILE: admin.html | LINES: 1343, 1118, 1376 | SECTION: window._BASE, btn-view-web, auth guard | FILE: index.html | LINES: 45 | SECTION: navAdminBtn onclick |
+| **[HOTFIX-22]** router.js + app.js — แทน BASE_PATH IIFE ที่พัง (script tag หาไม่เจอใน dynamic import) ด้วย import.meta.url default + export setBase() / app.js เรียก setBase(window._BASE) ก่อน initRouter | ✅ เสร็จ | FILE: router.js | LINES: 27–40 | SECTION: BASE_PATH let + setBase() export | FILE: app.js | LINES: 28, 1001–1006 | SECTION: window._BASE, setBase() call |
+| **[HOTFIX-23]** app.js — แก้ปุ่มย้อนกลับใน renderNovelView + error state เปลี่ยน `import('./router.js').then(...)` → `window.handleRoute('/')` แก้กด back ไม่ได้บน GitHub Pages | ✅ เสร็จ | FILE: app.js | LINES: 790, 832 | SECTION: nv-back-btn onclick, error state back btn |
+| **[HOTFIX-24a]** admin.html — เพิ่ม getAudioDuration() อ่าน duration จาก file ก่อน upload + save `duration` field ลง Firestore ใน saveEpisode() | ✅ เสร็จ | FILE: admin.html | LINES: 1691–1706 | SECTION: saveEpisode() — getAudioDuration helper + epData.duration |
+| **[HOTFIX-24b]** app.js — lazy load duration จาก Audio.onloadedmetadata สำหรับ ep เก่าที่ไม่มี field duration + cache ไว้ใน af object | ✅ เสร็จ | FILE: app.js | LINES: 930–942 | SECTION: _nvBuildEpList() — lazy Audio fetch per ep |
+| **[PLAYER-1]** index.html + style.css — redesign Player bar ใหม่ตามรูป: progress top แดง + thumb, main row (cover/info/controls/time/speed/sleep/volume/chevron), expanded panel | ✅ เสร็จ | FILE: index.html | LINES: 288–348 | SECTION: #nowPlaying HTML | FILE: style.css | LINES: 385–458 | SECTION: .now-playing, .np-* |
+| **[PLAYER-2]** app.js — cycleSpeed() [0.75-2.0x], setVolume(), toggleMute(), toggleSleepTimer() [15/30/60/90 นาที], อัปเดต timeupdate sync thumb | ✅ เสร็จ | FILE: app.js | LINES: 437–510 | SECTION: PLAYER-2 Speed/Volume/SleepTimer + timeupdate thumb |
+| **[HERO-SVG-1]** index.html + style.css — แทน 🎧 emoji ด้วย neon SVG headphone จริง (arc path + earcup) พร้อม CSS glow/bob animation | ✅ เสร็จ | FILE: index.html | LINES: 137 | SECTION: .hero-headphone div | FILE: style.css | LINES: 769–778 | SECTION: .hero-headphone |
+| **[EP-PROGRESS-1]** admin.html — เพิ่ม upload progress bar ใน ep-modal: CSS + HTML div + JS saveEpisode() อัปเดต % ระหว่าง upload | ✅ เสร็จ | FILE: admin.html | LINES: 1092–1103, 1959, 1683–1740 | SECTION: .ep-progress CSS, modal HTML, saveEpisode() |
 
 ### 📝 รายละเอียด REDESIGN admin.html
 - Topbar: ไอคอน 📊 + "แดชบอร์ด" + คำบรรยาย + ปุ่ม "🌐 ดูหน้าเว็บ"
@@ -533,11 +539,23 @@ Phase 2 — admin.html (Admin Dashboard)
 | Task | รายละเอียด | สถานะ |
 |------|-----------|-------|
 | **[HOTFIX-16]** reset tab/sort | app.js — reset `_nvTab` + `_nvDesc` ที่ต้น renderNovelView ทุกครั้งที่เปลี่ยนนิยาย | ✅ เสร็จ | FILE: app.js | LINES: 762–766 | SECTION: renderNovelView() — reset state |
-| **[UX-1]** Loading skeleton | app.js — เพิ่ม skeleton UI ตอนโหลด episode list แทน spinner เปล่า | ❌ ต้องทำ |
-| **[UX-2]** Scroll to top | router.js — scroll กลับขึ้นบนอัตโนมัติเมื่อ navigate ไปหน้าใหม่ | ❌ ต้องทำ |
-| **[UX-3]** Active episode sync | app.js — แสดง active ep-item ตรงกับตอนที่กำลังเล่นใน player bar | ❌ ต้องทำ |
+| **[UX-1]** Loading skeleton | app.js — เพิ่ม skeleton UI ตอนโหลด episode list แทน spinner เปล่า | ✅ เสร็จ | FILE: app.js | LINES: 867–873 | SECTION: renderNovelView() — ep-skeleton inject + requestAnimationFrame | FILE: style.css | LINES: ท้ายไฟล์ | SECTION: .ep-skeleton, sk-pulse animation |
+| **[UX-2]** Scroll to top | router.js — scroll กลับขึ้นบนอัตโนมัติเมื่อ navigate ไปหน้าใหม่ | ✅ เสร็จ | FILE: router.js | LINES: 220–221 | SECTION: _render() |
+| **[UX-3]** Active episode sync | app.js — แสดง active ep-item ตรงกับตอนที่กำลังเล่นใน player bar | ✅ เสร็จ | FILE: app.js | LINES: 900, 776–778, 955, 930–942 | SECTION: _nvCurrentIdx global, reset ใน renderNovelView, set ใน _nvPlayEp, restore ใน _nvBuildEpList |
 
 **หมายเหตุ:** login.html มีดีไซน์ดีแล้ว — ปรับเฉพาะ text/copy ให้สื่อถึง "ฟัง" เป็นหลัก
+
+---
+
+## 🚀 Phase 6 — Performance (แก้โหลดช้า)
+
+| Task | สถานะ |
+|------|-------|
+| **[PERF-1]** ลบ onSnapshot ซ้ำใน renderHomeView | ✅ เสร็จ | FILE: app.js | LINES: 705–713 | SECTION: renderHomeView() — ใช้ allNovels global + instant render |
+| **[PERF-2]** Novel cache `_novelCache{}` | ✅ เสร็จ | FILE: app.js | LINES: 757–758, 793–801 | SECTION: _novelCache const, renderNovelView() getDoc block |
+| **[PERF-3]** Episode cache `_epCache{}` | ✅ เสร็จ | FILE: app.js | LINES: 759, 803–808 | SECTION: _epCache const, renderNovelView() getDocs block |
+| **[PERF-4]** instant render (รวมใน PERF-1) | ✅ เสร็จ |
+| **[PERF-5]** Scroll to top on navigate | ✅ เสร็จ | FILE: router.js | LINES: 220–221 | SECTION: _render() — window.scrollTo หลัง _syncNavActive |
 
 ---
 
@@ -615,3 +633,14 @@ index.html (shell คงที่)
 - ✅ render เฉพาะ `#app-view` เท่านั้น
 - ✅ Firebase listeners ต้อง unsubscribe ก่อน re-render view
 - ✅ admin.html ยังแยกไฟล์ได้ (admin ไม่ต้องการ audio persist)
+| **[HERO-NEW-1]** index.html — แก้ Hero HTML: label "🎧 นิยายเสียงภาษาไทย", title "ฟังนิยายที่คุณชื่นชอบ / ได้ทุกที่ทุกเวลา", desc + btn "▶ เริ่มฟังเลย" + hero-neon-graphic (SVG waveform + headphone emoji) | ✅ เสร็จ | FILE: index.html | LINES: 73–115 | SECTION: .hero HTML |
+| **[HERO-NEW-2]** style.css — Hero CSS redesign: neon ring pulse, SVG waveform animation, headphone bob, crown badge spin, responsive | ✅ เสร็จ | FILE: style.css | LINES: 623–800 | SECTION: .hero, .hero-neon-graphic, .hero-waveform, .hero-headphone, .hero-crown-badge |
+| **[HERO-NEW-1]** index.html — แก้ Hero HTML: label "🎧 นิยายเสียงภาษาไทย", title "ฟังนิยายที่คุณชื่นชอบ / ได้ทุกที่ทุกเวลา", hero-neon-graphic SVG waveform + headphone | ✅ เสร็จ | FILE: index.html | LINES: 73–124 | SECTION: .hero HTML |
+| **[HERO-NEW-2]** style.css — Hero CSS neon ring pulse, waveform animation, headphone bob, crown badge, responsive | ✅ เสร็จ | FILE: style.css | LINES: 623–800 | SECTION: .hero, .hero-neon-graphic, .hero-waveform |
+| **[HIST-1]** index.html — ย้าย history bar เหนือ Hero + redesign HTML: history-bar-inner, history-scroll-wrap, history-items | ✅ เสร็จ | FILE: index.html | LINES: 73–90 | SECTION: #historyBar HTML |
+| **[IDX-4-CARD]** app.js — cardHTML() เพิ่ม views K/likes K/rating + ปุ่ม "▶ ฟังเลย" | ✅ เสร็จ | FILE: app.js | LINES: 134–163 | SECTION: cardHTML() |
+| **[BUG-404-ROUTE]** router.js — แก้ navigate() strip BASE_PATH ก่อน concat ป้องกัน /Novel/Novel/ double path | ✅ เสร็จ | FILE: router.js | LINES: 80–85 | SECTION: navigate() |
+| **[BUG-404-DEEPLINK]** app.js — แก้ _handleDeepLink() strip BASE_PATH จาก _r= ก่อน replaceState ป้องกัน /Novel/Novel/ | ✅ เสร็จ | FILE: app.js | LINES: 1290–1309 | SECTION: _handleDeepLink() |
+| **[HERO-FIX-3]** app.js — ย้าย SVG waveform + headphone + crown เข้า renderHomeView() hero-image div (เดิมว่างเปล่า ทำให้กราฟิกไม่โชว์เพราะ innerHTML ทับ) | ✅ เสร็จ | FILE: app.js | LINES: 776 | SECTION: renderHomeView() hero-image HTML |
+| **[HERO-FIX-2]** style.css — ลด .hero min-height: 60vh → 38vh และ .hero-inner padding: 60px → 32px แก้ช่องว่างใหญ่ใต้ history bar | ✅ เสร็จ | FILE: style.css | LINES: 626, 656 | SECTION: .hero min-height, .hero-inner padding |
+| **[HERO-FIX-1]** style.css — แก้ .hero-waveform ใช้ position:absolute + transform:translate(-50%,-30%) แทน bottom:20px, เพิ่ม z-index:1; .hero-headphone z-index:2; .hero-image + .hero-neon-graphic overflow:visible — แก้ graphic ไม่โชว์ใน Hero ฝั่งขวา | ✅ เสร็จ | FILE: style.css | LINES: 714–807 | SECTION: .hero-image, .hero-neon-graphic, .hero-waveform, .hero-headphone |

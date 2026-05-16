@@ -773,7 +773,65 @@ export async function renderHomeView() {
           <button class="btn-primary" onclick="navigateToLibrary()">🎧 เริ่มฟังเลย</button>
         </div>
       </div>
-      <div class="hero-image" id="heroImage"></div>
+      <div class="hero-image" id="heroImage">
+        <div class="hero-neon-graphic">
+          <svg class="hero-waveform" viewBox="0 0 260 120" xmlns="http://www.w3.org/2000/svg">
+            <g opacity="0.7">
+              <rect x="0"   y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+              <rect x="10"  y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+              <rect x="20"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+              <rect x="30"  y="40" width="6" height="40" rx="3" fill="#e8445a"/>
+              <rect x="40"  y="20" width="6" height="80" rx="3" fill="#e8445a"/>
+              <rect x="50"  y="35" width="6" height="50" rx="3" fill="#e8445a"/>
+              <rect x="60"  y="50" width="6" height="20" rx="3" fill="#e8445a"/>
+              <rect x="70"  y="25" width="6" height="70" rx="3" fill="#e8445a"/>
+              <rect x="80"  y="10" width="6" height="100" rx="3" fill="#e8445a"/>
+              <rect x="90"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+              <rect x="100" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+              <rect x="110" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+              <rect x="150" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+              <rect x="160" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+              <rect x="170" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+              <rect x="180" y="20" width="6" height="80" rx="3" fill="#e8445a"/>
+              <rect x="190" y="35" width="6" height="50" rx="3" fill="#e8445a"/>
+              <rect x="200" y="10" width="6" height="100" rx="3" fill="#e8445a"/>
+              <rect x="210" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+              <rect x="220" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+              <rect x="230" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+              <rect x="240" y="40" width="6" height="40" rx="3" fill="#e8445a"/>
+              <rect x="250" y="25" width="6" height="70" rx="3" fill="#e8445a"/>
+            </g>
+          </svg>
+          <div class="hero-headphone">
+            <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" width="160" height="128">
+              <defs>
+                <filter id="heroNeonGlow" x="-40%" y="-40%" width="180%" height="180%">
+                  <feGaussianBlur stdDeviation="4" result="blur1"/>
+                  <feGaussianBlur stdDeviation="10" result="blur2"/>
+                  <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <path d="M 30 100 A 70 75 0 0 1 170 100"
+                    fill="none" stroke="#e8445a" stroke-width="7"
+                    stroke-linecap="round" filter="url(#heroNeonGlow)"/>
+              <path d="M 38 100 A 62 67 0 0 1 162 100"
+                    fill="none" stroke="rgba(232,68,90,0.3)" stroke-width="2"
+                    stroke-linecap="round"/>
+              <rect x="14" y="88" width="28" height="44" rx="12"
+                    fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
+                    filter="url(#heroNeonGlow)"/>
+              <rect x="20" y="96" width="16" height="28" rx="7"
+                    fill="rgba(232,68,90,0.25)"/>
+              <rect x="158" y="88" width="28" height="44" rx="12"
+                    fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
+                    filter="url(#heroNeonGlow)"/>
+              <rect x="164" y="96" width="16" height="28" rx="7"
+                    fill="rgba(232,68,90,0.25)"/>
+            </svg>
+          </div>
+          <div class="hero-crown-badge">👑</div>
+        </div>
+      </div>
     </section>
 
     <!-- SEARCH + FILTER TABS -->
