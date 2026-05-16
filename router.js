@@ -20,6 +20,39 @@
 const _routes = new Map();
 
 /**
+ * BASE_PATH — รองรับ GitHub Pages ที่ deploy ใน sub-folder
+ * เช่น https://user.github.io/Novel/ → BASE_PATH = '/Novel'
+ * ถ้า deploy ที่ root → BASE_PATH = ''
+ */
+const BASE_PATH = (() => {
+  // ดึง path ของ index.html ออกมา แล้วตัด /index.html ทิ้ง
+  const scripts = document.querySelectorAll('script[src]');
+  // ใช้ pathname ของ window แล้วหา segment ก่อน /index.html
+  const p = window.location.pathname;
+  // ถ้า path ลงท้ายด้วย /index.html หรือ / ให้ดึง base folder
+  const match = p.match(/^(\/[^?#]*?)\/index\.html$/);
+  if (match) return match[1]; // เช่น '/Novel'
+  // ถ้าเป็น clean URL เช่น /Novel/ → ตัด trailing slash
+  const folderMatch = p.match(/^(\/[^?#]*?)\/$/);
+  if (folderMatch && folderMatch[1] !== '') return folderMatch[1];
+  return '';
+})();
+
+/**
+ * _stripBase(pathname) — ตัด BASE_PATH ออกจาก pathname
+ * '/Novel/index.html' → '/'
+ * '/Novel/novels/abc' → '/novels/abc'
+ */
+function _stripBase(pathname) {
+  if (BASE_PATH && pathname.startsWith(BASE_PATH)) {
+    const stripped = pathname.slice(BASE_PATH.length) || '/';
+    // ถ้าเป็น /index.html ให้ถือว่าเป็น /
+    return stripped.replace(/^\/index\.html$/, '/');
+  }
+  return pathname;
+}
+
+/**
  * unsubscribe fn จาก Firebase listener ของ view ก่อนหน้า
  * เพื่อไม่ให้ listener ซ้อนกัน
  */
@@ -43,9 +76,10 @@ export function register(pattern, renderFn) {
  * ปลอดภัย: ไม่แตะ <audio> / #player-bar
  */
 export function navigate(path) {
-  if (window.location.pathname === path) return; // ไม่ navigate ซ้ำ
-  history.pushState(null, '', path);
-  _render(path);
+  const fullPath = BASE_PATH + path;
+  if (window.location.pathname === fullPath) return; // ไม่ navigate ซ้ำ
+  history.pushState(null, '', fullPath);
+  _render(path); // ส่ง path สั้น (ไม่มี BASE_PATH) เข้า _render
 }
 
 /**
@@ -53,14 +87,14 @@ export function navigate(path) {
  * เรียกครั้งเดียวตอน app เริ่ม — render route ปัจจุบัน
  */
 export function initRouter() {
-  _render(window.location.pathname);
+  _render(_stripBase(window.location.pathname));
 }
 
 
 /* ===== 3. POPSTATE — back / forward ===== */
 
 window.addEventListener('popstate', () => {
-  _render(window.location.pathname);
+  _render(_stripBase(window.location.pathname));
 });
 
 
