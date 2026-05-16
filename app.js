@@ -26,9 +26,7 @@ import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getD
 
 /* ===== 1. FIREBASE INIT ===== */
 
-// expose BASE PATH สำหรับ inline onclick ใน HTML
-// import.meta.url = absolute URL ของ app.js เช่น https://...github.io/Novel/app.js
-// → _BASE = '/Novel'  (ไม่มี trailing slash)
+// BASE PATH จาก import.meta.url ของ app.js — ถูกต้องเสมอ ไม่ขึ้นกับ URL ปัจจุบัน
 window._BASE = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
 
 const app = initializeApp({
@@ -1005,6 +1003,7 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
  * audio element #audioEl อยู่นอก #app-view → ไม่ถูก destroy เมื่อ navigate ✅
  */
 import('./router.js').then(router => {
+  router.setBase(window._BASE);   // ส่ง BASE ที่ถูกต้องให้ router ก่อน
   router.register('/', renderHomeView);
   router.register('/novels/:id', window.renderNovelView);
   router.register('/library', renderLibraryView);

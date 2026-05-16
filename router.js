@@ -24,31 +24,21 @@ const _routes = new Map();
  * เช่น https://user.github.io/Novel/ → BASE_PATH = '/Novel'
  * ถ้า deploy ที่ root → BASE_PATH = ''
  */
-const BASE_PATH = (() => {
-  // ดึง base จาก src ของ router.js เอง — ไม่เปลี่ยนตาม URL ปัจจุบัน
-  // เช่น src="/Novel/router.js" → BASE_PATH='/Novel'
-  // เช่น src="/router.js"       → BASE_PATH=''
-  const me = document.querySelector('script[src*="router.js"]');
-  if (me) {
-    try {
-      const u = new URL(me.src, window.location.href);
-      // ตัด /router.js ออก → เหลือ folder
-      const folder = u.pathname.replace(/\/router\.js(\?.*)?$/, '');
-      // ถ้า folder คือ '' หรือ '/' → root
-      return folder === '/' ? '' : folder;
-    } catch(e) {}
-  }
-  // fallback: ดึงจาก <base href> ถ้ามี
-  const baseEl = document.querySelector('base[href]');
-  if (baseEl) {
-    try {
-      const bu = new URL(baseEl.href, window.location.href);
-      const bp = bu.pathname.replace(/\/$/, '');
-      return bp;
-    } catch(e) {}
-  }
-  return '';
+// BASE_PATH — default จาก import.meta.url ของ router.js เอง
+// app.js จะเรียก setBase(window._BASE) ก่อน initRouter() เพื่อให้แน่ใจ
+let BASE_PATH = (() => {
+  try {
+    const folder = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
+    return folder === '/' ? '' : folder;
+  } catch(e) { return ''; }
 })();
+
+/**
+ * setBase(base) — เรียกจาก app.js ก่อน initRouter()
+ */
+export function setBase(base) {
+  BASE_PATH = typeof base === 'string' ? base : '';
+}
 
 /**
  * _stripBase(pathname) — ตัด BASE_PATH ออกจาก pathname
@@ -93,9 +83,6 @@ export function navigate(path) {
   history.pushState(null, '', fullPath);
   _render(path); // ส่ง path สั้น (ไม่มี BASE_PATH) เข้า _render
 }
-
-// expose ให้ inline onclick ใช้ได้โดยไม่ต้อง dynamic import ซ้ำ
-window._navigate = navigate;
 
 /**
  * initRouter()
