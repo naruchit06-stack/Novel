@@ -1761,3 +1761,16 @@ body {
   .np-play      { width: 38px; height: 38px; font-size: 0.9rem; }
   .np-cover     { width: 38px; height: 38px; }
 }
+
+/* [FAV-1] Heart button on novel card */
+.novel-card-heart {
+  position: absolute; top: 7px; right: 7px;
+  background: rgba(0,0,0,0.55); border: none;
+  border-radius: 50%; width: 30px; height: 30px;
+  font-size: 0.85rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+  z-index: 2;
+}
+.novel-card-heart:hover { transform: scale(1.2); background: rgba(0,0,0,0.75); }
+.novel-card-heart.fav-active { background: rgba(232,68,90,0.25); }

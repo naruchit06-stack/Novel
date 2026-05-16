@@ -1288,22 +1288,30 @@ window.handleRoute = function(path) {
  * novel.html?id=xxx (legacy) → /?_novel=xxx → /novels/xxx ก็รองรับด้วย
  */
 (function _handleDeepLink() {
-  const sp = new URLSearchParams(window.location.search);
+  const sp   = new URLSearchParams(window.location.search);
+  const base = window._BASE || '';
 
-  // กรณี 404.html redirect: ?_r=/novels/abc123
+  // helper: ตัด BASE_PATH ออกจาก path ถ้ามี
+  function stripBase(p) {
+    if (base && p.startsWith(base)) {
+      return p.slice(base.length) || '/';
+    }
+    return p;
+  }
+
+  // กรณี 404.html redirect: ?_r=/Novel/novels/abc123
   const redirectPath = sp.get('_r');
   if (redirectPath) {
-    // ลบ ?_r= ออกจาก URL แล้ว navigate ไป path จริง
-    history.replaceState(null, '', redirectPath);
-    // รอ router.js โหลดเสร็จก่อน (initRouter ทำงานจาก pathname ใหม่แล้ว)
+    const cleanPath = stripBase(decodeURIComponent(redirectPath));
+    const fullPath  = base + cleanPath;
+    history.replaceState(null, '', fullPath);
     return;
   }
 
   // กรณี novel.html?id=xxx redirect: ?_novel=xxx
   const novelId = sp.get('_novel');
   if (novelId) {
-    const targetPath = '/novels/' + encodeURIComponent(novelId);
-    history.replaceState(null, '', targetPath);
-    // initRouter() จะ render จาก pathname ใหม่อัตโนมัติ
+    const cleanPath = '/novels/' + encodeURIComponent(novelId);
+    history.replaceState(null, '', base + cleanPath);
   }
 })();
