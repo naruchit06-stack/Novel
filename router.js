@@ -94,6 +94,9 @@ export function navigate(path) {
   _render(path); // ส่ง path สั้น (ไม่มี BASE_PATH) เข้า _render
 }
 
+// expose ให้ inline onclick ใช้ได้โดยไม่ต้อง dynamic import ซ้ำ
+window._navigate = navigate;
+
 /**
  * initRouter()
  * เรียกครั้งเดียวตอน app เริ่ม — render route ปัจจุบัน

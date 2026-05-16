@@ -25,6 +25,12 @@ import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getD
 
 
 /* ===== 1. FIREBASE INIT ===== */
+
+// expose BASE PATH สำหรับ inline onclick ใน HTML
+// import.meta.url = absolute URL ของ app.js เช่น https://...github.io/Novel/app.js
+// → _BASE = '/Novel'  (ไม่มี trailing slash)
+window._BASE = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
+
 const app = initializeApp({
   apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
   authDomain:        "login-24acc.firebaseapp.com",

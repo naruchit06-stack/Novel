@@ -475,8 +475,8 @@ Phase 2 — admin.html (Admin Dashboard)
 | **[IDX-NEW-3]** JS: saveHistory() + renderHistory() ใน app.js | ✅ เสร็จ |
 | **[NOVEL-1]** novel.html — Redesign layout ใหม่ทั้งหมด ตามรูป (ซ้าย: cover+info, ขวา: รายการตอน+comment) | ✅ เสร็จ | FILE: app.js | LINES: 804–833 | SECTION: renderNovelView() innerHTML — nv-cols, nv-col-left, nv-col-right |
 | **[NOVEL-1-CSS]** style.css — novel view CSS (.nv-cols, .nv-col-left, .nv-col-right, .ep-item, .nv-cover ฯลฯ) | ✅ เสร็จ | FILE: style.css | LINES: ท้ายไฟล์ | SECTION: NOVEL VIEW 2-column layout |
-| **[NOVEL-2]** novel.html — Audio Player bar ด้านล่าง (sticky) ตามรูป | ❌ ต้องทำ |
-| **[NOVEL-3]** novel.html — Episode list: ทั้งหมด/ตอนล่าสุด tabs + sort dropdown | ❌ ต้องทำ |
+| **[NOVEL-2]** novel.html — Audio Player bar ด้านล่าง (sticky) ตามรูป | ✅ เสร็จ | FILE: app.js | LINES: 906–926 | SECTION: _nvPlayEp() — แก้จาก #player-bar → #nowPlaying, #npTitle, #npEp, #npCover, #npExpandTitle, #npExpandEp, #npExpandCover |
+| **[NOVEL-3]** novel.html — Episode list: ทั้งหมด/ตอนล่าสุด tabs + sort dropdown | ✅ เสร็จ | FILE: app.js | LINES: 825–835, 857–910 | SECTION: nv-ep-header HTML, _nvBuildEpList(), _nvSetTab(), _nvToggleSort() | FILE: style.css | LINES: ท้ายไฟล์ | SECTION: .nv-ep-header, .nv-ep-controls, .nv-tab, .nv-sort-btn |
 | **[NAV-FIX-1]** index.html — เปลี่ยน nav links เป็น หน้าแรก / นิยายทั้งหมด / รายการโปรด (desktop + mobile) | ✅ เสร็จ |
 | **[HOTFIX-7]** firestore.rules — แก้ isAdmin() function รองรับ admins collection (ไม่ใช่แค่ 2 email hardcode) เพื่อให้ admin ที่สร้างใหม่เพิ่มตอนได้ | ✅ เสร็จ |
 | **[LOGIN-RESP]** login.html — เพิ่ม responsive media queries (mobile: stack vertical, ซ่อน left-panel ให้กระชับ) | ✅ เสร็จ |
@@ -488,6 +488,15 @@ Phase 2 — admin.html (Admin Dashboard)
 | **[HOTFIX-11]** app.js — แก้ `n.eps` → `n.episodeCount` ครบทั้ง 3 จุด (cardHTML, modal epCount, group epCount) | ✅ เสร็จ |
 | **[HOTFIX-12]** admin.html — แก้ deleteEpisode เพิ่ม updateDoc ลด episodeCount เมื่อลบตอน | ✅ เสร็จ |
 | **[HOTFIX-13]** novel.html — แก้ `#player-bar` `left:200px` → `left:0` (ค้างจาก sidebar เดิม) | ✅ เสร็จ |
+| **[ROUTER-HOTFIX-1]** router.js — เพิ่ม BASE_PATH auto-detect + _stripBase() รองรับ GitHub Pages sub-folder `/Novel/` | ✅ เสร็จ | FILE: router.js | LINES: 20–57 | SECTION: BASE_PATH const, _stripBase(), navigate(), initRouter(), popstate |
+| **[HOTFIX-14]** app.js — แก้ cardHTML + history-item ใช้ `_spaNavigate()` แทน `novel.html?id=` | ✅ เสร็จ | FILE: app.js | LINES: 132–138, 731, 1060–1070 | SECTION: cardHTML(), history-item onclick, _spaNavigate() helper |
+| **[NOVEL-HOTFIX]** novel.html — แก้ redirect ใช้ base auto-detect แทน hardcode `/index.html` | ✅ เสร็จ | FILE: novel.html | LINES: 8–16 | SECTION: redirect script |
+| **[HOTFIX-15]** 404.html — แก้ redirect auto-detect BASE_PATH (`/Novel`) แทน hardcode `/?_r=` รองรับ GitHub Pages sub-folder | ✅ เสร็จ | FILE: 404.html | LINES: 8–19 | SECTION: redirect script |
+| **[HOTFIX-17]** index.html + admin.html — แก้ relative path `admin.html`/`index.html` → `./admin.html`/`./index.html` แก้ `/Novel/Novel/` double path | ✅ เสร็จ | FILE: index.html | LINES: 45 | SECTION: navAdminBtn href | FILE: admin.html | LINES: 1118, 1375 | SECTION: btn-view-web href, location.href |
+| **[HOTFIX-18]** router.js — แก้ BASE_PATH IIFE ใช้ script[src*="router.js"] detect แทน window.location.pathname — แก้ bug URL ซ้ำ `/Novel/Novel/Novel/` เมื่อ navigate | ✅ เสร็จ | FILE: router.js | LINES: 27–47 | SECTION: BASE_PATH IIFE |
+| **[HOTFIX-19]** index.html + admin.html — แก้ href `./admin.html` / `./index.html` → JS onclick ที่ detect BASE จาก script[src*="app.js"] — แก้ path ซ้ำเมื่ออยู่ใน SPA route | ✅ เสร็จ | FILE: index.html | LINES: 45 | SECTION: navAdminBtn onclick | FILE: admin.html | LINES: 1118, 1375 | SECTION: btn-view-web onclick, auth guard redirect |
+| **[HOTFIX-20]** router.js + app.js + index.html — expose window._navigate ใน router.js, แทน dynamic import('./router.js') ทุกจุดใน app.js, ลบ pushState ซ้ำ + popstate ซ้ำใน index.html | ✅ เสร็จ | FILE: router.js | LINES: 90–95 | SECTION: window._navigate | FILE: app.js | LINES: 718, 780, 810, 1124, 1128 | SECTION: navigate calls | FILE: index.html | LINES: 352–368 | SECTION: navigate() bridge |
+| **[HOTFIX-21]** app.js + admin.html + index.html — expose window._BASE จาก import.meta.url ใน app.js และ admin.html, แก้ onclick ทุกจุดใช้ window._BASE | ✅ เสร็จ | FILE: app.js | LINES: 28 | SECTION: window._BASE | FILE: admin.html | LINES: 1343, 1118, 1376 | SECTION: window._BASE, btn-view-web, auth guard | FILE: index.html | LINES: 45 | SECTION: navAdminBtn onclick |
 
 ### 📝 รายละเอียด REDESIGN admin.html
 - Topbar: ไอคอน 📊 + "แดชบอร์ด" + คำบรรยาย + ปุ่ม "🌐 ดูหน้าเว็บ"
@@ -515,7 +524,18 @@ Phase 2 — admin.html (Admin Dashboard)
 | [LOG-1] ตรวจสอบโครงสร้าง login.html ปัจจุบัน | ✅ เสร็จ |
 | [LOG-2] แก้ text/copy ให้สื่อถึง "ฟัง" ไม่ใช่ "อ่าน" | ✅ เสร็จ |
 | [LOG-3] แก้ left-panel tagline + book-stack emoji ให้เป็น audio theme | ✅ เสร็จ (รวมใน LOG-2) |
-| [novel.html] หน้าฟังนิยาย | ❌ ยังไม่ได้ redesign |
+| [novel.html] หน้าฟังนิยาย | ✅ ไม่จำเป็น — ถูกแทนด้วย SPA แล้ว |
+
+---
+
+### 🟠 Phase 5 — UX Improvements
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[HOTFIX-16]** reset tab/sort | app.js — reset `_nvTab` + `_nvDesc` ที่ต้น renderNovelView ทุกครั้งที่เปลี่ยนนิยาย | ✅ เสร็จ | FILE: app.js | LINES: 762–766 | SECTION: renderNovelView() — reset state |
+| **[UX-1]** Loading skeleton | app.js — เพิ่ม skeleton UI ตอนโหลด episode list แทน spinner เปล่า | ❌ ต้องทำ |
+| **[UX-2]** Scroll to top | router.js — scroll กลับขึ้นบนอัตโนมัติเมื่อ navigate ไปหน้าใหม่ | ❌ ต้องทำ |
+| **[UX-3]** Active episode sync | app.js — แสดง active ep-item ตรงกับตอนที่กำลังเล่นใน player bar | ❌ ต้องทำ |
 
 **หมายเหตุ:** login.html มีดีไซน์ดีแล้ว — ปรับเฉพาะ text/copy ให้สื่อถึง "ฟัง" เป็นหลัก
 
