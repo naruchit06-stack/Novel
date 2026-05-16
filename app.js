@@ -188,9 +188,11 @@ function toggleFav(novelId, btn) {
     btn.textContent = '🤍';
     btn.title = 'เพิ่มในรายการโปรด';
     /* ถ้ากำลังอยู่ในหน้า favorites ให้ลบการ์ดทิ้ง */
-    const card = btn.closest('.novel-card-h');
-    if (card && document.getElementById('app-view')?.dataset.view === 'favorites') {
-      card.remove();
+    const appView = document.getElementById('app-view');
+    const isFavPage = appView?.dataset.view === 'favorites';
+    if (isFavPage) {
+      const card = btn.closest('.novel-card-h');
+      if (card) card.remove();
     }
   }
   _saveFavs(favs);
