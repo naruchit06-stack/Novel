@@ -42,7 +42,7 @@
     <div class="nav-avatar" id="navAvatar">U</div>
     <div class="nav-dropdown">
       <a href="#" id="navUserName" style="cursor:default;pointer-events:none;color:var(--text);font-weight:700;">ผู้ใช้</a>
-      <a href="./admin.html" id="navAdminBtn" style="display:none;">⚙️ จัดการนิยาย</a>
+      <a href="#" id="navAdminBtn" style="display:none;" onclick="event.preventDefault();(function(){const s=document.querySelector('script[src*=\'app.js\']');let b='';if(s){try{const u=new URL(s.src,location.href);b=u.pathname.replace(/\/app\.js(\?.*)?$/,'').replace(/\/$/,'');}catch(e){}}location.href=b+'/admin.html';})()">⚙️ จัดการนิยาย</a>
       <a href="#" class="danger" onclick="handleSignOut()">🚪 ออกจากระบบ</a>
     </div>
   </div>

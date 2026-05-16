@@ -25,16 +25,28 @@ const _routes = new Map();
  * ถ้า deploy ที่ root → BASE_PATH = ''
  */
 const BASE_PATH = (() => {
-  // ดึง path ของ index.html ออกมา แล้วตัด /index.html ทิ้ง
-  const scripts = document.querySelectorAll('script[src]');
-  // ใช้ pathname ของ window แล้วหา segment ก่อน /index.html
-  const p = window.location.pathname;
-  // ถ้า path ลงท้ายด้วย /index.html หรือ / ให้ดึง base folder
-  const match = p.match(/^(\/[^?#]*?)\/index\.html$/);
-  if (match) return match[1]; // เช่น '/Novel'
-  // ถ้าเป็น clean URL เช่น /Novel/ → ตัด trailing slash
-  const folderMatch = p.match(/^(\/[^?#]*?)\/$/);
-  if (folderMatch && folderMatch[1] !== '') return folderMatch[1];
+  // ดึง base จาก src ของ router.js เอง — ไม่เปลี่ยนตาม URL ปัจจุบัน
+  // เช่น src="/Novel/router.js" → BASE_PATH='/Novel'
+  // เช่น src="/router.js"       → BASE_PATH=''
+  const me = document.querySelector('script[src*="router.js"]');
+  if (me) {
+    try {
+      const u = new URL(me.src, window.location.href);
+      // ตัด /router.js ออก → เหลือ folder
+      const folder = u.pathname.replace(/\/router\.js(\?.*)?$/, '');
+      // ถ้า folder คือ '' หรือ '/' → root
+      return folder === '/' ? '' : folder;
+    } catch(e) {}
+  }
+  // fallback: ดึงจาก <base href> ถ้ามี
+  const baseEl = document.querySelector('base[href]');
+  if (baseEl) {
+    try {
+      const bu = new URL(baseEl.href, window.location.href);
+      const bp = bu.pathname.replace(/\/$/, '');
+      return bp;
+    } catch(e) {}
+  }
   return '';
 })();
 

@@ -1115,7 +1115,7 @@ body.admin-body {
     </div>
   </div>
   <div class="admin-topbar-right">
-    <a href="./index.html" class="btn-view-web">🌐 ดูหน้าเว็บ</a>
+    <a href="#" class="btn-view-web" onclick="event.preventDefault();(function(){const s=document.querySelector('script[src*=\'app.js\']');let b='';if(s){try{const u=new URL(s.src,location.href);b=u.pathname.replace(/\/app\.js(\?.*)?$/,'').replace(/\/$/,'');}catch(e){}}location.href=b+'/';})()">🌐 ดูหน้าเว็บ</a>
   </div>
 </header>
 
@@ -1372,7 +1372,7 @@ onAuthStateChanged(auth, async user => {
   if (!isSuperAdmin) {
     // Check if user is in admins collection
     const snap = await getDoc(doc(db, 'admins', user.uid));
-    if (!snap.exists()) { window.location.href = './index.html'; return; }
+    if (!snap.exists()) { const s=document.querySelector('script[src*="app.js"]');let b='';if(s){try{const u=new URL(s.src,location.href);b=u.pathname.replace(/\/app\.js(\?.*)?$/,'').replace(/\/$/,'');}catch(e){}}window.location.href=b+'/'; return; }
   }
   initAdmin();
 });
