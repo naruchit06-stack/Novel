@@ -182,22 +182,6 @@ body {
 
 
 /* ===== 5. BANNER ===== */
-.banner {
-  background: #e8f5e9; border: 1px solid #c8e6c9;
-  border-radius: 14px; padding: 14px 20px;
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 32px; font-size: 0.88rem; color: #2e7d32;
-}
-.banner-icon { font-size: 1rem; }
-.banner-text strong { display: block; font-weight: 700; margin-bottom: 2px; }
-.banner-text span { color: #388e3c; font-size: 0.82rem; }
-.banner-btn {
-  margin-left: auto; background: #1a1a2e; color: #fff;
-  padding: 8px 18px; border-radius: 10px; font-size: 0.82rem;
-  font-weight: 700; text-decoration: none; white-space: nowrap;
-  transition: all 0.2s; font-family: 'Sarabun', sans-serif;
-}
-.banner-btn:hover { background: var(--primary); }
 
 
 /* ===== 6. SECTION HEADERS ===== */
@@ -823,11 +807,11 @@ body {
    ======================================== */
 .novel-card-h {
   display: flex;
-  flex-direction: column;
+  gap: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  overflow: hidden;
+  padding: 14px;
   transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
   text-decoration: none;
   color: inherit;
@@ -836,15 +820,16 @@ body {
 
 .novel-card-h:hover {
   border-color: rgba(232,68,90,0.45);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.3);
 }
 
-/* Cover — เต็มความกว้าง ratio 2/3 แบบในรูป */
+/* Cover — ใหญ่ขึ้นตามรูป */
 .novel-card-cover {
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  border-radius: 0;
+  flex-shrink: 0;
+  width: 100px;
+  height: 140px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--surface2);
   position: relative;
@@ -889,7 +874,6 @@ body {
   flex-direction: column;
   gap: 5px;
   min-width: 0;
-  padding: 10px 12px 12px;
 }
 
 .novel-card-top {
