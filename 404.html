@@ -9,12 +9,20 @@
   // เมื่อ user เปิด URL เช่น /novels/abc123 ตรง
   // GitHub Pages จะ serve 404.html แทน
   // Script นี้จะ redirect กลับไป index.html พร้อมเก็บ path ไว้ใน ?_r=
+  // [SPA-9 + HOTFIX-15] auto-detect BASE_PATH รองรับ GitHub Pages sub-folder
   (function() {
-    var path = window.location.pathname;
+    var path   = window.location.pathname;
     var search = window.location.search;
-    var hash = window.location.hash;
-    // เก็บ path เดิมไว้ใน query param _r แล้ว redirect ไป root
-    var redirectUrl = '/?_r=' + encodeURIComponent(path + search + hash);
+    var hash   = window.location.hash;
+    // หา base: ตัด trailing segment ออก เช่น /Novel/novels/abc → /Novel
+    // แต่ถ้าเป็น /Novel/404.html → /Novel
+    var segments = path.split('/').filter(Boolean); // ['Novel','novels','abc']
+    // base คือ segment แรกเสมอ (repo folder ใน GitHub Pages)
+    var base = segments.length > 0 ? '/' + segments[0] : '';
+    // ตรวจ: ถ้า segment แรกดูเหมือน route (/novels, /library) ไม่ใช่ folder → ไม่มี base
+    var knownRoutes = ['novels', 'library'];
+    if (knownRoutes.indexOf(segments[0]) !== -1) base = '';
+    var redirectUrl = base + '/index.html?_r=' + encodeURIComponent(path + search + hash);
     window.location.replace(redirectUrl);
   })();
 </script>

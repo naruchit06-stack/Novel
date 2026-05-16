@@ -1578,3 +1578,21 @@ body {
   .nv-meta { justify-content: center; }
   .nv-tags { justify-content: center; }
 }
+
+/* ===== NOVEL-3: Episode Tabs + Sort ===== */
+.nv-ep-header { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.nv-ep-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.nv-ep-tabs { display:flex; gap:6px; }
+.nv-tab {
+  padding:6px 14px; border-radius:20px; border:1px solid #2e2e2e;
+  background:none; color:#a0a0a0; font-size:0.82rem; font-weight:600;
+  cursor:pointer; font-family:inherit; transition:all .18s;
+}
+.nv-tab.active { background:#c8963e; border-color:#c8963e; color:#0f0f0f; }
+.nv-tab:hover:not(.active) { border-color:#c8963e; color:#c8963e; }
+.nv-sort-btn {
+  padding:6px 12px; border-radius:20px; border:1px solid #2e2e2e;
+  background:none; color:#a0a0a0; font-size:0.82rem; font-weight:600;
+  cursor:pointer; font-family:inherit; transition:all .18s; white-space:nowrap;
+}
+.nv-sort-btn:hover { border-color:#c8963e; color:#c8963e; }

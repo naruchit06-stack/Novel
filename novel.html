@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>กำลังโหลด... — The Golden Hoard Novels</title>
 <script>
-  // [SPA-7] Redirect novel.html?id=xxx → index.html then navigate to /novels/xxx
+  // [SPA-7 + NOVEL-HOTFIX] Redirect novel.html → index.html รองรับ sub-folder
   (function() {
-    const id = new URLSearchParams(location.search).get('id');
+    const base = location.pathname.replace(/\/novel\.html$/i, '');
+    const id   = new URLSearchParams(location.search).get('id');
     if (id) {
-      location.replace('/index.html?_novel=' + encodeURIComponent(id));
+      location.replace(base + '/index.html?_novel=' + encodeURIComponent(id));
     } else {
-      location.replace('/index.html');
+      location.replace(base + '/index.html');
     }
   })();
 </script>

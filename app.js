@@ -129,13 +129,13 @@ const STATUS_MAP = {
 // [JS-2] Horizontal card template
 function cardHTML(n) {
   const st  = STATUS_MAP[n.status] || STATUS_MAP.ongoing;
-  const url = `novel.html?id=${encodeURIComponent(n.id)}`;
+  const novelPath = '/novels/' + encodeURIComponent(n.id);
   const cover = n.coverUrl
     ? `<img src="${n.coverUrl}" alt="${n.title}" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="novel-card-cover-placeholder">${n.emoji || '📖'}</div>`;
   const rating = n.rating ? `⭐ ${n.rating}` : '⭐ —';
   return `
-  <a href="${url}" class="novel-card-h">
+  <a href="javascript:void(0)" data-novel-id="${n.id}" class="novel-card-h" onclick="window._spaNavigate(this)">
     <div class="novel-card-cover">
       ${cover}
       <span class="novel-card-cover-badge badge ${st.cls}">${st.label}</span>
@@ -728,7 +728,7 @@ window.renderHistory = function() {
     items.innerHTML = list.map(h => {
       const pct = Math.min(100, Math.round((h.progress || 0) * 100));
       return `
-        <div class="history-item" onclick="window.location.href='novel.html?id=${h.novelId}'">
+        <div class="history-item" data-novel-id="${h.novelId}" onclick="window._spaNavigate(this)">
           <img class="history-item-cover"
                src="${h.coverUrl || 'https://placehold.co/60x80/1a1a2e/e2b96b?text=📖'}"
                alt="${h.novelTitle}" loading="lazy">
@@ -762,6 +762,10 @@ const fmtNV = s => {
 window.renderNovelView = async function({ id: novelId }) {
   const appView = document.getElementById('app-view');
   if (!appView) return;
+
+  // ── reset tab + sort state ทุกครั้งที่เปลี่ยนนิยาย
+  _nvTab  = 'all';
+  _nvDesc = false;
 
   // ── loading state
   appView.innerHTML = `
@@ -823,7 +827,16 @@ window.renderNovelView = async function({ id: novelId }) {
         </div>
         <div class="nv-col-right">
           <div class="nv-ep-section">
-            <h2 class="nv-ep-title">รายการตอน (${epCnt})</h2>
+            <div class="nv-ep-header">
+              <h2 class="nv-ep-title">รายการตอน (${epCnt})</h2>
+              <div class="nv-ep-controls">
+                <div class="nv-ep-tabs">
+                  <button class="nv-tab active" id="nvTabAll" onclick="window._nvSetTab('all')">ทั้งหมด</button>
+                  <button class="nv-tab" id="nvTabLatest" onclick="window._nvSetTab('latest')">ล่าสุด 10 ตอน</button>
+                </div>
+                <button class="nv-sort-btn" id="nvSortBtn" onclick="window._nvToggleSort()">⇅ <span id="nvSortLabel">เก่า→ใหม่</span></button>
+              </div>
+            </div>
             <div class="ep-list" id="nvEpList"></div>
           </div>
         </div>
@@ -854,15 +867,28 @@ function _nvErr(msg) {
   if (em) em.textContent = msg;
 }
 
+// ── tab + sort state
+let _nvTab  = 'all';   // 'all' | 'latest'
+let _nvDesc = false;   // false = เก่า→ใหม่, true = ใหม่→เก่า
+let _nvAudioFiles = [], _nvNovel = null;
+
 function _nvBuildEpList(epCnt, audioFiles, novel) {
+  _nvAudioFiles = audioFiles;
+  _nvNovel = novel;
   const list = document.getElementById('nvEpList');
   if (!list) return;
   if (epCnt === 0) {
     list.innerHTML = `<div style="text-align:center;padding:30px;color:#666">⏳ ยังไม่มีตอน</div>`;
     return;
   }
+
+  // สร้าง array index ตาม tab + sort
+  let indices = Array.from({ length: epCnt }, (_, i) => i);
+  if (_nvDesc) indices = indices.slice().reverse();
+  if (_nvTab === 'latest') indices = indices.slice(0, 10);
+
   list.innerHTML = '';
-  for (let i = 0; i < epCnt; i++) {
+  indices.forEach(i => {
     const af  = audioFiles[i];
     const ok  = af && af.url;
     const lbl = af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`;
@@ -874,8 +900,24 @@ function _nvBuildEpList(epCnt, audioFiles, novel) {
       <span class="ep-dur">${ok ? fmtNV(af.duration) : ''}</span>`;
     if (ok) item.addEventListener('click', () => window._nvPlayEp(i, audioFiles, novel));
     list.appendChild(item);
-  }
+  });
 }
+
+window._nvSetTab = function(tab) {
+  _nvTab = tab;
+  document.getElementById('nvTabAll')?.classList.toggle('active', tab === 'all');
+  document.getElementById('nvTabLatest')?.classList.toggle('active', tab === 'latest');
+  const epCnt = Math.max(_nvNovel?.episodeCount || 0, _nvAudioFiles.length);
+  _nvBuildEpList(epCnt, _nvAudioFiles, _nvNovel);
+};
+
+window._nvToggleSort = function() {
+  _nvDesc = !_nvDesc;
+  const lbl = document.getElementById('nvSortLabel');
+  if (lbl) lbl.textContent = _nvDesc ? 'ใหม่→เก่า' : 'เก่า→ใหม่';
+  const epCnt = Math.max(_nvNovel?.episodeCount || 0, _nvAudioFiles.length);
+  _nvBuildEpList(epCnt, _nvAudioFiles, _nvNovel);
+};
 
 // ── play episode (ใช้ audio element เดิมใน shell — SPA-5 ต้องตรวจ)
 window._nvPlayEp = function(idx, audioFiles, novel) {
@@ -904,14 +946,28 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
   audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
 
   const lbl = af.name || `ตอนที่ ${idx+1}`;
-  const playerEp  = document.getElementById('playerEp');
-  const playerSub = document.getElementById('playerSub');
-  const playerBar = document.getElementById('player-bar');
-  const thumb     = document.getElementById('playerThumb');
-  if (playerEp)  playerEp.textContent  = lbl;
-  if (playerSub) playerSub.textContent = novel?.title || '';
-  if (thumb) thumb.innerHTML = novel?.coverUrl ? `<img src="${novel.coverUrl}" alt="">` : '🎧';
-  if (playerBar) playerBar.classList.add('visible');
+
+  // ── อัปเดต now-playing bar (shell elements)
+  const nowPlaying = document.getElementById('nowPlaying');
+  const npTitle    = document.getElementById('npTitle');
+  const npEp       = document.getElementById('npEp');
+  const npCover    = document.getElementById('npCover');
+  const npExpandTitle = document.getElementById('npExpandTitle');
+  const npExpandEp    = document.getElementById('npExpandEp');
+  const npExpandCover = document.getElementById('npExpandCover');
+
+  if (npTitle) npTitle.textContent = novel?.title || lbl;
+  if (npEp)    npEp.textContent    = lbl;
+  if (npExpandTitle) npExpandTitle.textContent = novel?.title || lbl;
+  if (npExpandEp)    npExpandEp.textContent    = lbl;
+
+  const coverHTML = novel?.coverUrl
+    ? `<img src="${novel.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover">`
+    : '🎧';
+  if (npCover)       npCover.innerHTML       = coverHTML;
+  if (npExpandCover) npExpandCover.innerHTML = coverHTML;
+
+  if (nowPlaying) nowPlaying.classList.add('visible');
 
   // media session
   if ('mediaSession' in navigator && novel) {
@@ -1057,6 +1113,17 @@ function _libDoRender() {
  * window.handleRoute — bridge สำหรับ inline onclick ใน HTML shell
  * ก่อน module โหลดเสร็จ navigate() ใน index.html จะเรียกนี้
  */
+/* ===== SPA NAVIGATE HELPER ===== */
+/**
+ * _spaNavigate(el) — ใช้ใน onclick ของ card/history-item
+ * อ่าน data-novel-id แล้ว navigate ผ่าน router แทน href
+ */
+window._spaNavigate = function(el) {
+  const id = el.dataset.novelId;
+  if (!id) return;
+  import('./router.js').then(r => r.navigate('/novels/' + encodeURIComponent(id)));
+};
+
 window.handleRoute = function(path) {
   import('./router.js').then(r => r.navigate(path));
 };
