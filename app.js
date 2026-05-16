@@ -755,6 +755,11 @@ window.renderHistory = function() {
 
 /* ===== SPA-4: renderNovelView(novelId) ===== */
 
+// [PERF-2] Novel metadata cache — ไม่ hit Firestore ซ้ำถ้าเปิดนิยายเดิม
+const _novelCache = {};
+// [PERF-3] Episode list cache — ไม่ getDocs ซ้ำถ้า episode ยังไม่เปลี่ยน
+const _epCache = {};
+
 const STATUS_LABEL_NV = { ongoing:'กำลังดำเนิน', done:'จบแล้ว', new:'ใหม่', hiatus:'หยุดพัก' };
 const STATUS_CLS_NV   = { ongoing:'badge-ongoing', done:'badge-done', new:'badge-new', hiatus:'badge-hiatus' };
 const fmtNV = s => {
@@ -770,6 +775,7 @@ window.renderNovelView = async function({ id: novelId }) {
   // ── reset tab + sort state ทุกครั้งที่เปลี่ยนนิยาย
   _nvTab  = 'all';
   _nvDesc = false;
+  _nvCurrentIdx = -1; // [UX-3] reset active ep
 
   // ── loading state
   appView.innerHTML = `
@@ -790,12 +796,24 @@ window.renderNovelView = async function({ id: novelId }) {
 
   let novel, audioFiles;
   try {
-    const snap = await getDoc(doc(db, 'novels', novelId));
-    if (!snap.exists()) { _nvErr('ไม่พบนิยายนี้ในฐานข้อมูล'); return; }
-    novel = { id: snap.id, ...snap.data() };
+    // [PERF-2] เช็ค novel cache ก่อน — ถ้ามีแล้วไม่ hit Firestore
+    if (_novelCache[novelId]) {
+      novel = _novelCache[novelId];
+    } else {
+      const snap = await getDoc(doc(db, 'novels', novelId));
+      if (!snap.exists()) { _nvErr('ไม่พบนิยายนี้ในฐานข้อมูล'); return; }
+      novel = { id: snap.id, ...snap.data() };
+      _novelCache[novelId] = novel;
+    }
 
-    const epSnap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order','asc')));
-    audioFiles = epSnap.docs.map(d => ({ url: d.data().audioUrl, name: d.data().title, ...d.data() }));
+    // [PERF-3] เช็ค episode cache ก่อน — ถ้ามีแล้วไม่ getDocs ซ้ำ
+    if (_epCache[novelId]) {
+      audioFiles = _epCache[novelId];
+    } else {
+      const epSnap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order','asc')));
+      audioFiles = epSnap.docs.map(d => ({ url: d.data().audioUrl, name: d.data().title, ...d.data() }));
+      _epCache[novelId] = audioFiles;
+    }
   } catch(e) {
     console.error('[renderNovelView]', e);
     _nvErr('โหลดข้อมูลไม่สำเร็จ'); return;
@@ -847,8 +865,14 @@ window.renderNovelView = async function({ id: novelId }) {
       </div>
     </div>`;
 
-  // ── episode list
-  _nvBuildEpList(epCnt, audioFiles, novel);
+  // ── episode list — แสดง skeleton ก่อน แล้ว build จริง (UX-1)
+  const epListEl = document.getElementById('nvEpList');
+  if (epListEl) {
+    epListEl.innerHTML = Array.from({ length: Math.min(epCnt, 6) })
+      .map(() => `<div class="ep-skeleton"><span class="ep-sk-icon"></span><span class="ep-sk-label"></span><span class="ep-sk-dur"></span></div>`)
+      .join('');
+  }
+  requestAnimationFrame(() => _nvBuildEpList(epCnt, audioFiles, novel));
 
   // ── play first btn
   document.getElementById('nvPlayFirstBtn').addEventListener('click', () => {
@@ -875,6 +899,7 @@ function _nvErr(msg) {
 let _nvTab  = 'all';   // 'all' | 'latest'
 let _nvDesc = false;   // false = เก่า→ใหม่, true = ใหม่→เก่า
 let _nvAudioFiles = [], _nvNovel = null;
+let _nvCurrentIdx = -1; // [UX-3] track ep ที่กำลังเล่นอยู่
 
 function _nvBuildEpList(epCnt, audioFiles, novel) {
   _nvAudioFiles = audioFiles;
@@ -905,6 +930,16 @@ function _nvBuildEpList(epCnt, audioFiles, novel) {
     if (ok) item.addEventListener('click', () => window._nvPlayEp(i, audioFiles, novel));
     list.appendChild(item);
   });
+
+  // [UX-3] restore active state ถ้ามี ep ที่กำลังเล่นอยู่
+  if (_nvCurrentIdx >= 0) {
+    const activeEl = document.getElementById('nvEp-' + _nvCurrentIdx);
+    if (activeEl) {
+      activeEl.classList.add('active');
+      const ic = activeEl.querySelector('.ep-icon');
+      if (ic) ic.textContent = '⏸';
+    }
+  }
 }
 
 window._nvSetTab = function(tab) {
@@ -930,6 +965,8 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
 
   const af = audioFiles[idx];
   if (!af || !af.url) return;
+
+  _nvCurrentIdx = idx; // [UX-3] track ep ที่กำลังเล่น
 
   // reset active state
   document.querySelectorAll('.ep-item').forEach(el => {

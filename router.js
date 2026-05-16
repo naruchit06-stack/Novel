@@ -218,6 +218,8 @@ async function _render(path) {
     }
     // [SPA-10] sync active state ของ nav links (desktop + mobile drawer)
     _syncNavActive(path);
+    // [PERF-5] scroll to top เมื่อ navigate ไปหน้าใหม่
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (err) {
     console.error('[router] render error:', err);
     appView.innerHTML = `
