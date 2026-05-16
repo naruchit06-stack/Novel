@@ -139,11 +139,17 @@ function cardHTML(n) {
   const rating = n.rating ? `⭐ ${n.rating}` : '';
   const views  = n.views  ? `👁 ${(n.views/1000).toFixed(1)}K`  : '';
   const likes  = n.likes  ? `❤ ${(n.likes/1000).toFixed(1)}K`  : '';
+  const isFav  = _getFavs().includes(n.id);
   return `
   <a href="javascript:void(0)" data-novel-id="${n.id}" class="novel-card-h" onclick="window._spaNavigate(this)">
-    <div class="novel-card-cover">
+    <div class="novel-card-cover" style="position:relative">
       ${cover}
       <span class="novel-card-cover-badge badge ${st.cls}">${st.label}</span>
+      <button class="novel-card-heart${isFav ? ' fav-active' : ''}" data-fav-id="${n.id}"
+        onclick="event.preventDefault();event.stopPropagation();toggleFav('${n.id}',this)"
+        title="${isFav ? 'เอาออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'}">
+        ${isFav ? '❤️' : '🤍'}
+      </button>
     </div>
     <div class="novel-card-body">
       <div class="novel-card-title">${n.title}</div>
@@ -160,6 +166,43 @@ function cardHTML(n) {
     </div>
   </a>`;
 }
+
+/* ===== [CARD-H-1] Favorites helpers ===== */
+function _getFavs() {
+  try { return JSON.parse(localStorage.getItem('gh_favs') || '[]'); } catch { return []; }
+}
+function _saveFavs(arr) {
+  localStorage.setItem('gh_favs', JSON.stringify(arr));
+}
+function toggleFav(novelId, btn) {
+  let favs = _getFavs();
+  const idx = favs.indexOf(novelId);
+  if (idx === -1) {
+    favs.push(novelId);
+    btn.classList.add('fav-active');
+    btn.textContent = '❤️';
+    btn.title = 'เอาออกจากรายการโปรด';
+  } else {
+    favs.splice(idx, 1);
+    btn.classList.remove('fav-active');
+    btn.textContent = '🤍';
+    btn.title = 'เพิ่มในรายการโปรด';
+    /* ถ้ากำลังอยู่ในหน้า favorites ให้ลบการ์ดทิ้ง */
+    const card = btn.closest('.novel-card-h');
+    if (card && document.getElementById('app-view')?.dataset.view === 'favorites') {
+      card.remove();
+    }
+  }
+  _saveFavs(favs);
+  _updateFavBadge();
+}
+function _updateFavBadge() {
+  const count = _getFavs().length;
+  const link = document.getElementById('nav-favorites-link');
+  if (!link) return;
+  link.textContent = count > 0 ? `รายการโปรด (${count})` : 'รายการโปรด';
+}
+window.toggleFav = toggleFav;
 
 function renderNovels(list) {
   const grid = document.getElementById('novelsGrid');
@@ -1150,8 +1193,16 @@ import('./router.js').then(router => {
   router.register('/', renderHomeView);
   router.register('/novels/:id', window.renderNovelView);
   router.register('/library', renderLibraryView);
+  router.register('/favorites', renderFavoritesView);
   router.initRouter();
 }).catch(e => console.error('[SPA-5] router load failed:', e));
+
+/* [CARD-H-1] wire nav-favorites-link + init badge */
+document.addEventListener('DOMContentLoaded', () => {
+  _updateFavBadge();
+  const favLink = document.getElementById('nav-favorites-link');
+  if (favLink) favLink.onclick = e => { e.preventDefault(); window.handleRoute('/favorites'); };
+});
 
 
 /* ===== SPA-8: Library View ===== */
@@ -1256,6 +1307,31 @@ function _libDoRender() {
   if (empty) empty.style.display = 'none';
   grid.innerHTML = list.map(n => cardHTML(n)).join('');
 }
+
+/* ===== [CARD-H-1] Favorites View ===== */
+window.renderFavoritesView = async function renderFavoritesView() {
+  const appView = document.getElementById('app-view');
+  if (!appView) return;
+  appView.dataset.view = 'favorites';
+
+  const favIds = _getFavs();
+  const favNovels = allNovels.filter(n => favIds.includes(n.id));
+
+  appView.innerHTML = `
+  <div class="lib-container">
+    <div class="lib-header">
+      <h1 class="lib-title">❤️ รายการโปรด</h1>
+      <span class="lib-count" id="favCount">${favNovels.length} เรื่อง</span>
+    </div>
+    <div class="novels-grid" id="favGrid">
+      ${favNovels.length
+        ? favNovels.map(n => cardHTML(n)).join('')
+        : `<div class="empty-state"><div class="empty-icon">🤍</div><p>ยังไม่มีรายการโปรด<br><small>กดหัวใจ ❤ บนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`
+      }
+    </div>
+  </div>`;
+};
+window.renderFavoritesView = window.renderFavoritesView;
 
 /**
  * window.handleRoute — bridge สำหรับ inline onclick ใน HTML shell
