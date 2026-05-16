@@ -1101,6 +1101,24 @@ body.admin-body {
   background: #2563eb; color: #fff; border: none;
   padding: 8px 14px; border-radius: 7px; font-size: 13px; cursor: pointer; white-space: nowrap;
 }
+/* [EP-PROGRESS-1] upload progress */
+.ep-progress-wrap {
+  display: none; margin-top: 14px;
+  background: var(--admin-surface); border-radius: 999px;
+  height: 6px; overflow: hidden;
+}
+.ep-progress-wrap.visible { display: block; }
+.ep-progress-bar {
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, #e8445a, #ff7043);
+  transition: width 0.25s ease;
+  box-shadow: 0 0 8px rgba(232,68,90,0.6);
+}
+.ep-progress-label {
+  display: none; margin-top: 6px;
+  font-size: 12px; color: var(--muted); text-align: right;
+}
+.ep-progress-label.visible { display: block; }
 </style>
 </head>
 <body class="admin-body">
@@ -1675,6 +1693,10 @@ function openEpModal(novelId, epId, epData) {
 }
 window.closeEpModal = function() {
   document.getElementById('epModal').classList.remove('open');
+  // [EP-PROGRESS-1] reset progress
+  document.getElementById('epProgressWrap').classList.remove('visible');
+  document.getElementById('epProgressBar').style.width = '0%';
+  document.getElementById('epProgressLabel').classList.remove('visible');
 };
 window.onEpFileChange = function(input) {
   _epModalFile = input.files[0] || null;
@@ -1705,13 +1727,43 @@ window.saveEpisode = async function() {
     // Upload audio to Cloudinary if file selected
     if (_epModalFile) {
       duration = await getAudioDuration(_epModalFile);
+
+      // [EP-PROGRESS-1] show progress bar
+      const wrap  = document.getElementById('epProgressWrap');
+      const bar   = document.getElementById('epProgressBar');
+      const label = document.getElementById('epProgressLabel');
+      wrap.classList.add('visible');
+      label.classList.add('visible');
+      bar.style.width = '0%';
+      label.textContent = 'กำลังอัปโหลด... 0%';
+
       const fd = new FormData();
       fd.append('file', _epModalFile);
       fd.append('upload_preset', 'ml_default');
-      const res  = await fetch(`https://api.cloudinary.com/v1_1/dmr6ln5hy/video/upload`, { method:'POST', body: fd });
-      const json = await res.json();
-      audioUrl = json.secure_url;
-      fileName = _epModalFile.name;
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://api.cloudinary.com/v1_1/dmr6ln5hy/video/upload');
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            bar.style.width = pct + '%';
+            label.textContent = 'กำลังอัปโหลด... ' + pct + '%';
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const json = JSON.parse(xhr.responseText);
+            audioUrl = json.secure_url;
+            fileName = _epModalFile.name;
+            bar.style.width = '100%';
+            label.textContent = 'อัปโหลดสำเร็จ ✅';
+            resolve();
+          } else { reject(new Error('Upload failed')); }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(fd);
+      });
     }
 
     const epData = { title, order, updatedAt: new Date() };
@@ -1960,6 +2012,11 @@ function bindEvents() {
       <button class="btn-ep-cancel" onclick="closeEpModal()">ยกเลิก</button>
       <button class="btn-ep-save" id="epModalSaveBtn" onclick="saveEpisode()">💾 บันทึก</button>
     </div>
+    <!-- [EP-PROGRESS-1] progress bar -->
+    <div class="ep-progress-wrap" id="epProgressWrap">
+      <div class="ep-progress-bar" id="epProgressBar"></div>
+    </div>
+    <div class="ep-progress-label" id="epProgressLabel">กำลังอัปโหลด... 0%</div>
   </div>
 </div>
 </body>

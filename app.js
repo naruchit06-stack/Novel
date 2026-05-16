@@ -133,11 +133,12 @@ const STATUS_MAP = {
 // [JS-2] Horizontal card template
 function cardHTML(n) {
   const st  = STATUS_MAP[n.status] || STATUS_MAP.ongoing;
-  const novelPath = '/novels/' + encodeURIComponent(n.id);
   const cover = n.coverUrl
     ? `<img src="${n.coverUrl}" alt="${n.title}" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="novel-card-cover-placeholder">${n.emoji || '📖'}</div>`;
-  const rating = n.rating ? `⭐ ${n.rating}` : '⭐ —';
+  const rating = n.rating ? `⭐ ${n.rating}` : '';
+  const views  = n.views  ? `👁 ${(n.views/1000).toFixed(1)}K`  : '';
+  const likes  = n.likes  ? `❤ ${(n.likes/1000).toFixed(1)}K`  : '';
   return `
   <a href="javascript:void(0)" data-novel-id="${n.id}" class="novel-card-h" onclick="window._spaNavigate(this)">
     <div class="novel-card-cover">
@@ -148,10 +149,14 @@ function cardHTML(n) {
       <div class="novel-card-title">${n.title}</div>
       <div class="novel-card-desc">${n.desc || n.description || ''}</div>
       <div class="novel-card-meta">
+        ${rating ? `<span class="meta-rating">${rating}</span>` : ''}
+        ${views  ? `<span>${views}</span>` : ''}
+        ${likes  ? `<span class="meta-likes">${likes}</span>` : ''}
         <span>📖 ${n.episodeCount || 0} ตอน</span>
-        <span>👁 ${n.views || 0}</span>
       </div>
-      <div class="novel-card-rating">${rating}</div>
+      <div class="novel-card-footer">
+        <span class="novel-card-read-btn">▶ ฟังเลย</span>
+      </div>
     </div>
   </a>`;
 }
@@ -438,6 +443,78 @@ window.toggleExpand = function() { document.getElementById('nowPlaying').classLi
 window.rewind10     = function() { if (audio.src) audio.currentTime = Math.max(0, audio.currentTime - 10); };
 window.forward10    = function() { if (audio.src) audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10); };
 
+/* ===== [PLAYER-2] Speed, Volume, Sleep Timer ===== */
+
+// -- Speed --
+const SPEEDS = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+let _speedIdx = 1; // default 1.0x
+
+window.cycleSpeed = function() {
+  _speedIdx = (_speedIdx + 1) % SPEEDS.length;
+  const s = SPEEDS[_speedIdx];
+  audio.playbackRate = s;
+  const btn = document.getElementById('npSpeedBtn');
+  if (btn) btn.textContent = s.toFixed(2).replace('.00','').replace(/\.?0+$/,'') + 'x';
+};
+
+// -- Volume --
+let _muted = false, _lastVol = 1;
+
+window.setVolume = function(v) {
+  audio.volume = parseFloat(v);
+  _lastVol = audio.volume;
+  _muted = audio.volume === 0;
+  _syncVolIcon();
+};
+
+window.toggleMute = function() {
+  _muted = !_muted;
+  audio.volume = _muted ? 0 : _lastVol;
+  const slider = document.getElementById('npVolume');
+  if (slider) slider.value = audio.volume;
+  _syncVolIcon();
+};
+
+function _syncVolIcon() {
+  const el = document.querySelector('.np-vol-icon');
+  if (!el) return;
+  el.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.5 ? '🔉' : '🔊';
+}
+
+// -- Sleep Timer --
+let _sleepTimer = null;
+let _sleepMins  = 0;
+const SLEEP_OPTIONS = [15, 30, 60, 90, 0]; // 0 = ยกเลิก
+let _sleepIdx = 0;
+
+window.toggleSleepTimer = function() {
+  const mins = SLEEP_OPTIONS[_sleepIdx % SLEEP_OPTIONS.length];
+  _sleepIdx++;
+
+  if (_sleepTimer) { clearTimeout(_sleepTimer); _sleepTimer = null; }
+
+  const btn = document.getElementById('npSleepBtn');
+  if (!btn) return;
+
+  if (mins === 0) {
+    btn.textContent = '⏰ ตั้งเวลาปิด';
+    btn.classList.remove('active');
+    _sleepIdx = 0;
+    return;
+  }
+
+  _sleepTimer = setTimeout(() => {
+    audio.pause();
+    isPlaying = false;
+    syncPlayBtn(false);
+    if (btn) { btn.textContent = '⏰ ตั้งเวลาปิด'; btn.classList.remove('active'); }
+    _sleepIdx = 0;
+  }, mins * 60 * 1000);
+
+  btn.textContent = `⏰ ${mins} นาที`;
+  btn.classList.add('active');
+};
+
 window.togglePlay = function() {
   if (!audio.src && !isPlaying) return;
   if (audio.src) {
@@ -463,16 +540,21 @@ audio.addEventListener('timeupdate', () => {
   const cur = formatTime(audio.currentTime);
   const dur = formatTime(audio.duration);
 
-  document.getElementById('npBarFill').style.width  = pct + '%';
+  const fill  = document.getElementById('npBarFill');
+  const thumb = document.getElementById('npBarThumb');
+  if (fill)  fill.style.width = pct + '%';
+  if (thumb) thumb.style.left = `calc(${pct}% - 6px)`;
   document.getElementById('npCurrent').textContent  = cur;
   document.getElementById('npDuration').textContent = dur;
 
   const f2 = document.getElementById('npBarFill2');
+  const t2 = document.getElementById('npBarThumb2');
   const c2 = document.getElementById('npCurrent2');
   const d2 = document.getElementById('npDuration2');
-  if (f2) f2.style.width  = pct + '%';
-  if (c2) c2.textContent  = cur;
-  if (d2) d2.textContent  = dur;
+  if (f2) f2.style.width = pct + '%';
+  if (t2) t2.style.left  = `calc(${pct}% - 6px)`;
+  if (c2) c2.textContent = cur;
+  if (d2) d2.textContent = dur;
 });
 
 audio.addEventListener('ended', () => { nextEp(); });

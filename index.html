@@ -70,25 +70,103 @@
 <!-- ========== APP VIEW (SPA content area) ========== -->
 <div id="app-view">
 
+<!-- [HIST-1] HISTORY BAR — เหนือ Hero, แสดงเฉพาะ login + มีประวัติ -->
+<div class="history-bar" id="historyBar" style="display:none;">
+  <div class="history-bar-inner">
+    <div class="history-bar-header">
+      <div class="history-bar-title">
+        <span class="history-bar-icon">🕐</span>
+        ประวัติการฟังล่าสุด
+      </div>
+      <a href="/library" onclick="navigate(event,'/library')" class="history-bar-viewall">ดูทั้งหมด →</a>
+    </div>
+    <div class="history-scroll-wrap">
+      <div class="history-items" id="historyItems">
+        <!-- render by JS: renderHistory() -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- [IDX-2] HERO SECTION -->
 <section class="hero" id="heroSection">
   <div class="hero-inner">
     <div class="hero-content">
-      <p class="hero-label">✨ ยินดีต้อนรับสู่</p>
+      <p class="hero-label"><span class="hero-label-icon">🎧</span> นิยายเสียงภาษาไทย</p>
       <h1 class="hero-title">
-        The <span>Golden</span> Hoard<br>นิยายเสียงคุณภาพ
+        ฟังนิยายที่คุณชื่นชอบ<br><span>ได้ทุกที่ทุกเวลา</span>
       </h1>
       <p class="hero-desc">
-        รวมนิยายเสียงภาษาไทยคัดสรรคุณภาพ อัปเดตใหม่ทุกวัน<br>
-        ฟังได้ทุกที่ ทุกเวลา บนทุกอุปกรณ์
+        สัมผัสประสบการณ์การฟังนิยายเสียงคุณภาพสูง<br>
+        พากย์โดยนักพากย์มืออาชีพ อัปเดตใหม่ทุกสัปดาห์
       </p>
       <div class="hero-actions">
-        <a href="#novelList" class="hero-btn-primary">เริ่มฟังเลย 🎧</a>
+        <a href="#novelList" class="hero-btn-primary">▶ เริ่มฟังเลย</a>
         <a href="#novelList" class="hero-btn-outline">ดูนิยายทั้งหมด →</a>
       </div>
     </div>
     <div class="hero-image" id="heroImage">
-      <div class="hero-image-placeholder">👑</div>
+      <div class="hero-neon-graphic">
+        <svg class="hero-waveform" viewBox="0 0 260 120" xmlns="http://www.w3.org/2000/svg">
+          <g opacity="0.7">
+            <rect x="0"   y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+            <rect x="10"  y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+            <rect x="20"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+            <rect x="30"  y="40" width="6" height="40" rx="3" fill="#e8445a"/>
+            <rect x="40"  y="20" width="6" height="80" rx="3" fill="#e8445a"/>
+            <rect x="50"  y="35" width="6" height="50" rx="3" fill="#e8445a"/>
+            <rect x="60"  y="50" width="6" height="20" rx="3" fill="#e8445a"/>
+            <rect x="70"  y="25" width="6" height="70" rx="3" fill="#e8445a"/>
+            <rect x="80"  y="10" width="6" height="100" rx="3" fill="#e8445a"/>
+            <rect x="90"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+            <rect x="100" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+            <rect x="110" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+            <rect x="150" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+            <rect x="160" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+            <rect x="170" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+            <rect x="180" y="20" width="6" height="80" rx="3" fill="#e8445a"/>
+            <rect x="190" y="35" width="6" height="50" rx="3" fill="#e8445a"/>
+            <rect x="200" y="10" width="6" height="100" rx="3" fill="#e8445a"/>
+            <rect x="210" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+            <rect x="220" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+            <rect x="230" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+            <rect x="240" y="40" width="6" height="40" rx="3" fill="#e8445a"/>
+            <rect x="250" y="25" width="6" height="70" rx="3" fill="#e8445a"/>
+          </g>
+        </svg>
+        <div class="hero-headphone">
+          <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" width="160" height="128">
+            <defs>
+              <filter id="neonGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="4" result="blur1"/>
+                <feGaussianBlur stdDeviation="10" result="blur2"/>
+                <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <!-- headband arc -->
+            <path d="M 30 100 A 70 75 0 0 1 170 100"
+                  fill="none" stroke="#e8445a" stroke-width="7"
+                  stroke-linecap="round" filter="url(#neonGlow)"/>
+            <!-- inner arc dim -->
+            <path d="M 38 100 A 62 67 0 0 1 162 100"
+                  fill="none" stroke="rgba(232,68,90,0.3)" stroke-width="2"
+                  stroke-linecap="round"/>
+            <!-- left earcup -->
+            <rect x="14" y="88" width="28" height="44" rx="12"
+                  fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
+                  filter="url(#neonGlow)"/>
+            <rect x="20" y="96" width="16" height="28" rx="7"
+                  fill="rgba(232,68,90,0.25)"/>
+            <!-- right earcup -->
+            <rect x="158" y="88" width="28" height="44" rx="12"
+                  fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
+                  filter="url(#neonGlow)"/>
+            <rect x="164" y="96" width="16" height="28" rx="7"
+                  fill="rgba(232,68,90,0.25)"/>
+          </svg>
+        </div>
+        <div class="hero-crown-badge">👑</div>
+      </div>
     </div>
   </div>
 </section>
@@ -115,17 +193,6 @@
         <button class="filter-tab" onclick="switchFilterTab(this,'new')">⭐ มาใหม่</button>
         <button class="filter-tab" onclick="switchFilterTab(this,'updated')">🕐 อัปเดตล่าสุด</button>
         <button class="filter-tab" onclick="switchFilterTab(this,'all')">🔲 ทั้งหมด</button>
-      </div>
-    </div>
-
-    <!-- [IDX-NEW-1] HISTORY BAR ประวัติการดูล่าสุด (แสดงเฉพาะ login + มีประวัติ) -->
-    <div class="history-bar" id="historyBar">
-      <div class="history-bar-header">
-        <div class="history-bar-title">🕐 <span>ประวัติการดูล่าสุด</span></div>
-        <a href="#" class="history-bar-viewall">ดูทั้งหมด →</a>
-      </div>
-      <div class="history-items" id="historyItems">
-        <!-- render by JS: renderHistory() -->
       </div>
     </div>
 
@@ -215,7 +282,7 @@
       <a href="index.html" class="footer-brand-logo">
         👑 The <span>Golden</span> Hoard
       </a>
-      <p class="footer-brand-desc">คลังรวมนิยายคุณภาพ ที่ใหญ่ที่สุดในประเทศไทย<br>อัปเดตทุกวันเพื่อคุณ</p>
+      <p class="footer-brand-desc">สัมผัสประสบการณ์การฟังนิยายเสียงคุณภาพสูง<br>อัปเดตใหม่ทุกสัปดาห์</p>
       <div class="footer-socials">
         <a href="#" class="footer-social-btn" title="Facebook">f</a>
         <a href="#" class="footer-social-btn" title="Discord">💬</a>
@@ -285,47 +352,67 @@
   </div>
 </div>
 
-<!-- NOW PLAYING BAR -->
+<!-- NOW PLAYING BAR (PLAYER-1) -->
 <div class="now-playing" id="nowPlaying">
-  <div class="np-mini">
-    <div class="np-cover" id="npCover" onclick="toggleExpand()">🎧</div>
-    <div class="np-info"  onclick="toggleExpand()">
-      <div class="np-title" id="npTitle">-</div>
-      <div class="np-ep"    id="npEp">-</div>
-    </div>
-    <div class="np-mini-bar">
-      <div class="np-bar" onclick="seekAudio(event)" id="npBar">
-        <div class="np-bar-fill" id="npBarFill"></div>
-      </div>
-      <div class="np-time">
-        <span id="npCurrent">0:00</span>
-        <span id="npDuration">0:00</span>
-      </div>
-    </div>
-    <div class="np-controls">
-      <button class="np-btn"            onclick="prevEp()">⏮</button>
-      <button class="np-btn play-pause" id="btnPlayPause" onclick="togglePlay()">▶</button>
-      <button class="np-btn"            onclick="nextEp()">⏭</button>
-    </div>
-    <span class="np-chevron" onclick="toggleExpand()">▲</span>
+  <!-- progress bar แดง — ด้านบนสุดของ bar -->
+  <div class="np-progress-top" id="npBar" onclick="seekAudio(event)">
+    <div class="np-progress-top-fill" id="npBarFill"></div>
+    <div class="np-progress-top-thumb" id="npBarThumb"></div>
   </div>
+
+  <div class="np-main-row">
+    <!-- ซ้าย: cover + info -->
+    <div class="np-left">
+      <div class="np-cover" id="npCover">🎧</div>
+      <div class="np-info">
+        <div class="np-title" id="npTitle">-</div>
+        <div class="np-ep"    id="npEp">-</div>
+      </div>
+    </div>
+
+    <!-- กลาง: controls -->
+    <div class="np-center">
+      <button class="np-ctrl-btn" onclick="prevEp()" title="ตอนก่อน">⏮</button>
+      <button class="np-ctrl-btn np-play" id="btnPlayPause" onclick="togglePlay()">▶</button>
+      <button class="np-ctrl-btn" onclick="nextEp()" title="ตอนถัดไป">⏭</button>
+    </div>
+
+    <!-- ขวา: time + speed + sleep + volume + chevron -->
+    <div class="np-right">
+      <span class="np-time-text"><span id="npCurrent">0:00</span> / <span id="npDuration">0:00</span></span>
+      <button class="np-pill-btn" id="npSpeedBtn" onclick="cycleSpeed()" title="ความเร็ว">1.0x</button>
+      <button class="np-pill-btn np-sleep" id="npSleepBtn" onclick="toggleSleepTimer()" title="ตั้งเวลาปิด">⏰ ตั้งเวลาปิด</button>
+      <div class="np-volume-wrap">
+        <span class="np-vol-icon" onclick="toggleMute()">🔊</span>
+        <input class="np-volume" id="npVolume" type="range" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)">
+      </div>
+      <span class="np-chevron" id="npChevron" onclick="toggleExpand()">∧</span>
+    </div>
+  </div>
+
+  <!-- expanded panel -->
   <div class="np-expanded-area" id="npExpandedArea">
-    <div id="npExpandCover" style="width:100%;max-width:200px;aspect-ratio:1;border-radius:16px;overflow:hidden;margin:0 auto 12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:3rem">🎧</div>
-    <div class="np-expanded-title" id="npExpandTitle">-</div>
-    <div class="np-expanded-ep"    id="npExpandEp">-</div>
-    <div class="np-expanded-bar"   onclick="seekAudio2(event)" id="npBar2">
-      <div class="np-expanded-fill" id="npBarFill2"></div>
-    </div>
-    <div class="np-expanded-time">
-      <span id="npCurrent2">0:00</span>
-      <span id="npDuration2">0:00</span>
-    </div>
-    <div class="np-expanded-controls">
-      <button class="np-exp-btn"     onclick="rewind10()"  title="ย้อน 10 วิ">⏪<br><span style="font-size:0.6rem">10</span></button>
-      <button class="np-exp-btn"     onclick="prevEp()">⏮</button>
-      <button class="np-exp-btn big" id="btnPlayPause2"    onclick="togglePlay()">▶</button>
-      <button class="np-exp-btn"     onclick="nextEp()">⏭</button>
-      <button class="np-exp-btn"     onclick="forward10()" title="ข้าม 10 วิ">⏩<br><span style="font-size:0.6rem">10</span></button>
+    <div class="np-exp-inner">
+      <div id="npExpandCover" class="np-exp-cover">🎧</div>
+      <div class="np-exp-info">
+        <div class="np-expanded-title" id="npExpandTitle">-</div>
+        <div class="np-expanded-ep"    id="npExpandEp">-</div>
+        <div class="np-expanded-bar" id="npBar2" onclick="seekAudio2(event)">
+          <div class="np-expanded-fill" id="npBarFill2"></div>
+          <div class="np-exp-thumb" id="npBarThumb2"></div>
+        </div>
+        <div class="np-expanded-time">
+          <span id="npCurrent2">0:00</span>
+          <span id="npDuration2">0:00</span>
+        </div>
+        <div class="np-expanded-controls">
+          <button class="np-exp-btn" onclick="rewind10()" title="ย้อน 10 วิ">⏪ <span class="np-exp-label">10</span></button>
+          <button class="np-exp-btn" onclick="prevEp()">⏮</button>
+          <button class="np-exp-btn np-exp-play" id="btnPlayPause2" onclick="togglePlay()">▶</button>
+          <button class="np-exp-btn" onclick="nextEp()">⏭</button>
+          <button class="np-exp-btn" onclick="forward10()" title="ข้าม 10 วิ">⏩ <span class="np-exp-label">10</span></button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
