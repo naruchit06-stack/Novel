@@ -1252,9 +1252,9 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
 import('./router.js').then(router => {
   router.setBase(window._BASE);   // ส่ง BASE ที่ถูกต้องให้ router ก่อน
   router.register('/', renderHomeView);
-  router.register('/novels/:id', window.renderNovelView);
-  router.register('/library', renderLibraryView);
-  router.register('/favorites', renderFavoritesView);
+  router.register('/novels/:id', p => window.renderNovelView(p));
+  router.register('/library',   () => window.renderLibraryView());
+  router.register('/favorites', () => window.renderFavoritesView());
   router.initRouter();
 }).catch(e => console.error('[SPA-5] router load failed:', e));
 
