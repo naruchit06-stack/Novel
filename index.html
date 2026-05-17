@@ -13,15 +13,15 @@
 <nav class="navbar" id="mainNavbar">
 
   <!-- Logo ซ้าย -->
-  <a class="nav-logo" href="/" onclick="navigate(event,'/')">
+  <a class="nav-logo" href="/" onclick="event.preventDefault();window.handleRoute('/')" >
     <div class="nav-logo-icon">👑</div>
     <div class="nav-logo-text">The Golden <span>Hoard</span></div>
   </a>
 
   <!-- เมนูกลาง -->
   <div class="nav-links">
-    <a href="/" id="nav-home-link" onclick="navigate(event,'/')">หน้าแรก</a>
-    <a href="/library" id="nav-library-link" onclick="navigate(event,'/library')">นิยายทั้งหมด</a>
+    <a href="/" id="nav-home-link" onclick="event.preventDefault();window.handleRoute('/')">หน้าแรก</a>
+    <a href="/library" id="nav-library-link" onclick="event.preventDefault();window.handleRoute('/library')">นิยายทั้งหมด</a>
     <a href="#" id="nav-favorites-link">รายการโปรด</a>
   </div>
 
@@ -54,8 +54,8 @@
 
 <!-- Mobile nav drawer -->
 <div class="nav-mobile-drawer" id="mobileDrawer">
-  <a href="/" onclick="navigate(event,'/')">🏠 หน้าแรก</a>
-  <a href="/library" onclick="navigate(event,'/library')">📚 นิยายทั้งหมด</a>
+  <a href="/" onclick="event.preventDefault();window.handleRoute('/')">🏠 หน้าแรก</a>
+  <a href="/library" onclick="event.preventDefault();window.handleRoute('/library')">📚 นิยายทั้งหมด</a>
   <a href="#" id="mobile-favorites-link">⭐ รายการโปรด</a>
   <div class="nav-mobile-search">
     <span>🔍</span>
