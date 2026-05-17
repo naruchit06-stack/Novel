@@ -130,8 +130,9 @@
       <span class="np-time-text"><span id="npCurrent">0:00</span> / <span id="npDuration">0:00</span></span>
       <!-- 🕐 sleep timer -->
       <button class="np-icon-btn np-sleep" id="npSleepBtn" onclick="toggleSleepTimer()" title="ตั้งเวลาปิด">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" stroke-dasharray="3 2.5"/>
+          <polyline points="12,7 12,12 15,15" stroke-dasharray="none"/>
         </svg>
       </button>
       <!-- 🔁 speed -->

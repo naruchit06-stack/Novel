@@ -527,38 +527,104 @@ function _syncVolIcon() {
 }
 
 // -- Sleep Timer --
-let _sleepTimer = null;
-let _sleepMins  = 0;
-const SLEEP_OPTIONS = [15, 30, 60, 90, 0]; // 0 = ยกเลิก
-let _sleepIdx = 0;
+let _sleepTimer    = null;
+let _sleepInterval = null;
+let _sleepEndTime  = 0;
+let _sleepPickMins = 30; // ค่า default ใน popup
 
-window.toggleSleepTimer = function() {
-  const mins = SLEEP_OPTIONS[_sleepIdx % SLEEP_OPTIONS.length];
-  _sleepIdx++;
-
-  if (_sleepTimer) { clearTimeout(_sleepTimer); _sleepTimer = null; }
-
-  const btn = document.getElementById('npSleepBtn');
-  if (!btn) return;
-
-  if (mins === 0) {
-    btn.textContent = '⏰ ตั้งเวลาปิด';
-    btn.classList.remove('active');
-    _sleepIdx = 0;
+// อัปเดต badge นับถอยหลัง
+function _updateSleepBadge() {
+  const label = document.getElementById('npSleepLabel');
+  const btn   = document.getElementById('npSleepBtn');
+  if (!label) return;
+  const remaining = Math.max(0, Math.round((_sleepEndTime - Date.now()) / 1000));
+  if (remaining <= 0) {
+    label.style.display = 'none';
+    if (btn) btn.classList.remove('active');
     return;
   }
+  const m = Math.floor(remaining / 60), s = remaining % 60;
+  label.textContent   = m > 0 ? `${m}:${String(s).padStart(2,'0')}` : `${s}s`;
+  label.style.display = 'block';
+  if (btn) btn.classList.add('active');
+}
 
-  _sleepTimer = setTimeout(() => {
-    audio.pause();
-    isPlaying = false;
-    syncPlayBtn(false);
-    if (btn) { btn.textContent = '⏰ ตั้งเวลาปิด'; btn.classList.remove('active'); }
-    _sleepIdx = 0;
-  }, mins * 60 * 1000);
-
-  btn.textContent = `⏰ ${mins} นาที`;
-  btn.classList.add('active');
+window.openSleepPopup = function() {
+  document.getElementById('sleepPopupOverlay').style.display = 'block';
+  document.getElementById('sleepPopup').style.display = 'block';
+  _renderSleepDisplay();
+  _renderSleepConfirmBtn();
 };
+
+window.closeSleepPopup = function() {
+  document.getElementById('sleepPopupOverlay').style.display = 'none';
+  document.getElementById('sleepPopup').style.display = 'none';
+};
+
+window.setSleepMins = function(m) {
+  _sleepPickMins = m;
+  document.querySelectorAll('.sleep-preset').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === m ||
+      (m===60 && b.textContent==='1 ชม.') || (m===120 && b.textContent==='2 ชม.'));
+  });
+  _renderSleepDisplay();
+  _renderSleepConfirmBtn();
+};
+
+window.adjustSleepMins = function(delta) {
+  _sleepPickMins = Math.max(5, Math.min(180, _sleepPickMins + delta));
+  document.querySelectorAll('.sleep-preset').forEach(b => b.classList.remove('active'));
+  _renderSleepDisplay();
+  _renderSleepConfirmBtn();
+};
+
+function _renderSleepDisplay() {
+  const el = document.getElementById('sleepDisplay');
+  if (!el) return;
+  const h = Math.floor(_sleepPickMins / 60), m = _sleepPickMins % 60;
+  el.textContent = h > 0 ? `${h}:${String(m).padStart(2,'0')}` : `${m}:00`;
+}
+
+function _renderSleepConfirmBtn() {
+  const btn = document.getElementById('sleepConfirmBtn');
+  if (!btn) return;
+  if (_sleepTimer) {
+    btn.textContent = 'ยกเลิกตั้งเวลา';
+    btn.style.color = '#e8445a';
+    btn.style.borderColor = '#e8445a';
+    btn.onclick = () => { _cancelSleep(); closeSleepPopup(); };
+  } else {
+    btn.textContent = 'ยืนยัน';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'rgba(255,255,255,0.15)';
+    btn.style.background = '#e8445a';
+    btn.onclick = () => { _startSleep(_sleepPickMins); closeSleepPopup(); };
+  }
+}
+
+function _startSleep(mins) {
+  _cancelSleep();
+  _sleepEndTime = Date.now() + mins * 60 * 1000;
+  _updateSleepBadge();
+  _sleepInterval = setInterval(_updateSleepBadge, 1000);
+  _sleepTimer = setTimeout(() => {
+    audio.pause(); isPlaying = false; syncPlayBtn(false);
+    _cancelSleep();
+  }, mins * 60 * 1000);
+}
+
+function _cancelSleep() {
+  if (_sleepTimer)    { clearTimeout(_sleepTimer);   _sleepTimer = null; }
+  if (_sleepInterval) { clearInterval(_sleepInterval); _sleepInterval = null; }
+  _sleepEndTime = 0;
+  const label = document.getElementById('npSleepLabel');
+  const btn   = document.getElementById('npSleepBtn');
+  if (label) label.style.display = 'none';
+  if (btn)   btn.classList.remove('active');
+}
+
+// legacy compat
+window.toggleSleepTimer = window.openSleepPopup;
 
 window.togglePlay = function() {
   if (!audio.src && !isPlaying) return;
@@ -800,20 +866,6 @@ window.setTheme = function(t) {
   } catch(e) {
     console.warn('restorePlayer error:', e);
   }
-})();
-
-// [BUG-PREVNEXT-2] restore _nvAudioFiles/_nvNovel/_nvCurrentIdx จาก localStorage
-// ให้ prevEp/nextEp/ended ทำงานได้แม้ refresh หน้า
-(function restoreNvState() {
-  try {
-    const raw = localStorage.getItem('_nvState');
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (!s.audioFiles || !s.novelId) return;
-    _nvAudioFiles = s.audioFiles;
-    _nvNovel = { id: s.novelId, title: s.novelTitle, coverUrl: s.coverUrl, author: s.author };
-    _nvCurrentIdx = s.epIdx ?? -1;
-  } catch(e) {}
 })();
 
 /* ===== [IDX-NEW-3] HISTORY — saveHistory + renderHistory ===== */
@@ -1353,15 +1405,6 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
     const entry = { novelId: novel.id, novelTitle: novel.title, coverUrl: novel.coverUrl||'', epLabel: lbl, epIdx: idx, progress: 0 };
     const filtered2 = list.filter(h => h.novelId !== novel.id);
     localStorage.setItem(HISTORY_KEY, JSON.stringify([entry, ...filtered2].slice(0,10)));
-  } catch(e) {}
-
-  // [BUG-PREVNEXT-2] save _nvState ให้ prevEp/nextEp ใช้ได้แม้ refresh
-  try {
-    localStorage.setItem('_nvState', JSON.stringify({
-      novelId: novel.id, novelTitle: novel.title, coverUrl: novel.coverUrl||'',
-      author: novel.author||'', epIdx: idx,
-      audioFiles: audioFiles.map(a => ({ url: a.url, name: a.name||'', order: a.order||0 }))
-    }));
   } catch(e) {}
 };
 
