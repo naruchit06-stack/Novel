@@ -367,133 +367,105 @@ body {
 
 /* ===== 10. NOW PLAYING BAR ===== */
 /* ===== PLAYER-1: Now Playing Bar (redesign) ===== */
+/* ===== NOW PLAYING BAR (PLAYER-NEW-2) ===== */
 .now-playing {
   position:fixed; bottom:0; left:0; right:0; z-index:150;
-  background:#111; border-top:1px solid #222;
+  background:#111; border-top:1px solid #1e1e1e;
   display:none; flex-direction:column;
   transform:translateY(100%); transition:transform 0.3s cubic-bezier(.4,0,.2,1);
-  box-shadow:0 -4px 32px rgba(0,0,0,0.5);
+  box-shadow:0 -4px 40px rgba(0,0,0,0.7);
 }
 .now-playing.visible { display:flex; transform:translateY(0); }
 
-/* progress top */
+/* progress bar — drag ได้ YouTube style */
 .np-progress-top {
-  width:100%; height:3px; background:#2a2a2a; cursor:pointer; position:relative;
-  flex-shrink:0;
+  width:100%; height:4px; background:#2a2a2a;
+  cursor:pointer; position:relative; flex-shrink:0;
+  transition:height 0.15s;
 }
+.np-progress-top:hover { height:6px; }
 .np-progress-top-fill {
-  height:100%; background:#e8445a; width:0%;
-  transition:width 0.5s linear; position:relative;
+  height:100%; background:#4ade80; width:0%;
+  transition:width 0.4s linear; position:relative; border-radius:0 2px 2px 0;
 }
 .np-progress-top-thumb {
-  position:absolute; right:-6px; top:50%; transform:translateY(-50%);
-  width:12px; height:12px; border-radius:50%; background:#fff;
-  box-shadow:0 0 0 2px #e8445a; pointer-events:none;
+  position:absolute; right:-7px; top:50%; transform:translateY(-50%) scale(0);
+  width:14px; height:14px; border-radius:50%; background:#fff;
+  box-shadow:0 0 0 2px #4ade80; pointer-events:none;
+  transition:transform 0.15s;
 }
+.np-progress-top:hover .np-progress-top-thumb,
+.np-progress-top.dragging .np-progress-top-thumb { transform:translateY(-50%) scale(1); }
+.np-progress-top.dragging .np-progress-top-fill { transition:none; }
 
 /* main row */
 .np-main-row {
-  display:flex; align-items:center; gap:16px;
-  padding:10px 20px; min-height:64px;
+  display:flex; align-items:center; gap:12px;
+  padding:8px 20px; min-height:68px;
 }
 
-/* left */
+/* left: cover + info */
 .np-left { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
 .np-cover {
-  width:44px; height:44px; border-radius:8px; flex-shrink:0;
+  width:46px; height:46px; border-radius:6px; flex-shrink:0;
   background:#1e1e2e; font-size:1.4rem;
   display:flex; align-items:center; justify-content:center; overflow:hidden;
 }
 .np-cover img { width:100%; height:100%; object-fit:cover; }
 .np-info { min-width:0; }
-.np-title { font-size:0.88rem; font-weight:700; color:#f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.np-title { font-size:0.88rem; font-weight:700; color:#f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
 .np-ep    { font-size:0.72rem; color:#888; margin-top:2px; }
 
 /* center controls */
-.np-center { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.np-center { display:flex; align-items:center; gap:4px; flex-shrink:0; }
 .np-ctrl-btn {
-  width:36px; height:36px; border-radius:50%; border:none;
-  background:none; color:#ccc; font-size:0.85rem; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:color 0.2s;
+  width:38px; height:38px; border-radius:50%; border:none;
+  background:none; color:#aaa; font-size:0.9rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:color 0.15s, background 0.15s;
 }
-.np-ctrl-btn:hover { color:#fff; }
+.np-ctrl-btn:hover { color:#fff; background:rgba(255,255,255,0.06); }
+.np-ctrl-btn svg { pointer-events:none; }
 .np-play {
-  width:44px; height:44px; background:#e8445a; color:#fff;
-  font-size:1rem; border-radius:50%; flex-shrink:0;
+  width:46px; height:46px; background:#fff; color:#111 !important;
+  font-size:1.1rem; border-radius:50%; flex-shrink:0;
 }
-.np-play:hover { background:#c0392b; }
+.np-play:hover { background:#e0e0e0 !important; }
 
 /* right */
-.np-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-.np-time-text { font-size:0.75rem; color:#888; white-space:nowrap; }
+.np-right { display:flex; align-items:center; gap:8px; flex-shrink:0; margin-left:auto; }
+.np-time-text { font-size:0.75rem; color:#888; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .np-pill-btn {
   padding:4px 10px; border-radius:20px; border:1px solid #333;
-  background:none; color:#ccc; font-size:0.75rem; cursor:pointer;
-  font-family:inherit; transition:all 0.2s; white-space:nowrap;
+  background:none; color:#aaa; font-size:0.72rem; cursor:pointer;
+  font-family:inherit; transition:all 0.2s; white-space:nowrap; min-width:40px; text-align:center;
 }
 .np-pill-btn:hover { border-color:#e8445a; color:#e8445a; }
-.np-sleep { border-color:#e8445a; color:#e8445a; }
-.np-sleep.active { background:#e8445a; color:#fff; }
-.np-volume-wrap { display:flex; align-items:center; gap:6px; }
-.np-vol-icon { font-size:0.85rem; cursor:pointer; color:#888; }
+.np-icon-btn {
+  width:34px; height:34px; border-radius:50%; border:none;
+  background:none; color:#888; font-size:1rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:color 0.15s;
+}
+.np-icon-btn:hover { color:#fff; }
+.np-icon-btn.np-sleep { color:#888; }
+.np-icon-btn.np-sleep.active { color:#e8445a; }
 .np-volume {
-  -webkit-appearance:none; width:80px; height:4px;
+  -webkit-appearance:none; width:90px; height:4px;
   background:#333; border-radius:2px; outline:none; cursor:pointer;
 }
 .np-volume::-webkit-slider-thumb {
-  -webkit-appearance:none; width:12px; height:12px;
-  border-radius:50%; background:#e8445a; cursor:pointer;
+  -webkit-appearance:none; width:13px; height:13px;
+  border-radius:50%; background:#fff; cursor:pointer;
+  box-shadow:0 0 0 2px #e8445a;
 }
-.np-chevron {
-  font-size:1rem; color:#888; cursor:pointer; padding:4px;
-  transition:transform 0.3s; user-select:none;
-}
-.now-playing.expanded .np-chevron { transform:rotate(180deg); }
 
-/* expanded panel */
-.np-expanded-area { display:none; padding:0 20px 20px; }
-.now-playing.expanded .np-expanded-area { display:block; }
-.np-exp-inner { display:flex; gap:24px; align-items:flex-start; max-width:600px; margin:0 auto; }
-.np-exp-cover {
-  width:100px; height:100px; border-radius:12px; flex-shrink:0;
-  background:#1e1e2e; font-size:2.5rem;
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
-}
-.np-exp-cover img { width:100%; height:100%; object-fit:cover; }
-.np-exp-info { flex:1; min-width:0; }
-.np-expanded-title { font-size:1rem; font-weight:800; color:#f0f0f0; margin-bottom:2px; }
-.np-expanded-ep    { font-size:0.8rem; color:#888; margin-bottom:12px; }
-.np-expanded-bar {
-  width:100%; height:4px; background:#2a2a2a; border-radius:2px;
-  cursor:pointer; position:relative; margin-bottom:6px;
-}
-.np-expanded-fill { height:100%; background:#e8445a; border-radius:2px; width:0%; transition:width 0.5s linear; }
-.np-exp-thumb {
-  position:absolute; right:-6px; top:50%; transform:translateY(-50%);
-  width:12px; height:12px; border-radius:50%; background:#fff;
-  box-shadow:0 0 0 2px #e8445a; pointer-events:none;
-}
-.np-expanded-time { display:flex; justify-content:space-between; font-size:0.72rem; color:#888; margin-bottom:12px; }
-.np-expanded-controls { display:flex; align-items:center; justify-content:center; gap:12px; }
-.np-exp-btn {
-  width:40px; height:40px; border-radius:50%; border:1px solid #333;
-  background:#1e1e2e; color:#ccc; font-size:0.8rem; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; gap:2px;
-  transition:all 0.2s; flex-direction:column;
-}
-.np-exp-btn:hover { border-color:#e8445a; color:#e8445a; }
-.np-exp-play {
-  width:52px; height:52px; background:#e8445a; border-color:#e8445a;
-  color:#fff; font-size:1.2rem;
-}
-.np-exp-play:hover { background:#c0392b; }
-.np-exp-label { font-size:0.55rem; color:inherit; }
-
-/* mobile responsive */
-@media(max-width:600px){
-  .np-right .np-sleep, .np-right .np-volume-wrap { display:none; }
+/* mobile */
+@media(max-width:640px){
+  .np-right .np-volume, .np-right .np-icon-btn.np-sleep { display:none; }
   .np-time-text { display:none; }
-  .np-main-row { padding:8px 12px; gap:8px; }
+  .np-main-row { padding:8px 12px; gap:6px; }
+  .np-title { max-width:120px; }
 }
 
 
