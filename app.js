@@ -1239,6 +1239,8 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
     src = src.replace('/raw/upload/', '/video/upload/');
   audio.src = src; audio.load();
   audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
+  isPlaying = true;
+  syncPlayBtn(true);
 
   const lbl = af.name || `ตอนที่ ${idx+1}`;
 
