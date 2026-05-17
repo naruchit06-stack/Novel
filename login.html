@@ -207,7 +207,7 @@ function setLoad(v) {
 const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
 
 function redirect(user) {
-  const BASE = 'https://naruchit06-stack.github.io/Novel/';
+  const BASE = window.location.origin + '/';
   if (user && ADMIN_EMAILS.includes(user.email)) {
     window.location.href = BASE + 'admin.html';
   } else {
