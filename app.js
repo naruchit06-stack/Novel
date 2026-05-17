@@ -428,11 +428,10 @@ const audio = document.getElementById('audioEl');
 let isPlaying = false;
 
 function syncPlayBtn(playing) {
-  const icon = playing ? '⏸' : '▶';
-  ['btnPlayPause', 'btnPlayPause2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = icon;
-  });
+  const svgPlay  = document.getElementById('svgPlay');
+  const svgPause = document.getElementById('svgPause');
+  if (svgPlay)  svgPlay.style.display  = playing ? 'none' : '';
+  if (svgPause) svgPause.style.display = playing ? ''     : 'none';
 }
 
 window.playEpisode = function(idx) {
@@ -521,9 +520,10 @@ window.toggleMute = function() {
 };
 
 function _syncVolIcon() {
-  const el = document.querySelector('.np-vol-icon');
-  if (!el) return;
-  el.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.5 ? '🔉' : '🔊';
+  const on  = document.getElementById('svgVolOn');
+  const off = document.getElementById('svgVolOff');
+  if (on)  on.style.display  = audio.volume === 0 ? 'none' : '';
+  if (off) off.style.display = audio.volume === 0 ? ''     : 'none';
 }
 
 // -- Sleep Timer --
@@ -580,38 +580,82 @@ window.nextEp = function() {
 
 /* ===== 9. PROGRESS BAR & TIME ===== */
 audio.addEventListener('timeupdate', () => {
-  if (!audio.duration) return;
+  if (!audio.duration || _isDragging) return;
   const pct = (audio.currentTime / audio.duration) * 100;
-  const cur = formatTime(audio.currentTime);
-  const dur = formatTime(audio.duration);
-
   const fill  = document.getElementById('npBarFill');
   const thumb = document.getElementById('npBarThumb');
   if (fill)  fill.style.width = pct + '%';
-  if (thumb) thumb.style.left = `calc(${pct}% - 6px)`;
-  document.getElementById('npCurrent').textContent  = cur;
-  document.getElementById('npDuration').textContent = dur;
-
-  const f2 = document.getElementById('npBarFill2');
-  const t2 = document.getElementById('npBarThumb2');
-  const c2 = document.getElementById('npCurrent2');
-  const d2 = document.getElementById('npDuration2');
-  if (f2) f2.style.width = pct + '%';
-  if (t2) t2.style.left  = `calc(${pct}% - 6px)`;
-  if (c2) c2.textContent = cur;
-  if (d2) d2.textContent = dur;
+  if (thumb) thumb.style.left = `calc(${pct}% - 7px)`;
+  document.getElementById('npCurrent').textContent  = formatTime(audio.currentTime);
+  document.getElementById('npDuration').textContent = formatTime(audio.duration);
 });
 
 audio.addEventListener('ended', () => { nextEp(); });
 
-window.seekAudio  = function(e) {
+/* ===== DRAG PROGRESS BAR (PLAYER-NEW-3) ===== */
+let _isDragging = false;
+
+function _seekFromX(clientX) {
+  if (!audio.duration) return;
+  const bar  = document.getElementById('npBar');
+  const rect = bar.getBoundingClientRect();
+  const pct  = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  const fill  = document.getElementById('npBarFill');
+  const thumb = document.getElementById('npBarThumb');
+  if (fill)  fill.style.width = (pct * 100) + '%';
+  if (thumb) thumb.style.left = `calc(${pct * 100}% - 7px)`;
+  document.getElementById('npCurrent').textContent = formatTime(pct * audio.duration);
+  return pct;
+}
+
+(function _initProgressDrag() {
+  const bar = document.getElementById('npBar');
+  if (!bar) return;
+
+  // Mouse
+  bar.addEventListener('mousedown', e => {
+    _isDragging = true;
+    bar.classList.add('dragging');
+    _seekFromX(e.clientX);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!_isDragging) return;
+    _seekFromX(e.clientX);
+  });
+  document.addEventListener('mouseup', e => {
+    if (!_isDragging) return;
+    const pct = _seekFromX(e.clientX);
+    if (pct !== undefined) audio.currentTime = pct * audio.duration;
+    _isDragging = false;
+    document.getElementById('npBar').classList.remove('dragging');
+  });
+
+  // Touch
+  bar.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    _isDragging = true;
+    bar.classList.add('dragging');
+    _seekFromX(e.touches[0].clientX);
+    e.preventDefault();
+  }, { passive: false });
+  bar.addEventListener('touchmove', e => {
+    if (!_isDragging || e.touches.length !== 1) return;
+    _seekFromX(e.touches[0].clientX);
+    e.preventDefault();
+  }, { passive: false });
+  bar.addEventListener('touchend', e => {
+    if (!_isDragging) return;
+    const pct = _seekFromX(e.changedTouches[0].clientX);
+    if (pct !== undefined && audio.duration) audio.currentTime = pct * audio.duration;
+    _isDragging = false;
+    bar.classList.remove('dragging');
+  });
+})();
+
+window.seekAudio = function(e) {
   if (!audio.duration) return;
   const rect = document.getElementById('npBar').getBoundingClientRect();
-  audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-};
-window.seekAudio2 = function(e) {
-  if (!audio.duration) return;
-  const rect = document.getElementById('npBar2').getBoundingClientRect();
   audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
 };
 
@@ -629,8 +673,8 @@ function updateMediaSession() {
     album:   currentNovel.title,
     artwork: currentNovel.coverUrl ? [{ src: currentNovel.coverUrl, sizes: '512x512', type: 'image/jpeg' }] : []
   });
-  navigator.mediaSession.setActionHandler('play',         () => { audio.play();  document.getElementById('btnPlayPause').textContent = '⏸'; });
-  navigator.mediaSession.setActionHandler('pause',        () => { audio.pause(); document.getElementById('btnPlayPause').textContent = '▶'; });
+  navigator.mediaSession.setActionHandler('play',         () => { audio.play();  syncPlayBtn(true);  });
+  navigator.mediaSession.setActionHandler('pause',        () => { audio.pause(); syncPlayBtn(false); });
   navigator.mediaSession.setActionHandler('previoustrack',() => prevEp());
   navigator.mediaSession.setActionHandler('nexttrack',    () => nextEp());
   navigator.mediaSession.setActionHandler('seekbackward', () => { audio.currentTime = Math.max(0,                audio.currentTime - 10); });
