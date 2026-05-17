@@ -802,6 +802,20 @@ window.setTheme = function(t) {
   }
 })();
 
+// [BUG-PREVNEXT-2] restore _nvAudioFiles/_nvNovel/_nvCurrentIdx จาก localStorage
+// ให้ prevEp/nextEp/ended ทำงานได้แม้ refresh หน้า
+(function restoreNvState() {
+  try {
+    const raw = localStorage.getItem('_nvState');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (!s.audioFiles || !s.novelId) return;
+    _nvAudioFiles = s.audioFiles;
+    _nvNovel = { id: s.novelId, title: s.novelTitle, coverUrl: s.coverUrl, author: s.author };
+    _nvCurrentIdx = s.epIdx ?? -1;
+  } catch(e) {}
+})();
+
 /* ===== [IDX-NEW-3] HISTORY — saveHistory + renderHistory ===== */
 
 const HISTORY_KEY = 'gh_history';
@@ -1339,6 +1353,15 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
     const entry = { novelId: novel.id, novelTitle: novel.title, coverUrl: novel.coverUrl||'', epLabel: lbl, epIdx: idx, progress: 0 };
     const filtered2 = list.filter(h => h.novelId !== novel.id);
     localStorage.setItem(HISTORY_KEY, JSON.stringify([entry, ...filtered2].slice(0,10)));
+  } catch(e) {}
+
+  // [BUG-PREVNEXT-2] save _nvState ให้ prevEp/nextEp ใช้ได้แม้ refresh
+  try {
+    localStorage.setItem('_nvState', JSON.stringify({
+      novelId: novel.id, novelTitle: novel.title, coverUrl: novel.coverUrl||'',
+      author: novel.author||'', epIdx: idx,
+      audioFiles: audioFiles.map(a => ({ url: a.url, name: a.name||'', order: a.order||0 }))
+    }));
   } catch(e) {}
 };
 
