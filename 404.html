@@ -14,9 +14,12 @@
     var path   = window.location.pathname;
     var search = window.location.search;
     var hash   = window.location.hash;
-    // หา base: ตัด trailing segment ออก เช่น /Novel/novels/abc → /Novel
-    // แต่ถ้าเป็น /Novel/404.html → /Novel
-    var segments = path.split('/').filter(Boolean); // ['Novel','novels','abc']
+    // Netlify อาจ append /index.html ต่อท้าย knownRoute เช่น /favorites/index.html
+    // ต้องตัดออกก่อนเพื่อป้องกัน redirect loop 414
+    if (path.endsWith('/index.html')) {
+      path = path.slice(0, -'/index.html'.length) || '/';
+    }
+    var segments = path.split('/').filter(Boolean); // ['novels','abc']
     // base คือ segment แรกเสมอ (repo folder ใน GitHub Pages)
     var base = segments.length > 0 ? '/' + segments[0] : '';
     // ตรวจ: ถ้า segment แรกดูเหมือน route (/novels, /library) ไม่ใช่ folder → ไม่มี base
