@@ -754,6 +754,7 @@ window.saveHistory = function(novelId, novelTitle, coverUrl, epLabel, progress) 
 export async function renderHomeView() {
   const appView = document.getElementById('app-view');
   if (!appView) return;
+  appView.dataset.view = 'home';
 
   // inject skeleton HTML
   appView.innerHTML = `
@@ -1277,6 +1278,7 @@ let _libFilter = 'all'; // all | ongoing | completed
 window.renderLibraryView = async function renderLibraryView() {
   const appView = document.getElementById('app-view');
   if (!appView) return;
+  appView.dataset.view = 'library';
 
   appView.innerHTML = `
     <div class="lib-wrap">
