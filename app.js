@@ -579,6 +579,7 @@ window.nextEp = function() {
 
 
 /* ===== 9. PROGRESS BAR & TIME ===== */
+let _lastSaveTime = 0;
 audio.addEventListener('timeupdate', () => {
   if (!audio.duration || _isDragging) return;
   const pct = (audio.currentTime / audio.duration) * 100;
@@ -588,6 +589,23 @@ audio.addEventListener('timeupdate', () => {
   if (thumb) thumb.style.left = `calc(${pct}% - 7px)`;
   document.getElementById('npCurrent').textContent  = formatTime(audio.currentTime);
   document.getElementById('npDuration').textContent = formatTime(audio.duration);
+  // [RESUME-1] save progress ทุก 5 วินาที
+  const now = Date.now();
+  if (now - _lastSaveTime > 5000 && _nvNovel && _nvCurrentIdx >= 0) {
+    _lastSaveTime = now;
+    try {
+      const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      const hi = list.findIndex(h => h.novelId === _nvNovel.id);
+      if (hi >= 0) {
+        list[hi].currentTime = audio.currentTime;
+        list[hi].duration    = audio.duration;
+        list[hi].progress    = audio.currentTime / audio.duration;
+        list[hi].epIdx       = _nvCurrentIdx;
+        list[hi].epLabel     = _nvAudioFiles[_nvCurrentIdx]?.name || `ตอนที่ ${_nvCurrentIdx + 1}`;
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+      }
+    } catch(e) {}
+  }
 });
 
 audio.addEventListener('ended', () => { nextEp(); });
@@ -969,7 +987,7 @@ window.renderHistory = function() {
       const cur = h.currentTime ? _fmtTime(h.currentTime) : '—';
       const dur = h.duration    ? _fmtTime(h.duration)    : '—';
       return `
-        <div class="history-item" data-novel-id="${h.novelId}" onclick="window._spaNavigate(this)">
+        <div class="history-item" data-novel-id="${h.novelId}" data-ep-idx="${h.epIdx ?? 0}" data-resume-time="${h.currentTime || 0}" onclick="window._spaNavigate(this)">
           <div class="history-item-cover">
             📖
             <img src="${h.coverUrl || ''}" alt="${h.novelTitle || ''}"
@@ -1125,6 +1143,27 @@ window.renderNovelView = async function({ id: novelId }) {
   document.getElementById('nvStateLoading').style.display = 'none';
   document.getElementById('nvContent').style.display = 'block';
   document.title = `${novel.title} — The Golden Hoard Novels`;
+
+  // [RESUME-1] resume จาก history — เล่นตอนและ seek ไปตำแหน่งที่ค้างไว้
+  try {
+    const resumeKey = 'ghResume_' + novelId;
+    const raw = sessionStorage.getItem(resumeKey);
+    if (raw) {
+      sessionStorage.removeItem(resumeKey);
+      const { epIdx, resumeTime } = JSON.parse(raw);
+      const af = audioFiles[epIdx];
+      if (af && af.url) {
+        window._nvPlayEp(epIdx, audioFiles, novel);
+        // seek หลัง canplay เพื่อให้ browser โหลด metadata ก่อน
+        const audioEl = document.getElementById('audioEl');
+        const onReady = () => {
+          audioEl.currentTime = resumeTime;
+          audioEl.removeEventListener('canplay', onReady);
+        };
+        audioEl.addEventListener('canplay', onReady);
+      }
+    }
+  } catch(e) {}
 };
 
 function _nvErr(msg) {
@@ -1481,6 +1520,12 @@ window.renderFavoritesView = async function renderFavoritesView() {
 window._spaNavigate = function(el) {
   const id = el.dataset.novelId;
   if (!id) return;
+  // [RESUME-1] ถ้ามี resume data (จาก history-item) → เก็บไว้ใน sessionStorage
+  const epIdx      = el.dataset.epIdx;
+  const resumeTime = parseFloat(el.dataset.resumeTime || 0);
+  if (epIdx !== undefined && resumeTime > 0) {
+    try { sessionStorage.setItem('ghResume_' + id, JSON.stringify({ epIdx: parseInt(epIdx), resumeTime })); } catch(e) {}
+  }
   import('./router.js').then(r => r.navigate('/novels/' + encodeURIComponent(id)));
 };
 
