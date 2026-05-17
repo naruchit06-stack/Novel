@@ -1252,9 +1252,9 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
 import('./router.js').then(router => {
   router.setBase(window._BASE);   // ส่ง BASE ที่ถูกต้องให้ router ก่อน
   router.register('/', renderHomeView);
-  router.register('/novels/:id', p => window.renderNovelView(p));
-  router.register('/library',   () => window.renderLibraryView());
-  router.register('/favorites', () => window.renderFavoritesView());
+  router.register('/novels/:id', window.renderNovelView);
+  router.register('/library', renderLibraryView);
+  router.register('/favorites', renderFavoritesView);
   router.initRouter();
 }).catch(e => console.error('[SPA-5] router load failed:', e));
 
@@ -1320,7 +1320,17 @@ window.renderLibraryView = async function renderLibraryView() {
 
   _libQuery = '';
   _libFilter = 'all';
-  _libDoRender();
+
+  // ใช้ onSnapshot ของตัวเอง — ไม่พึ่ง allNovels global ที่อาจยังว่าง
+  const unsub = onSnapshot(novelsQuery, (snapshot) => {
+    allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    filtered  = [...allNovels];
+    _libDoRender();
+  }, (err) => {
+    console.warn('[renderLibraryView] Firestore error:', err);
+  });
+
+  return unsub; // router จะเรียก unsub() ก่อน navigate ออก
 };
 
 /** กรอง + เรียงนิยายตาม query + filter ปัจจุบัน */
@@ -1376,24 +1386,42 @@ window.renderFavoritesView = async function renderFavoritesView() {
   if (!appView) return;
   appView.dataset.view = 'favorites';
 
-  const favIds = _getFavs();
-  const favNovels = allNovels.filter(n => favIds.includes(n.id));
-
+  // inject shell ก่อน
   appView.innerHTML = `
   <div class="lib-container">
     <div class="lib-header">
       <h1 class="lib-title">❤️ รายการโปรด</h1>
-      <span class="lib-count" id="favCount">${favNovels.length} เรื่อง</span>
+      <span class="lib-count" id="favCount">0 เรื่อง</span>
     </div>
     <div class="novels-grid" id="favGrid">
-      ${favNovels.length
-        ? favNovels.map(n => cardHTML(n)).join('')
-        : `<div class="empty-state"><div class="empty-icon">🤍</div><p>ยังไม่มีรายการโปรด<br><small>กดหัวใจ ❤ บนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`
-      }
+      <div class="empty-state"><div class="empty-icon">🤍</div><p>กำลังโหลด...</p></div>
     </div>
   </div>`;
+
+  function _renderFavGrid() {
+    const favIds    = _getFavs();
+    const favNovels = allNovels.filter(n => favIds.includes(n.id));
+    const grid      = document.getElementById('favGrid');
+    const count     = document.getElementById('favCount');
+    if (!grid) return;
+    if (count) count.textContent = favNovels.length + ' เรื่อง';
+    grid.innerHTML = favNovels.length
+      ? favNovels.map(n => cardHTML(n)).join('')
+      : `<div class="empty-state"><div class="empty-icon">🤍</div><p>ยังไม่มีรายการโปรด<br><small>กดหัวใจ ❤ บนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`;
+  }
+
+  // ใช้ onSnapshot ของตัวเอง
+  const unsub = onSnapshot(novelsQuery, (snapshot) => {
+    allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    filtered  = [...allNovels];
+    _renderFavGrid();
+  }, (err) => {
+    console.warn('[renderFavoritesView] Firestore error:', err);
+    _renderFavGrid(); // render จาก allNovels ที่มีอยู่
+  });
+
+  return unsub;
 };
-window.renderFavoritesView = window.renderFavoritesView;
 
 /**
  * window.handleRoute — bridge สำหรับ inline onclick ใน HTML shell
