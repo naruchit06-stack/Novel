@@ -571,8 +571,18 @@ window.togglePlay = function() {
   }
 };
 
-window.prevEp = function() { if (currentEpIdx > 0) playEpisode(currentEpIdx - 1); };
+window.prevEp = function() {
+  if (_nvAudioFiles.length > 0) {
+    if (_nvCurrentIdx > 0) window._nvPlayEp(_nvCurrentIdx - 1, _nvAudioFiles, _nvNovel);
+    return;
+  }
+  if (currentEpIdx > 0) playEpisode(currentEpIdx - 1);
+};
 window.nextEp = function() {
+  if (_nvAudioFiles.length > 0) {
+    if (_nvCurrentIdx < _nvAudioFiles.length - 1) window._nvPlayEp(_nvCurrentIdx + 1, _nvAudioFiles, _nvNovel);
+    return;
+  }
   const max = Math.max((currentNovel?.eps || 0), audioFiles_modal.length) - 1;
   if (currentEpIdx < max) playEpisode(currentEpIdx + 1);
 };
@@ -608,7 +618,13 @@ audio.addEventListener('timeupdate', () => {
   }
 });
 
-audio.addEventListener('ended', () => { nextEp(); });
+audio.addEventListener('ended', () => {
+  if (_nvAudioFiles.length > 0 && _nvCurrentIdx < _nvAudioFiles.length - 1) {
+    window._nvPlayEp(_nvCurrentIdx + 1, _nvAudioFiles, _nvNovel);
+  } else {
+    nextEp();
+  }
+});
 
 /* ===== DRAG PROGRESS BAR (PLAYER-NEW-3) ===== */
 let _isDragging = false;
@@ -1255,6 +1271,9 @@ window._nvToggleSort = function() {
 window._nvPlayEp = function(idx, audioFiles, novel) {
   const audio = document.getElementById('audioEl');
   if (!audio) { console.warn('[SPA-5] ไม่พบ #audioEl element'); return; }
+  // [BUG-PREVNEXT-1] อัปเดต global ให้ prevEp/nextEp/ended ใช้ได้เสมอ
+  _nvAudioFiles = audioFiles;
+  _nvNovel = novel;
 
   const af = audioFiles[idx];
   if (!af || !af.url) return;
