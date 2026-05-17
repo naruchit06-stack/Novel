@@ -1438,9 +1438,16 @@ window.handleRoute = function(path) {
   }
 
   // กรณี 404.html redirect: ?_r=/Novel/novels/abc123
+  // ถ้า Netlify ใช้ _redirects แล้ว ไม่ควรมี ?_r= เลย
   const redirectPath = sp.get('_r');
   if (redirectPath) {
-    const cleanPath = stripBase(decodeURIComponent(redirectPath));
+    const decoded = decodeURIComponent(redirectPath);
+    // ป้องกัน loop: ถ้า decoded ยังมี ?_r= อยู่ ให้ไป / แทน
+    if (decoded.includes('_r=')) {
+      history.replaceState(null, '', base + '/');
+      return;
+    }
+    const cleanPath = stripBase(decoded);
     const fullPath  = base + cleanPath;
     history.replaceState(null, '', fullPath);
     return;
