@@ -20,8 +20,13 @@
     // base คือ segment แรกเสมอ (repo folder ใน GitHub Pages)
     var base = segments.length > 0 ? '/' + segments[0] : '';
     // ตรวจ: ถ้า segment แรกดูเหมือน route (/novels, /library) ไม่ใช่ folder → ไม่มี base
-    var knownRoutes = ['novels', 'library'];
+    var knownRoutes = ['novels', 'library', 'favorites'];
     if (knownRoutes.indexOf(segments[0]) !== -1) base = '';
+    // ป้องกัน loop: ถ้า search มี _r= อยู่แล้ว ให้ไป root แทน
+    if (search.indexOf('_r=') !== -1) {
+      window.location.replace(base + '/');
+      return;
+    }
     var redirectUrl = base + '/index.html?_r=' + encodeURIComponent(path + search + hash);
     window.location.replace(redirectUrl);
   })();
