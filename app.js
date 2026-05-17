@@ -27,7 +27,7 @@ import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getD
 /* ===== 1. FIREBASE INIT ===== */
 
 // BASE PATH จาก import.meta.url ของ app.js — ถูกต้องเสมอ ไม่ขึ้นกับ URL ปัจจุบัน
-window._BASE = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
+window._BASE = '';
 
 const app = initializeApp({
   apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
