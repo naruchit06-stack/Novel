@@ -174,8 +174,7 @@ document.addEventListener('click', function(e) {
    ฟังก์ชันนี้เป็น bridge ให้ inline onclick ใช้ได้ก่อน module โหลด */
 function navigate(e, path) {
   if (e) e.preventDefault();
-  history.pushState({}, '', path);
-  /* handleRoute() จะถูก app.js export ให้ window */
+  /* ไม่ pushState เอง — ให้ router.navigate() จัดการเพื่อไม่ให้ early-return */
   if (typeof window.handleRoute === 'function') window.handleRoute(path);
   /* ปิด mobile drawer เมื่อ navigate */
   const drawer = document.getElementById('mobileDrawer');
