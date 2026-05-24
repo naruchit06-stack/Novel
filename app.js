@@ -1618,6 +1618,19 @@ window.handleRoute = function(path) {
   import('./router.js').then(r => r.navigate(path));
 };
 
+/**
+ * window.navigate — bridge สำหรับ inline onclick="navigate(event, path)"
+ * รองรับ signature navigate(event, path) และ navigate(path)
+ */
+window.navigate = function(eventOrPath, path) {
+  if (typeof eventOrPath === 'object' && eventOrPath.preventDefault) {
+    eventOrPath.preventDefault();
+    window.handleRoute(path);
+  } else {
+    window.handleRoute(eventOrPath);
+  }
+};
+
 
 /* ===== SPA-9: Deep Link Handler (GitHub Pages) ===== */
 
