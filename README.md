@@ -21,39 +21,31 @@ git push -u origin main
 ## ตั้งค่า Firebase
 
 ### Firestore Rules (สำคัญมาก!)
-ไปที่ Firebase Console → Firestore → Rules แล้ว paste นี้:
+ใช้ไฟล์ `firestore.rules` ในโฟลเดอร์นี้ได้เลย ( Firebase Console → Firestore → Rules → paste )
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // นิยาย: อ่านได้ทุกคน, เขียนได้เฉพาะ admin
-    match /novels/{novelId} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-        request.auth.token.email in ['momoppl01@gmail.com', 'admin@memonster.com'];
-    }
-    // Users: อ่าน/เขียนได้เฉพาะเจ้าของ
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+จุดสำคัญของ rules ชุดนี้:
+- สิทธิ์ admin มาจาก collection `admins/{uid}` เท่านั้น (ไม่มี email ฝังในไฟล์)
+- มี data validation ของ `novels` และ `episodes` (ชนิด/ขนาด field)
+- รองรับ `settings/{doc}` สำหรับ hero image
+
+**⚠️ ตั้งค่าครั้งแรก (จำเป็น):** เนื่องจาก rules ไม่ให้ใครเขียน `admins` ก่อนจะมี super admin
+ต้องสร้างเอกสารนี้ใน Firebase Console ด้วยมือ 1 ครั้ง:
+
+```
+Collection: admins
+Document ID: <UID ของคุณ>          (หาได้จาก Authentication → Users)
+Fields:
+  role         : "super"   (string)
+  superAdmin   : true      (boolean)
+  active       : true      (boolean)
+  email        : "อีเมลของคุณ"
+  displayName  : "ชื่อที่แสดง"
 ```
 
 ### Storage Rules
-```javascript
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /novels/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-        request.auth.token.email in ['momoppl01@gmail.com', 'admin@memonster.com'];
-    }
-  }
-}
-```
+ใช้ไฟล์ `storage.rules` — จำกัดขนาดไม่เกิน 100 MB และอนุญาตเฉพาะ
+`audio/*`, `image/*`, `application/pdf`, `text/plain` และเขียนได้เฉพาะ admin
+(ตรวจจาก `admins/{uid}` เช่นกัน)
 
 ### เปิด Google Sign-In
 Firebase Console → Authentication → Sign-in method → เปิด **Google**

@@ -81,8 +81,11 @@ export function navigate(path) {
   // strip BASE_PATH ถ้า path มีอยู่แล้ว — ป้องกัน /Novel/Novel/
   const cleanPath = _stripBase(path.startsWith('/') ? path : '/' + path);
   const fullPath  = BASE_PATH + cleanPath;
-  if (window.location.pathname === fullPath) return;
-  history.pushState(null, '', fullPath);
+  // [RESUME-FIX-4] ถ้า path เดิมแต่มี ghResume_ → ต้อง render ซ้ำเพื่อ resume
+  const hasResume = cleanPath.startsWith('/novels/') &&
+    (() => { try { const id = cleanPath.split('/novels/')[1]; return !!sessionStorage.getItem('ghResume_' + decodeURIComponent(id)); } catch(e) { return false; } })();
+  if (window.location.pathname === fullPath && !hasResume) return;
+  if (window.location.pathname !== fullPath) history.pushState(null, '', fullPath);
   _render(cleanPath);
 }
 
@@ -227,7 +230,10 @@ async function _render(path) {
     appView.innerHTML = `
       <div style="text-align:center;padding:80px 20px;">
         <h2 style="color:#c0392b;">เกิดข้อผิดพลาด</h2>
-        <p style="color:#888;">${err.message}</p>
+        <p style="color:#888;" id="routerErrMsg"></p>
       </div>`;
+    // [SEC-1] ใช้ textContent แทน interpolate ข้อความ error ลง HTML
+    const _em = document.getElementById('routerErrMsg');
+    if (_em) _em.textContent = String(err?.message || 'unknown');
   }
 }

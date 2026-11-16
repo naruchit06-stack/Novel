@@ -101,8 +101,116 @@ body.admin-body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* ===== [STORAGE-1] แถบพื้นที่จัดเก็บไฟล์ ===== */
+.storage-card {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  padding: 16px 22px 14px;
   margin-bottom: 28px;
 }
+.storage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.storage-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.storage-title .ico { color: #e8445a; }
+.storage-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.storage-pct {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #4ade80;
+}
+.storage-pct.warn   { color: #fbbf24; }
+.storage-pct.danger { color: #ff6b85; }
+.storage-refresh {
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.storage-refresh:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+.storage-bar {
+  height: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.storage-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  transition: width 0.5s ease;
+}
+.storage-fill.warn   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.storage-fill.danger { background: linear-gradient(90deg, #e8445a, #ff6b85); }
+.storage-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+.storage-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.storage-note.ok     { color: #4ade80; }
+.storage-note.warn   { color: #fbbf24; }
+/* [STORAGE-2] ตั้งค่าการเชื่อมต่อ Cloudinary Admin API (ผ่าน Worker) */
+.storage-cfg-toggle {
+  background: none; border: 0; padding: 0; margin-top: 6px;
+  color: var(--text-secondary); font-size: 11px; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.storage-cfg-toggle:hover { color: var(--text); }
+.storage-cfg {
+  display: none; margin-top: 10px; gap: 8px;
+  flex-wrap: wrap; align-items: center;
+}
+.storage-cfg.open { display: flex; }
+.storage-cfg input {
+  flex: 1 1 320px; min-width: 0;
+  background: var(--admin-surface); border: 1px solid var(--admin-border);
+  border-radius: 8px; color: var(--text); padding: 7px 11px; font-size: 12px;
+}
+.storage-cfg input:focus { outline: none; border-color: var(--gold); }
+.storage-cfg button {
+  background: var(--gold); color: #1a1208; border: 0; border-radius: 8px;
+  padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.storage-cfg button:hover { filter: brightness(1.1); }
+.storage-cfg .cfg-msg { font-size: 11px; color: var(--muted); }
 
 .stat-card {
   border-radius: 14px;
@@ -300,7 +408,11 @@ body.admin-body {
 }
 .search-input-wrap input::placeholder { color: var(--muted); }
 .search-input-wrap::before {
-  content: '🔍';
+  content: '';
+  width: 14px; height: 14px;
+  background-color: var(--muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.2-3.2'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.2-3.2'/%3E%3C/svg%3E") center/contain no-repeat;
   position: absolute;
   left: 10px;
   top: 50%;
@@ -1081,11 +1193,12 @@ body.admin-body {
 }
 .ep-modal h3 { color: #fff; margin: 0 0 20px; font-size: 17px; }
 .ep-modal label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; margin-top: 14px; }
-.ep-modal input, .ep-modal textarea {
+.ep-modal input, .ep-modal textarea, .ep-modal select {
   width: 100%; background: var(--admin-surface); border: 1px solid var(--admin-border);
   border-radius: 8px; color: #fff; padding: 9px 12px; font-size: 14px; box-sizing: border-box;
 }
-.ep-modal input:focus, .ep-modal textarea:focus { outline: none; border-color: var(--gold); }
+.ep-modal input:focus, .ep-modal textarea:focus, .ep-modal select:focus { outline: none; border-color: var(--gold); }
+.ep-modal textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .ep-modal .ep-modal-file-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
 .ep-modal .ep-modal-file-name { color: var(--muted); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ep-modal .ep-modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
@@ -1120,20 +1233,21 @@ body.admin-body {
 }
 .ep-progress-label.visible { display: block; }
 </style>
+<script src="icons.js"></script>
 </head>
 <body class="admin-body">
 
 <!-- ===== TOPBAR ===== -->
 <header class="admin-topbar">
   <div class="admin-topbar-left">
-    <div class="admin-topbar-icon">📊</div>
+    <div class="admin-topbar-icon"><span data-icon="chart"></span></div>
     <div>
       <div class="admin-topbar-title">แดชบอร์ด</div>
       <div class="admin-topbar-sub">จัดการเว็บไซต์มังงะของคุณ</div>
     </div>
   </div>
   <div class="admin-topbar-right">
-    <a href="#" class="btn-view-web" onclick="event.preventDefault();location.href=(window._BASE||'')+'/'">🌐 ดูหน้าเว็บ</a>
+    <a href="#" class="btn-view-web" onclick="event.preventDefault();location.href=(window._BASE||'')+'/'"><span data-icon="globe"></span> ดูหน้าเว็บ</a>
   </div>
 </header>
 
@@ -1142,29 +1256,53 @@ body.admin-body {
 
   <!-- ===== STATS BAR ===== -->
   <div class="stats-grid">
-    <div class="stat-card stat-card-novels" data-icon="📚">
-      <div class="stat-icon">📚</div>
+    <div class="stat-card stat-card-novels">
+      <div class="stat-icon"><span data-icon="book"></span></div>
       <div class="stat-label">นิยายทั้งหมด</div>
       <div class="stat-value" id="statNovels">—</div>
       <div class="stat-unit">เรื่อง</div>
     </div>
-    <div class="stat-card stat-card-eps" data-icon="▶">
-      <div class="stat-icon">▶️</div>
+    <div class="stat-card stat-card-eps">
+      <div class="stat-icon"><span data-icon="play"></span></div>
       <div class="stat-label">ตอนทั้งหมด</div>
       <div class="stat-value" id="statEps">—</div>
       <div class="stat-unit">ตอน</div>
     </div>
-    <div class="stat-card stat-card-views" data-icon="👁">
-      <div class="stat-icon">👁</div>
+    <div class="stat-card stat-card-views">
+      <div class="stat-icon"><span data-icon="eye"></span></div>
       <div class="stat-label">ยอดวิวรวม</div>
       <div class="stat-value" id="statViews">—</div>
       <div class="stat-unit">วิว</div>
     </div>
-    <div class="stat-card stat-card-members" data-icon="👥">
-      <div class="stat-icon">👥</div>
+    <div class="stat-card stat-card-members">
+      <div class="stat-icon"><span data-icon="users"></span></div>
       <div class="stat-label">สมาชิก</div>
       <div class="stat-value" id="statMembers">—</div>
       <div class="stat-unit">คน</div>
+    </div>
+  </div>
+
+  <!-- ===== [STORAGE-1] พื้นที่จัดเก็บไฟล์ ===== -->
+  <div class="storage-card">
+    <div class="storage-head">
+      <span class="storage-title"><span data-icon="drive"></span> พื้นที่จัดเก็บไฟล์</span>
+      <span class="storage-right">
+        <span class="storage-pct" id="storagePct">—</span>
+        <button class="storage-refresh" id="storageRefresh" title="สแกนขนาดไฟล์ใหม่"
+                onclick="loadStorageUsage(true)"><span data-icon="refresh"></span></button>
+      </span>
+    </div>
+    <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
+    <div class="storage-meta">
+      <span id="storageUsed">กำลังคำนวณ...</span>
+      <span id="storageFree"></span>
+    </div>
+    <div class="storage-note" id="storageNote">กำลังเชื่อมต่อ Cloudinary...</div>
+    <button class="storage-cfg-toggle" id="storageCfgToggle" onclick="toggleUsageCfg()">ตั้งค่าการเชื่อมต่อ Cloudinary</button>
+    <div class="storage-cfg" id="storageCfg">
+      <input type="url" id="usageApiInput" placeholder="https://ชื่อ-worker.ชื่อบัญชี.workers.dev" spellcheck="false">
+      <button onclick="saveUsageApi()">บันทึก</button>
+      <span class="cfg-msg" id="usageApiMsg"></span>
     </div>
   </div>
 
@@ -1183,7 +1321,7 @@ body.admin-body {
         </div>
         <div class="panel-left-actions">
           <button class="btn-add-novel" id="btnAddNovel">+ เพิ่มนิยาย</button>
-          <button class="btn-manage-admin" id="btnManageAdmin">👑 จัดการแอดมิน</button>
+          <button class="btn-manage-admin" id="btnManageAdmin"><span data-icon="crown"></span> จัดการแอดมิน</button>
         </div>
       </div>
       <div class="panel-left-search">
@@ -1209,7 +1347,7 @@ body.admin-body {
 
       <!-- Placeholder -->
       <div class="panel-right-placeholder" id="rightPlaceholder">
-        <div class="ph-icon">📋</div>
+        <div class="ph-icon"><span data-icon="clipboard"></span></div>
         <div>เลือกนิยายเพื่อแก้ไข หรือกด "จัดการแอดมิน"</div>
       </div>
 
@@ -1219,18 +1357,18 @@ body.admin-body {
         <div class="edit-form-header">
           <div class="edit-form-title" id="editFormTitle">จัดการนิยาย: —</div>
           <div class="edit-form-header-btns">
-            <button class="btn-view-front" id="btnViewFront">🌐 ดูหน้าบ้าน</button>
-            <button class="btn-delete-novel" id="btnDeleteNovelForm">🗑 ลบเรื่องนี้</button>
+            <button class="btn-view-front" id="btnViewFront"><span data-icon="globe"></span> ดูหน้าบ้าน</button>
+            <button class="btn-delete-novel" id="btnDeleteNovelForm"><span data-icon="trash"></span> ลบเรื่องนี้</button>
           </div>
         </div>
 
         <div class="edit-form-body">
           <!-- Cover col -->
           <div class="edit-cover-col">
-            <div class="edit-cover-img" id="editCoverPreview">📖</div>
+            <div class="edit-cover-img" id="editCoverPreview"><span data-icon="book"></span></div>
             <div class="edit-cover-badge badge-ongoing" id="editStatusBadge">กำลังดำเนิน</div>
-            <div class="edit-cover-meta" id="editCoverMeta">ผู้แต่ง: —<br>🎵 0 ตอน &nbsp; 👁 0 วิว</div>
-            <button class="btn-change-cover" id="btnChangeCover">✏️ เปลี่ยนรูปปก</button>
+            <div class="edit-cover-meta" id="editCoverMeta">ผู้แต่ง: —<br><span data-icon="music"></span> 0 ตอน &nbsp; <span data-icon="eye"></span> 0 วิว</div>
+            <button class="btn-change-cover" id="btnChangeCover"><span data-icon="edit"></span> เปลี่ยนรูปปก</button>
             <input type="file" id="coverFileInput" accept="image/*" style="display:none;">
           </div>
 
@@ -1257,7 +1395,7 @@ body.admin-body {
               </select>
             </div>
             <div class="edit-form-actions">
-              <button class="btn-save" id="btnSaveNovel">💾 บันทึกการแก้ไข</button>
+              <button class="btn-save" id="btnSaveNovel"><span data-icon="save"></span> บันทึกการแก้ไข</button>
               <button class="btn-cancel" id="btnCancelEdit">ยกเลิก</button>
             </div>
           </div>
@@ -1278,7 +1416,7 @@ body.admin-body {
       <!-- Admin Management Panel (hidden by default) -->
       <div class="admin-mgmt-wrap" id="adminMgmtWrap">
         <div class="admin-mgmt-header">
-          <div>👑</div>
+          <div><span data-icon="crown" data-icon-size="1.6em"></span></div>
           <div>
             <h2>จัดการแอดมิน</h2>
             <p>เพิ่ม ลบ หรือแก้ไขผู้ที่เป็นแอดมิน — เฉพาะ Super Admin เท่านั้น</p>
@@ -1310,14 +1448,14 @@ body.admin-body {
             <div class="field-group">
               <label>ระดับสิทธิ์ *</label>
               <select id="newAdminRole">
-                <option value="admin">🛡 Admin</option>
-                <option value="moderator">⚡ Moderator</option>
+                <option value="admin">Admin</option>
+                <option value="moderator">Moderator</option>
               </select>
             </div>
           </div>
           <div class="add-admin-actions">
             <button class="btn-add-admin" id="btnCreateAdmin">+ เพิ่มแอดมิน</button>
-            <button class="btn-clear-form" id="btnClearAdminForm">🗑 ล้างฟอร์ม</button>
+            <button class="btn-clear-form" id="btnClearAdminForm"><span data-icon="trash"></span> ล้างฟอร์ม</button>
           </div>
           <div id="adminFormMsg" style="font-size:13px;margin-top:10px;"></div>
         </div>
@@ -1325,8 +1463,8 @@ body.admin-body {
         <!-- Admin List -->
         <div class="admin-list-section">
           <div class="admin-list-header">
-            <h3>📋 รายชื่อแอดมินทั้งหมด</h3>
-            <p>คลิก 🗑 เพื่อถอดสิทธิ์แอดมิน (ไม่สามารถถอด Super Admin ได้)</p>
+            <h3><span data-icon="clipboard"></span> รายชื่อแอดมินทั้งหมด</h3>
+            <p>คลิกปุ่มถังขยะเพื่อถอดสิทธิ์แอดมิน (ไม่สามารถถอด Super Admin ได้)</p>
           </div>
           <table class="admin-table">
             <thead>
@@ -1370,7 +1508,20 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-const ADMIN_EMAILS   = ['momoppl01@gmail.com', 'admin@memonster.com'];
+/* ===== SEC-1: XSS GUARDS ===== */
+function esc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function safeUrl(u) {
+  if (!u) return '';
+  const s = String(u).trim();
+  return /^(https?:\/\/|\/|\.\/)/i.test(s) ? s : '';
+}
+
+// [SEC-3] ไม่ฝัง email admin ใน client — สิทธิ์ super admin มาจาก Firestore เท่านั้น
+// เอกสาร admins/{uid} ที่มี role:'super' หรือ superAdmin:true
 const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmr6ln5hy/image/upload';
 const CLOUDINARY_PRESET = 'ml_default';
 
@@ -1387,18 +1538,20 @@ let isSuperAdmin    = false;
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = 'login.html'; return; }
   currentUser = user;
-  isSuperAdmin = ADMIN_EMAILS.includes(user.email);
-  if (!isSuperAdmin) {
-    // Check if user is in admins collection
-    const snap = await getDoc(doc(db, 'admins', user.uid));
-    if (!snap.exists()) { window.location.href = (window._BASE||'') + '/'; return; }
+  // [SEC-3] ตรวจสิทธิ์จาก Firestore admins/{uid} เท่านั้น
+  const snap = await getDoc(doc(db, 'admins', user.uid));
+  if (!snap.exists() || snap.data()?.active === false) {
+    window.location.href = (window._BASE||'') + '/'; return;
   }
+  const adm = snap.data();
+  isSuperAdmin = adm.role === 'super' || adm.superAdmin === true;
   initAdmin();
 });
 
 /* ===== INIT ===== */
 function initAdmin() {
   loadStats();
+  loadStorageUsage();
   loadNovels();
   loadAdminList();
   bindEvents();
@@ -1430,6 +1583,239 @@ async function loadStats() {
     } catch { document.getElementById('statMembers').textContent = '—'; }
   } catch(e) { console.error('loadStats:', e); }
 }
+
+/* ===== [STORAGE-1] STORAGE USAGE ===== */
+// โควตาที่ใช้เทียบหลอด (ไบต์) — ตั้งเป็นพื้นที่ที่คุณต้องการเฝ้า
+const STORAGE_QUOTA_BYTES = 10 * 1024 * 1024 * 1024; // 10 GB
+const _SIZE_CACHE_KEY = 'gh_file_sizes_v1';
+const _USAGE_API_LS   = 'gh_usage_api';   // URL ของ Cloudflare Worker ที่อ่านยอดจริงให้
+// ตัวอ่านยอดในเครื่อง (tools/usage_proxy.py) — ลองอัตโนมัติเมื่อยังไม่ได้ตั้ง URL
+const DEFAULT_USAGE_APIS = ['http://127.0.0.1:8100'];
+let _sizeCache = {};
+try { _sizeCache = JSON.parse(localStorage.getItem(_SIZE_CACHE_KEY) || '{}') || {}; } catch (e) { _sizeCache = {}; }
+
+function fmtSize(bytes) {
+  if (!bytes || bytes <= 0) return '0 MB';
+  const mb = bytes / 1048576;
+  if (mb < 1024) return (mb < 10 ? mb.toFixed(1) : Math.round(mb)) + ' MB';
+  return (mb / 1024).toFixed(2) + ' GB';
+}
+
+// ขนาดไฟล์อ่านจาก HEAD content-length (Cloudinary เปิด CORS *) แล้วแคชไว้
+async function _headSize(url, force) {
+  if (!force && _sizeCache[url] > 0) return _sizeCache[url];
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    if (!res.ok) return null;
+    const len = Number(res.headers.get('content-length'));
+    if (!len || !isFinite(len)) return null;
+    _sizeCache[url] = len;
+    return len;
+  } catch (e) { return null; }
+}
+
+async function _mapPool(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  const size = Math.max(1, Math.min(limit, items.length));
+  const workers = [];
+  for (let w = 0; w < size; w++) {
+    workers.push((async () => {
+      while (next < items.length) {
+        const idx = next++;
+        out[idx] = await fn(items[idx], idx);
+      }
+    })());
+  }
+  await Promise.all(workers);
+  return out;
+}
+
+/* [STORAGE-2] ---------- ยอดใช้จริงจาก Cloudinary (ผ่าน Cloudflare Worker) ---------- */
+function _usageApiBase() {
+  try { return (localStorage.getItem(_USAGE_API_LS) || '').trim().replace(/\/+$/, ''); }
+  catch (e) { return ''; }
+}
+window.toggleUsageCfg = function () {
+  const p = document.getElementById('storageCfg');
+  if (!p) return;
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) {
+    const i = document.getElementById('usageApiInput');
+    if (i) { i.value = _usageApiBase(); i.focus(); }
+  }
+};
+window.saveUsageApi = function () {
+  const i   = document.getElementById('usageApiInput');
+  const msg = document.getElementById('usageApiMsg');
+  const v   = ((i && i.value) || '').trim().replace(/\/+$/, '');
+  if (v && !/^https?:\/\/[^\s/]+/i.test(v)) {
+    if (msg) { msg.textContent = 'URL ไม่ถูกต้อง (ต้องขึ้นต้นด้วย https://)'; msg.style.color = '#ff6b85'; }
+    return;
+  }
+  try {
+    if (v) localStorage.setItem(_USAGE_API_LS, v);
+    else   localStorage.removeItem(_USAGE_API_LS);
+  } catch (e) {}
+  if (msg) { msg.textContent = v ? 'บันทึกแล้ว กำลังดึงยอดจริง...' : 'ล้างค่าแล้ว'; msg.style.color = ''; }
+  loadStorageUsage(true);
+};
+
+async function _fetchUsageFromApi() {
+  const saved = _usageApiBase();
+  const list  = [];
+  if (saved) list.push(saved);
+  // ตัวอ่านยอดในเครื่อง (tools/usage_proxy.py) — ใช้ได้ทันทีโดยไม่ต้อง deploy Worker
+  DEFAULT_USAGE_APIS.forEach(u => { if (!list.includes(u)) list.push(u); });
+
+  let reason = 'nokey';
+  for (const base of list) {
+    try {
+      const res = await fetch(base + '/usage?refresh=1', { cache: 'no-store' });
+      let body = null;
+      try { body = await res.json(); } catch (e) {}
+      if (!res.ok) {
+        const d = body && (body.detail || body.error || '');
+        reason = 'HTTP ' + res.status + (d ? ' — ' + String(d).slice(0, 120) : '');
+        continue;
+      }
+      if (!body || !body.storage) { reason = 'ข้อมูลที่ได้ไม่มีส่วน storage'; continue; }
+      return { ok: true, data: body, base };
+    } catch (e) {
+      reason = 'network';
+    }
+  }
+  return { ok: false, reason };
+}
+
+function _paintStorage(o) {
+  const fillEl = document.getElementById('storageFill');
+  const pctEl  = document.getElementById('storagePct');
+  const usedEl = document.getElementById('storageUsed');
+  const freeEl = document.getElementById('storageFree');
+  const noteEl = document.getElementById('storageNote');
+  const pctRaw = isFinite(o.pct) ? o.pct : 0;
+  const pct    = Math.max(0, Math.min(100, pctRaw));
+  const tone   = pct >= 85 ? ' danger' : pct >= 60 ? ' warn' : '';
+  if (fillEl) {
+    fillEl.style.width = (pctRaw > 0 ? Math.max(pct, 1) : 0) + '%';
+    fillEl.className = 'storage-fill' + tone;
+  }
+  if (pctEl) {
+    pctEl.textContent = pctRaw > 0 && pctRaw < 1 ? '<1%' : Math.round(pctRaw) + '%';
+    pctEl.className = 'storage-pct' + tone;
+  }
+  if (usedEl) usedEl.textContent = o.usedText || '—';
+  if (freeEl) freeEl.textContent = o.freeText || '';
+  if (noteEl) {
+    noteEl.textContent = o.noteText || '';
+    noteEl.className = 'storage-note' + (o.noteTone || '');
+  }
+}
+
+function _renderRealUsage(d) {
+  const st    = d.storage || {};
+  const used  = Number(st.usage) || 0;
+  const limit = Number(st.limit) || 0;
+  const pct   = limit > 0 ? (used / limit) * 100 : (Number(st.used_percent) || 0);
+  const bw    = d.bandwidth || {};
+  const cr    = d.credits || {};
+  const parts = [];
+  if (d.plan) parts.push('แพลน ' + d.plan);
+  if (d.resources != null) parts.push(d.resources + ' ไฟล์');
+  if (bw.usage != null) parts.push('แบนด์วิดท์ ' + fmtSize(Number(bw.usage)) + (Number(bw.limit) ? ' / ' + fmtSize(Number(bw.limit)) : ''));
+  if (cr.usage != null) parts.push('เครดิต ' + cr.usage + (cr.limit ? ' / ' + cr.limit : ''));
+  const t = d.fetched_at ? new Date(d.fetched_at) : null;
+  const when = t && !isNaN(t.getTime())
+    ? ' • อัปเดต ' + t.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+    : '';
+  _paintStorage({
+    pct,
+    usedText: 'ใช้ไป ' + fmtSize(used) + (limit ? ' / ' + fmtSize(limit) : ''),
+    freeText: limit ? 'เหลือ ' + fmtSize(Math.max(0, limit - used)) : '',
+    noteText: 'ยอดจริงจากบัญชี Cloudinary' + when + (parts.length ? ' • ' + parts.join(' • ') : ''),
+    noteTone: ' ok'
+  });
+}
+
+async function _renderEstimatedUsage(force, api) {
+  const usedEl = document.getElementById('storageUsed');
+  if (usedEl) usedEl.textContent = 'กำลังคำนวณขนาดไฟล์...';
+
+  const novSnap = await getDocs(collection(db, 'novels'));
+  const novels  = novSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const epsLists = await _mapPool(novels, 4, async (n) => {
+    try {
+      const s = await getDocs(collection(db, 'novels', n.id, 'episodes'));
+      return s.docs.map(e => e.data());
+    } catch (e) { return []; }
+  });
+
+  const urls = [];
+  novels.forEach(n => { if (n.coverUrl) urls.push(n.coverUrl); });
+  epsLists.forEach(list => list.forEach(e => { if (e.audioUrl) urls.push(e.audioUrl); }));
+
+  const sizes = await _mapPool(urls, 6, (u) => _headSize(u, force));
+  let used = 0, unknown = 0;
+  sizes.forEach(s => { if (s == null) unknown++; else used += s; });
+  try { localStorage.setItem(_SIZE_CACHE_KEY, JSON.stringify(_sizeCache)); } catch (e) {}
+
+  const pct = (used / STORAGE_QUOTA_BYTES) * 100;
+  let why;
+  const r = (api && api.reason) || 'nokey';
+  if (!api || r === 'nokey')                 why = 'ยังไม่ได้เชื่อมต่อ Cloudinary — ใส่ URL ของ Worker หรือเปิด tools/usage_proxy.py';
+  else if (r === 'network')                  why = 'เชื่อมต่อตัวอ่านยอดไม่ได้ (ยังไม่เปิด usage_proxy.py และยังไม่ได้ตั้ง URL ของ Worker)';
+  else if (r.indexOf('missing_config') >= 0) why = 'ตัวอ่านในเครื่องยังไม่มี API key/secret — เติมที่ tools/cloudinary.json';
+  else                                       why = 'ดึงยอดจริงไม่สำเร็จ (' + r + ')';
+
+  _paintStorage({
+    pct,
+    usedText: 'ใช้ไป ' + fmtSize(used) + ' / ' + fmtSize(STORAGE_QUOTA_BYTES),
+    freeText: 'เหลือ ' + fmtSize(Math.max(0, STORAGE_QUOTA_BYTES - used)),
+    noteText: 'ค่าประมาณจากไฟล์ ' + (urls.length - unknown) + ' ไฟล์ (ปก+เสียง) ในระบบ'
+      + (unknown ? ' • อ่านขนาดไม่ได้ ' + unknown + ' ไฟล์' : '')
+      + ' • ' + why,
+    noteTone: ' warn'
+  });
+
+  if (!api || api.reason === 'nokey' || api.reason === 'network') {
+    const cfg = document.getElementById('storageCfg');
+    if (cfg) cfg.classList.add('open');
+  }
+}
+
+let _storageRunning = false;
+async function loadStorageUsage(force) {
+  if (_storageRunning) return;
+  _storageRunning = true;
+  const usedEl = document.getElementById('storageUsed');
+  const msgEl  = document.getElementById('usageApiMsg');
+  try {
+    if (usedEl) usedEl.textContent = 'กำลังดึงยอดใช้จริง...';
+    // 1) ลองยอดจริงจาก Cloudinary ก่อน
+    const api = await _fetchUsageFromApi();
+    if (api.ok) {
+      _renderRealUsage(api.data);
+      if (msgEl) {
+        const local = api.base && /127\.0\.0\.1|localhost/.test(api.base);
+        msgEl.textContent = 'เชื่อมต่อสำเร็จ' + (local ? ' (ตัวอ่านในเครื่อง)' : ' (Cloudflare Worker)');
+        msgEl.style.color = '#4ade80';
+      }
+      const cfg = document.getElementById('storageCfg');
+      if (cfg) cfg.classList.remove('open');
+      return;
+    }
+    // 2) เชื่อมไม่ได้ → ประมาณจากไฟล์ในระบบ พร้อมบอกสาเหตุ
+    await _renderEstimatedUsage(force, api);
+  } catch (e) {
+    console.error('loadStorageUsage:', e);
+    if (usedEl) usedEl.textContent = 'คำนวณไม่สำเร็จ';
+  } finally {
+    _storageRunning = false;
+  }
+}
+window.loadStorageUsage = loadStorageUsage;
 
 /* ===== NOVELS ===== */
 function loadNovels() {
@@ -1472,27 +1858,27 @@ function renderNovelList() {
       complete: { label: 'จบแล้ว',        cls: 'badge-complete' },
     };
     const s = statusMap[n.status] || statusMap.ongoing;
-    const coverEl = n.coverUrl
-      ? `<img src="${n.coverUrl}" alt="cover" loading="lazy">`
-      : '📖';
+    const coverEl = safeUrl(n.coverUrl)
+      ? `<img src="${esc(safeUrl(n.coverUrl))}" alt="cover" loading="lazy">`
+      : icon('book');
     const selected = n.id === selectedNovelId ? 'selected' : '';
     return `
-    <div class="novel-list-item ${selected}" data-id="${n.id}" onclick="selectNovel('${n.id}')">
+    <div class="novel-list-item ${selected}" data-id="${esc(n.id)}" onclick="selectNovel('${esc(n.id)}')">
       <div class="novel-list-cover">${coverEl}</div>
       <div class="novel-list-info">
         <div class="novel-list-top">
-          <div class="novel-list-name">${n.title || 'ไม่มีชื่อ'}</div>
+          <div class="novel-list-name">${esc(n.title || 'ไม่มีชื่อ')}</div>
           <span class="novel-status-badge ${s.cls}">${s.label}</span>
         </div>
-        <div class="novel-list-author">ผู้แต่ง: ${n.author || '—'}</div>
+        <div class="novel-list-author">ผู้แต่ง: ${esc(n.author || '—')}</div>
         <div class="novel-list-meta">
           <div class="novel-list-stats">
-            <span>🎵 ${n.episodeCount || 0} ตอน</span>
-            <span>👁 ${n.views || 0}</span>
+            <span>${icon('music')} ${Number(n.episodeCount) || 0} ตอน</span>
+            <span>${icon('eye')} ${Number(n.views) || 0}</span>
           </div>
           <div class="novel-list-btns">
-            <button class="btn-edit-sm" onclick="event.stopPropagation();openEdit('${n.id}')">✏️ แก้ไข</button>
-            <button class="btn-del-sm"  onclick="event.stopPropagation();deleteNovelConfirm('${n.id}','${(n.title||'').replace(/'/g,"\\'")}')">🗑</button>
+            <button class="btn-edit-sm" onclick="event.stopPropagation();openEdit('${esc(n.id)}')">${icon('edit')} แก้ไข</button>
+            <button class="btn-del-sm"  onclick="event.stopPropagation();deleteNovelConfirm('${esc(n.id)}')">${icon('trash')}</button>
           </div>
         </div>
       </div>
@@ -1557,10 +1943,11 @@ window.openEdit = async function(id) {
 
   // Cover
   const coverPreview = document.getElementById('editCoverPreview');
-  if (novel.coverUrl) {
-    coverPreview.innerHTML = `<img src="${novel.coverUrl}" alt="cover">`;
+  const editCoverUrl = safeUrl(novel.coverUrl);
+  if (editCoverUrl) {
+    coverPreview.innerHTML = `<img src="${esc(editCoverUrl)}" alt="cover">`;
   } else {
-    coverPreview.innerHTML = '📖';
+    coverPreview.innerHTML = icon('book');
   }
 
   // Status badge
@@ -1572,7 +1959,7 @@ window.openEdit = async function(id) {
 
   // Meta
   document.getElementById('editCoverMeta').innerHTML =
-    `ผู้แต่ง: ${novel.author||'—'}<br>🎵 ${novel.episodeCount||0} ตอน &nbsp; 👁 ${novel.views||0} วิว`;
+    `ผู้แต่ง: ${esc(novel.author||'—')}<br>${icon('music')} ${Number(novel.episodeCount)||0} ตอน &nbsp; ${icon('eye')} ${Number(novel.views)||0} วิว`;
 
   // View front button
   document.getElementById('btnViewFront').onclick = () => {
@@ -1603,25 +1990,25 @@ async function loadEpisodes(novelId, novel) {
     epContainer.innerHTML = `
     <div class="ep-group">
       <div class="ep-group-header" onclick="toggleEpGroup(this)">
-        <div class="ep-group-label">🎵 ตอนที่ 1 - ${eps.length}</div>
-        <div class="ep-group-toggle open">▲</div>
+        <div class="ep-group-label">${icon('music')} ตอนที่ 1 - ${eps.length}</div>
+        <div class="ep-group-toggle open">${icon('chevron-up')}</div>
       </div>
-      <div class="ep-items" id="epItems_${novelId}">
+      <div class="ep-items" id="epItems_${esc(novelId)}">
         ${eps.map(ep => {
           const hasFile = ep.audioUrl || ep.fileName;
           return `
           <div class="ep-item">
-            <div class="ep-item-num">ตอนที่ ${ep.order || '—'}</div>
+            <div class="ep-item-num">ตอนที่ ${esc(ep.order || '—')}</div>
             ${hasFile
-              ? `<div class="ep-item-icon">▶</div>
-                 <div class="ep-item-name">${ep.fileName || ep.title || 'ไม่มีชื่อ'}</div>
+              ? `<div class="ep-item-icon">${icon('play')}</div>
+                 <div class="ep-item-name">${esc(ep.fileName || ep.title || 'ไม่มีชื่อ')}</div>
                  <div class="ep-item-time">0:00</div>`
-              : `<div class="ep-item-icon">🔒</div>
+              : `<div class="ep-item-icon">${icon('lock')}</div>
                  <div class="ep-item-no-file">ไม่มีไฟล์</div>`
             }
             <div class="ep-btns">
-              <button class="btn-ep-edit" onclick="editEpisode('${novelId}','${ep.id}')">✏️ แก้ไขตอน</button>
-              <button class="btn-ep-del"  onclick="deleteEpisode('${novelId}','${ep.id}','${ep.order||''}')">🗑</button>
+              <button class="btn-ep-edit" onclick="editEpisode('${esc(novelId)}','${esc(ep.id)}')">${icon('edit')} แก้ไขตอน</button>
+              <button class="btn-ep-del"  onclick="deleteEpisode('${esc(novelId)}','${esc(ep.id)}','${esc(ep.order||'')}')">${icon('trash')}</button>
             </div>
           </div>`;
         }).join('')}
@@ -1640,11 +2027,11 @@ window.toggleEpGroup = function(header) {
   if (isOpen) {
     items.style.display  = 'none';
     toggle.classList.remove('open');
-    toggle.textContent = '▼';
+    toggle.innerHTML = icon('chevron-down');
   } else {
     items.style.display  = 'block';
     toggle.classList.add('open');
-    toggle.textContent = '▲';
+    toggle.innerHTML = icon('chevron-up');
   }
 };
 
@@ -1658,13 +2045,14 @@ async function saveNovel() {
   if (!title) { alert('กรุณากรอกชื่อเรื่อง'); return; }
   try {
     await updateDoc(doc(db, 'novels', selectedNovelId), { title, author, description: desc, status });
-    alert('บันทึกเรียบร้อย ✅');
+    alert('บันทึกเรียบร้อย');
   } catch(e) { alert('บันทึกล้มเหลว: ' + e.message); }
 }
 
 /* ===== DELETE NOVEL ===== */
 window.deleteNovelConfirm = function(id, title) {
-  if (!confirm(`ลบนิยาย "${title}" ? การกระทำนี้ไม่สามารถยกเลิกได้`)) return;
+  const name = title || allNovels.find(n => n.id === id)?.title || '';
+  if (!confirm(`ลบนิยาย "${name}" ? การกระทำนี้ไม่สามารถยกเลิกได้`)) return;
   deleteDoc(doc(db, 'novels', id))
     .then(() => {
       if (selectedNovelId === id) {
@@ -1757,7 +2145,7 @@ window.saveEpisode = async function() {
             audioUrl = json.secure_url;
             fileName = _epModalFile.name;
             bar.style.width = '100%';
-            label.textContent = 'อัปโหลดสำเร็จ ✅';
+            label.textContent = 'อัปโหลดสำเร็จ';
             resolve();
           } else { reject(new Error('Upload failed')); }
         };
@@ -1787,7 +2175,7 @@ window.saveEpisode = async function() {
   } catch(e) {
     alert('บันทึกล้มเหลว: ' + e.message);
   } finally {
-    btn.disabled = false; btn.textContent = '💾 บันทึก';
+    btn.disabled = false; btn.innerHTML = icon('save') + ' บันทึก';
   }
 };
 
@@ -1810,23 +2198,48 @@ window.deleteEpisode = async function(novelId, epId, order) {
   } catch(e) { alert('ลบล้มเหลว: ' + e.message); }
 };
 
-/* ===== ADD NOVEL (stub) ===== */
-function addNovel() {
-  const title = prompt('ชื่อนิยายใหม่:');
-  if (!title) return;
-  const author = prompt('ชื่อผู้แต่ง:') || '';
-  const newNovel = {
-    title, author,
-    description: '',
-    status: 'pending',
-    episodeCount: 0,
-    views: 0,
-    createdAt: new Date()
-  };
-  setDoc(doc(collection(db, 'novels')), newNovel)
-    .then(() => alert('เพิ่มนิยายเรียบร้อย ✅'))
-    .catch(e => alert('ล้มเหลว: ' + e.message));
-}
+/* ===== [ADDNOVEL-1] ADD NOVEL (แทน prompt() ที่เบราว์เซอร์นี้ไม่รองรับ) ===== */
+window.openAddNovel = function() {
+  document.getElementById('newNovelTitle').value  = '';
+  document.getElementById('newNovelAuthor').value = '';
+  document.getElementById('newNovelDesc').value   = '';
+  document.getElementById('newNovelStatus').value = 'pending';
+  document.getElementById('addNovelMsg').textContent = '';
+  const btn = document.getElementById('newNovelSaveBtn');
+  btn.disabled = false; btn.textContent = 'เพิ่มนิยาย';
+  document.getElementById('addNovelModal').classList.add('open');
+  setTimeout(() => document.getElementById('newNovelTitle').focus(), 60);
+};
+window.closeAddNovel = function() {
+  document.getElementById('addNovelModal').classList.remove('open');
+};
+window.submitAddNovel = async function() {
+  const title = document.getElementById('newNovelTitle').value.trim();
+  const msg   = document.getElementById('addNovelMsg');
+  const btn   = document.getElementById('newNovelSaveBtn');
+  if (!title) { msg.textContent = 'กรุณากรอกชื่อเรื่อง'; return; }
+  msg.textContent = '';
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    const newNovel = {
+      title,
+      author:      document.getElementById('newNovelAuthor').value.trim(),
+      description: document.getElementById('newNovelDesc').value.trim(),
+      status:      document.getElementById('newNovelStatus').value,
+      episodeCount: 0,
+      views: 0,
+      createdAt: new Date()
+    };
+    const ref = await addDoc(collection(db, 'novels'), newNovel);
+    window.closeAddNovel();
+    // เปิดฟอร์มแก้ไขของเรื่องที่เพิ่งสร้าง ให้อัปโหลดปก/เพิ่มตอนต่อได้ทันที
+    setTimeout(() => { try { window.openEdit(ref.id); } catch (e) {} }, 400);
+  } catch (e) {
+    msg.textContent = 'ล้มเหลว: ' + (e.message || e.code || 'ไม่ทราบสาเหตุ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'เพิ่มนิยาย';
+  }
+};
 
 /* ===== CHANGE COVER ===== */
 function changeCover() {
@@ -1844,8 +2257,8 @@ document.getElementById('coverFileInput').addEventListener('change', async e => 
     const data = await res.json();
     if (!data.secure_url) throw new Error('ไม่ได้รับ URL จาก Cloudinary');
     await updateDoc(doc(db, 'novels', selectedNovelId), { coverUrl: data.secure_url });
-    document.getElementById('editCoverPreview').innerHTML = `<img src="${data.secure_url}" alt="cover">`;
-    alert('เปลี่ยนรูปปกเรียบร้อย ✅');
+    document.getElementById('editCoverPreview').innerHTML = `<img src="${esc(safeUrl(data.secure_url))}" alt="cover">`;
+    alert('เปลี่ยนรูปปกเรียบร้อย');
   } catch(e) { alert('อัพโหลดรูปล้มเหลว: ' + e.message); }
 });
 
@@ -1857,11 +2270,12 @@ async function loadAdminList() {
     const admins = [];
     snap.forEach(d => admins.push({ id: d.id, ...d.data() }));
 
-    const superAdmins = ADMIN_EMAILS.map((email, i) => ({
-      id: `super_${i}`, email, displayName: 'Super Admin', role: 'super', isSuper: true
-    }));
+    // [SEC-3] super admin มาจาก Firestore เท่านั้น (role:'super' หรือ superAdmin:true)
+    const superAdmins = admins.filter(a => a.role === 'super' || a.superAdmin === true)
+                               .map(a => ({ ...a, isSuper: true }));
+    const normalAdmins = admins.filter(a => a.role !== 'super' && a.superAdmin !== true);
 
-    const all = [...superAdmins, ...admins.filter(a => !ADMIN_EMAILS.includes(a.email))];
+    const all = [...superAdmins, ...normalAdmins];
     renderAdminTable(all);
   } catch(e) { console.error('loadAdminList:', e); }
 }
@@ -1875,7 +2289,7 @@ function renderAdminTable(admins) {
   }
   tbody.innerHTML = admins.map((a, i) => {
     const color  = colors[i % colors.length];
-    const letter = (a.displayName || a.email || '?')[0].toUpperCase();
+    const letter = esc((a.displayName || a.email || '?')[0].toUpperCase());
     const roleLabel = a.role === 'super' ? 'Super Admin' : a.role === 'admin' ? 'Admin' : 'Moderator';
     const roleCls   = a.role === 'super' ? 'role-super' : a.role === 'admin' ? 'role-admin' : 'role-mod';
     return `
@@ -1884,15 +2298,15 @@ function renderAdminTable(admins) {
         <div class="admin-row-name">
           <div class="admin-avatar-sm" style="background:${color}">${letter}</div>
           <div class="admin-row-info">
-            <strong>${a.displayName || 'ไม่มีชื่อ'}</strong>
-            ${a.isSuper ? '<span>🔒 เจ้าของระบบ</span>' : ''}
+            <strong>${esc(a.displayName || 'ไม่มีชื่อ')}</strong>
+            ${a.isSuper ? '<span>' + icon('lock') + ' เจ้าของระบบ</span>' : ''}
           </div>
         </div>
       </td>
-      <td style="color:var(--text-secondary);font-size:12px;">${a.email || '—'}</td>
+      <td style="color:var(--text-secondary);font-size:12px;">${esc(a.email || '—')}</td>
       <td><span class="role-badge ${roleCls}">${roleLabel}</span></td>
       <td>
-        <button class="btn-del-admin" ${a.isSuper ? 'disabled' : `onclick="removeAdmin('${a.id}')"`}>🗑</button>
+        <button class="btn-del-admin" ${a.isSuper ? 'disabled' : `onclick="removeAdmin('${esc(a.id)}')"`}>${icon('trash')}</button>
       </td>
     </tr>`;
   }).join('');
@@ -1916,12 +2330,12 @@ async function createAdmin() {
 
   if (!name || !email || !password) {
     msgEl.style.color = '#f87171';
-    msgEl.textContent = '❌ กรุณากรอกข้อมูลให้ครบ';
+    msgEl.innerHTML = icon('x') + ' กรุณากรอกข้อมูลให้ครบ';
     return;
   }
   if (password.length < 6) {
     msgEl.style.color = '#f87171';
-    msgEl.textContent = '❌ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+    msgEl.innerHTML = icon('x') + ' รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
     return;
   }
   try {
@@ -1930,14 +2344,14 @@ async function createAdmin() {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(doc(db, 'admins', cred.user.uid), { displayName: name, email, role, createdAt: new Date() });
     msgEl.style.color = '#4ade80';
-    msgEl.textContent = '✅ เพิ่มแอดมินเรียบร้อย';
+    msgEl.innerHTML = icon('check') + ' เพิ่มแอดมินเรียบร้อย';
     document.getElementById('newAdminName').value     = '';
     document.getElementById('newAdminEmail').value    = '';
     document.getElementById('newAdminPassword').value = '';
     loadAdminList();
   } catch(e) {
     msgEl.style.color = '#f87171';
-    msgEl.textContent = '❌ ' + (e.message || 'เกิดข้อผิดพลาด');
+    msgEl.innerHTML = icon('x') + ' ' + esc(e.message || 'เกิดข้อผิดพลาด');
   }
 }
 
@@ -1945,7 +2359,7 @@ async function createAdmin() {
 function bindEvents() {
   document.getElementById('adminSearchInput').addEventListener('input', applyFilter);
   document.getElementById('statusFilter').addEventListener('change', applyFilter);
-  document.getElementById('btnAddNovel').addEventListener('click', addNovel);
+  document.getElementById('btnAddNovel').addEventListener('click', () => window.openAddNovel());
   document.getElementById('btnSaveNovel').addEventListener('click', saveNovel);
   document.getElementById('btnCancelEdit').addEventListener('click', () => {
     document.getElementById('editFormWrap').style.display = 'none';
@@ -2004,19 +2418,43 @@ function bindEvents() {
     <label>ลำดับตอน (order)</label>
     <input type="number" id="epModalOrder" placeholder="1, 2, 3 ...">
     <div class="ep-modal-file-row">
-      <button class="upload-btn" onclick="document.getElementById('epModalFileInput').click()">📁 เลือกไฟล์เสียง</button>
+      <button class="upload-btn" onclick="document.getElementById('epModalFileInput').click()"><span data-icon="folder"></span> เลือกไฟล์เสียง</button>
       <span class="ep-modal-file-name" id="epModalFileName">ยังไม่ได้เลือกไฟล์</span>
       <input type="file" id="epModalFileInput" accept="audio/*" style="display:none" onchange="onEpFileChange(this)">
     </div>
     <div class="ep-modal-actions">
       <button class="btn-ep-cancel" onclick="closeEpModal()">ยกเลิก</button>
-      <button class="btn-ep-save" id="epModalSaveBtn" onclick="saveEpisode()">💾 บันทึก</button>
+      <button class="btn-ep-save" id="epModalSaveBtn" onclick="saveEpisode()"><span data-icon="save"></span> บันทึก</button>
     </div>
     <!-- [EP-PROGRESS-1] progress bar -->
     <div class="ep-progress-wrap" id="epProgressWrap">
       <div class="ep-progress-bar" id="epProgressBar"></div>
     </div>
     <div class="ep-progress-label" id="epProgressLabel">กำลังอัปโหลด... 0%</div>
+  </div>
+</div>
+
+<!-- ===== [ADDNOVEL-1] ADD NOVEL MODAL ===== -->
+<div class="ep-modal-overlay" id="addNovelModal">
+  <div class="ep-modal">
+    <h3>เพิ่มนิยายใหม่</h3>
+    <label>ชื่อเรื่อง *</label>
+    <input type="text" id="newNovelTitle" placeholder="ชื่อนิยาย" maxlength="200">
+    <label>ผู้แต่ง</label>
+    <input type="text" id="newNovelAuthor" placeholder="ชื่อผู้แต่ง" maxlength="120">
+    <label>คำโปรย (ไม่บังคับ)</label>
+    <textarea id="newNovelDesc" placeholder="เรื่องย่อสั้น ๆ"></textarea>
+    <label>สถานะ</label>
+    <select id="newNovelStatus">
+      <option value="pending">รอเริ่มเรื่อง</option>
+      <option value="ongoing">กำลังดำเนิน</option>
+      <option value="complete">จบแล้ว</option>
+    </select>
+    <div class="ep-modal-actions">
+      <button class="btn-ep-cancel" onclick="closeAddNovel()">ยกเลิก</button>
+      <button class="btn-ep-save" id="newNovelSaveBtn" onclick="submitAddNovel()">เพิ่มนิยาย</button>
+    </div>
+    <div class="admin-form-msg" id="addNovelMsg" style="color:#ff6b85;font-size:13px;margin-top:10px;"></div>
   </div>
 </div>
 </body>

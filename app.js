@@ -20,14 +20,19 @@
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getDocs }
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getDocs, setDoc, serverTimestamp }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 /* ===== 1. FIREBASE INIT ===== */
 
 // BASE PATH จาก import.meta.url ของ app.js — ถูกต้องเสมอ ไม่ขึ้นกับ URL ปัจจุบัน
-window._BASE = '';
+window._BASE = (() => {
+  try {
+    const folder = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
+    return folder === '/' ? '' : folder;
+  } catch (e) { return ''; }
+})();
 
 const app = initializeApp({
   apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
@@ -41,10 +46,47 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 
 
-/* ===== 2. AUTH ===== */
-const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
+/* ===== 1b. SEC-1: XSS GUARDS ===== */
+/* ข้อมูลทุกอย่างจาก Firestore ถือเป็น "ข้อมูลที่ไม่เชื่อถือ" —
+   ก่อนเอาไปประกอบเป็น HTML ต้องผ่าน esc() หรือ safeUrl() ทุกครั้ง */
 
-onAuthStateChanged(auth, (user) => {
+// escape อักขระ HTML — ใช้กับข้อความทุกตัวที่ interpolate ลง innerHTML
+function esc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.esc = esc;
+
+// อนุญาตเฉพาะ URL ที่ขึ้นต้นด้วย http(s):// หรือ path relative
+// กัน javascript:, vbscript:, data:text/html ฯลฯ
+function safeUrl(u) {
+  if (!u) return '';
+  const s = String(u).trim();
+  return /^(https?:\/\/|\/|\.\/)/i.test(s) ? s : '';
+}
+window.safeUrl = safeUrl;
+
+
+/* ===== 2. AUTH ===== */
+// [SEC-3] ไม่ฝัง email admin ใน client อีกต่อไป — ตรวจจาก Firestore admins/{uid} เท่านั้น
+// (เอกสาร admins/{uid} ต้องมีอยู่จริง, field active ไม่ใช่ false)
+async function checkIsAdmin(user) {
+  if (!user) return false;
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists() && snap.data()?.active !== false;
+  } catch (e) {
+    console.warn('[admin-check]', e);
+    return false;
+  }
+}
+
+onAuthStateChanged(auth, async (user) => {
   // [JS-1] Navbar elements
   const loginBtn      = document.getElementById('navLoginBtn');
   const registerBtn   = document.getElementById('navRegisterBtn');
@@ -63,9 +105,26 @@ onAuthStateChanged(auth, (user) => {
       userMenu.style.display = 'flex';
       if (userNameEl) userNameEl.textContent = user.displayName || user.email.split('@')[0];
     }
-    // แสดงปุ่ม admin ถ้าเป็น admin
-    if (adminBtn && ADMIN_EMAILS.includes(user.email)) {
-      adminBtn.style.display = 'flex';
+    // [AVATAR-1] เดิมอวตารแสดงตัวอักษร U ตายตัว → ใช้รูปโปรไฟล์ หรืออักษรแรกของชื่อ
+    const avatarEl = document.getElementById('navAvatar');
+    if (avatarEl) {
+      avatarEl.textContent = '';
+      if (user.photoURL) {
+        const im = document.createElement('img');
+        im.src = user.photoURL;
+        im.alt = '';
+        im.referrerPolicy = 'no-referrer';
+        avatarEl.appendChild(im);
+      } else {
+        const nm = (user.displayName || user.email || 'U').trim();
+        avatarEl.textContent = (nm.charAt(0) || 'U').toUpperCase();
+      }
+    }
+    // แสดงปุ่ม admin ถ้าเป็น admin (ตรวจจาก Firestore)
+    if (adminBtn) {
+      const isAdmin = await checkIsAdmin(user);
+      window._isAdmin = isAdmin;
+      adminBtn.style.display = isAdmin ? 'flex' : 'none';
     }
     // แสดงประวัติการฟัง
     renderHistory();
@@ -85,6 +144,21 @@ window.handleSignOut = async function() {
   window.location.reload();
 };
 
+/* [DROPDOWN-FIX-2] คลิกอวตารเพื่อเปิด/ปิดเมนู (จำเป็นบนจอสัมผัสที่ไม่มี hover)
+   + คลิกนอกเมนูเพื่อปิด */
+(function () {
+  const avatar = document.getElementById('navAvatar');
+  const menu   = document.getElementById('navUserMenu');
+  if (!avatar || !menu) return;
+  avatar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target)) menu.classList.remove('open');
+  });
+})();
+
 
 /* ===== 3. FIRESTORE — โหลดนิยาย ===== */
 let allNovels = [];
@@ -99,7 +173,9 @@ async function loadHeroImage() {
     if (snap.exists() && snap.data().imageUrl) {
       const el = document.getElementById('heroImage');
       if (!el) return;
-      el.innerHTML = `<img src="${snap.data().imageUrl}" alt="Hero" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+      const heroUrl = safeUrl(snap.data().imageUrl);
+      if (!heroUrl) return;
+      el.innerHTML = `<img src="${esc(heroUrl)}" alt="Hero" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
     }
   } catch(e) { console.warn('Hero image:', e); }
 }
@@ -109,6 +185,7 @@ const novelsQuery = query(novelsRef, orderBy('createdAt', 'desc'));
 onSnapshot(novelsQuery, (snapshot) => {
   allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   filtered  = [...allNovels];
+  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
   renderSection('newReleasesGrid', allNovels.slice(0, 3));
   renderSection('popularGrid',     allNovels.slice(0, 4));
   renderNovels(filtered);
@@ -133,35 +210,37 @@ const STATUS_MAP = {
 // [JS-2] Horizontal card template
 function cardHTML(n) {
   const st  = STATUS_MAP[n.status] || STATUS_MAP.ongoing;
-  const cover = n.coverUrl
-    ? `<img src="${n.coverUrl}" alt="${n.title}" loading="lazy" onerror="this.style.display='none'">`
-    : `<div class="novel-card-cover-placeholder">${n.emoji || '📖'}</div>`;
-  const rating = n.rating ? `⭐ ${n.rating}` : '';
-  const views  = n.views  ? `👁 ${(n.views/1000).toFixed(1)}K`  : '';
-  const likes  = n.likes  ? `❤ ${(n.likes/1000).toFixed(1)}K`  : '';
+  const coverUrl = safeUrl(n.coverUrl);
+  const cover = coverUrl
+    ? `<img src="${esc(coverUrl)}" alt="${esc(n.title)}" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="novel-card-cover-placeholder">${icon('book')}</div>`;
+  const rating = Number.isFinite(n.rating) && n.rating ? `${icon('star')} ${n.rating}` : '';
+  const views  = Number.isFinite(n.views)  && n.views  ? `${icon('eye')} ${(n.views/1000).toFixed(1)}K`  : '';
+  const likes  = Number.isFinite(n.likes)  && n.likes  ? `${icon('heart')} ${(n.likes/1000).toFixed(1)}K`  : '';
+  const epCount = Number.isFinite(n.episodeCount) ? n.episodeCount : 0;
   const isFav  = _getFavs().includes(n.id);
   return `
-  <a href="javascript:void(0)" data-novel-id="${n.id}" class="novel-card-h" onclick="window._spaNavigate(this)">
+  <a href="javascript:void(0)" data-novel-id="${esc(n.id)}" class="novel-card-h" onclick="window._spaNavigate(this)">
     <div class="novel-card-cover" style="position:relative">
       ${cover}
       <span class="novel-card-cover-badge badge ${st.cls}">${st.label}</span>
-      <button class="novel-card-heart${isFav ? ' fav-active' : ''}" data-fav-id="${n.id}"
-        onclick="event.preventDefault();event.stopPropagation();toggleFav('${n.id}',this)"
+      <button class="novel-card-heart${isFav ? ' fav-active' : ''}" data-fav-id="${esc(n.id)}"
+        onclick="event.preventDefault();event.stopPropagation();toggleFav('${esc(n.id)}',this)"
         title="${isFav ? 'เอาออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'}">
-        ${isFav ? '❤️' : '🤍'}
+        ${isFav ? icon('heart') : icon('heart-outline')}
       </button>
     </div>
     <div class="novel-card-body">
-      <div class="novel-card-title">${n.title}</div>
-      <div class="novel-card-desc">${n.desc || n.description || ''}</div>
+      <div class="novel-card-title">${esc(n.title)}</div>
+      <div class="novel-card-desc">${esc(n.desc || n.description || '')}</div>
       <div class="novel-card-meta">
         ${rating ? `<span class="meta-rating">${rating}</span>` : ''}
         ${views  ? `<span>${views}</span>` : ''}
         ${likes  ? `<span class="meta-likes">${likes}</span>` : ''}
-        <span>📖 ${n.episodeCount || 0} ตอน</span>
+        <span>${icon('book')} ${epCount} ตอน</span>
       </div>
       <div class="novel-card-footer">
-        <span class="novel-card-read-btn">▶ ฟังเลย</span>
+        <span class="novel-card-read-btn">${icon('play')} ฟังเลย</span>
       </div>
     </div>
   </a>`;
@@ -174,29 +253,43 @@ function _getFavs() {
 function _saveFavs(arr) {
   localStorage.setItem('gh_favs', JSON.stringify(arr));
 }
+/* ===== [FAV-SYNC-1] ให้หัวใจของเรื่องเดียวกันตรงกันทุกการ์ด (หน้าแรกมีหลายกริด) ===== */
+function _syncFavButtons(novelId) {
+  const on = _getFavs().includes(novelId);
+  const nodes = document.querySelectorAll('.novel-card-heart[data-fav-id="' + novelId + '"]');
+  nodes.forEach(b => {
+    b.classList.toggle('fav-active', on);
+    b.innerHTML = on ? icon('heart') : icon('heart-outline');
+    b.title = on ? 'เอาออกจากรายการโปรด' : 'เพิ่มในรายการโปรด';
+  });
+}
+window._syncFavButtons = _syncFavButtons;
+
 function toggleFav(novelId, btn) {
   let favs = _getFavs();
   const idx = favs.indexOf(novelId);
-  if (idx === -1) {
-    favs.push(novelId);
-    btn.classList.add('fav-active');
-    btn.textContent = '❤️';
-    btn.title = 'เอาออกจากรายการโปรด';
-  } else {
-    favs.splice(idx, 1);
-    btn.classList.remove('fav-active');
-    btn.textContent = '🤍';
-    btn.title = 'เพิ่มในรายการโปรด';
+  const adding = idx === -1;
+  if (adding) favs.push(novelId);
+  else favs.splice(idx, 1);
+  _saveFavs(favs);
+
+  // [FAV-SYNC-1] อัปเดตหัวใจของเรื่องเดียวกันทุกการ์ด (หน้าแรกมี 3 กริด)
+  _syncFavButtons(novelId);
+  _updateFavBadge();
+
+  if (!adding) {
     /* ถ้ากำลังอยู่ในหน้า favorites ให้ลบการ์ดทิ้ง */
     const appView = document.getElementById('app-view');
     const isFavPage = appView?.dataset.view === 'favorites';
     if (isFavPage) {
-      const card = btn.closest('.novel-card-h');
+      const card = btn && btn.closest ? btn.closest('.novel-card-h') : null;
       if (card) card.remove();
+      const grid = document.getElementById('favGrid');
+      if (grid && !grid.querySelector('.novel-card-h')) {
+        grid.innerHTML = `<div class="empty-state"><div class="empty-icon">${icon('heart-outline')}</div><p>ยังไม่มีรายการโปรด<br><small>กดรูปหัวใจบนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`;
+      }
     }
   }
-  _saveFavs(favs);
-  _updateFavBadge();
 }
 function _updateFavBadge() {
   const count = _getFavs().length;
@@ -206,13 +299,32 @@ function _updateFavBadge() {
 }
 window.toggleFav = toggleFav;
 
+/* ===== [FAV-PRUNE-1] ลบ id ที่นิยายถูกลบไปแล้ว เพื่อให้ตัวเลขบนเมนูตรงกับการ์ด ===== */
+function _pruneFavs() {
+  if (!allNovels || !allNovels.length) return false;   // ยังโหลดไม่เสร็จ → อย่าแตะ
+  const favs = _getFavs();
+  let changed = false;
+  if (favs.length) {
+    const valid = favs.filter(id => allNovels.some(n => n.id === id));
+    if (valid.length !== favs.length) {
+      _saveFavs(valid);
+      changed = true;
+    }
+  }
+  _updateFavBadge();   // ให้ตัวเลขบนเมนูตรงกับของจริงเสมอ
+  return changed;
+}
+window._pruneFavs = _pruneFavs;
+
 function renderNovels(list) {
   const grid = document.getElementById('novelsGrid');
   const countEl = document.getElementById('novels-count');
   if (countEl) countEl.textContent = list.length + ' เรื่อง';
+  // [BUG-GRID-1] grid อาจยังไม่มี (view อื่นไม่ได้ mount อยู่) — ไม่ต้อง throw
+  if (!grid) return;
   grid.innerHTML = list.length
     ? list.map(cardHTML).join('')
-    : `<div class="empty-state"><div class="empty-icon">🎙️</div><p>ยังไม่มีนิยายเสียง</p></div>`;
+    : `<div class="empty-state"><div class="empty-icon">${icon('mic')}</div><p>ยังไม่มีนิยายเสียง</p></div>`;
 }
 
 function renderSection(gridId, novels) {
@@ -226,17 +338,29 @@ function renderSection(gridId, novels) {
 /* ===== 5. SEARCH & FILTER ===== */
 let currentFilterTab = 'popular'; // track active filter tab
 
-window.filterNovels = function() {
-  // รับค่าจาก search bar ใหม่ (searchInputMain) หรือเดิม (searchInput)
-  const el = document.getElementById('searchInputMain') || document.getElementById('searchInput');
-  const q  = el ? el.value.toLowerCase().trim() : '';
+window.filterNovels = function(src) {
+  // [SEARCH-FIX-2] รับ element ที่พิมพ์เข้ามา (this) — เดิม sync ค่ากลับทำให้ลบข้อความไม่ได้
+  const ids = ['searchInputMain', 'searchInput', 'searchInputDrawer'];
+  const boxes = ids.map(id => document.getElementById(id)).filter(Boolean);
+
+  let raw;
+  if (src && typeof src.value === 'string') {
+    raw = src.value;
+  } else {
+    const filled = boxes.find(b => b.value.trim());
+    raw = filled ? filled.value : '';
+  }
+  // sync ไปยังช่องอื่น (ไม่แตะช่องที่กำลังพิมพ์)
+  boxes.forEach(b => { if (b !== src && b.value !== raw) b.value = raw; });
+
+  const q = raw.toLowerCase().trim();
 
   let result = applyFilterTab(currentFilterTab, allNovels);
   if (q) {
     result = result.filter(n =>
-      n.title.toLowerCase().includes(q) ||
+      (n.title || '').toLowerCase().includes(q) ||
       (n.author || '').toLowerCase().includes(q) ||
-      (n.tags || []).some(t => t.toLowerCase().includes(q))
+      (n.tags || []).some(t => String(t).toLowerCase().includes(q))
     );
   }
   renderNovels(result);
@@ -258,7 +382,7 @@ function applyFilterTab(tab, novels) {
     });
   }
 
-// --- MID-CODE CHECKPOINT: ✅ task เดียว ✅ buffer พอ ---
+// --- MID-CODE CHECKPOINT: งานเดียว, buffer พอ ---
 
   if (tab === 'updated') {
     return [...novels].sort((a, b) => {
@@ -312,9 +436,9 @@ window.openModal = function(id) {
   currentEpIdx = 0;
 
   document.getElementById('modalTitle').textContent  = n.title;
-  document.getElementById('modalAuthor').textContent = '✍️ ' + (n.author || 'Unknown');
+  document.getElementById('modalAuthor').innerHTML = icon('edit') + ' ' + esc(n.author || 'Unknown');
   document.getElementById('modalSynopsis').textContent = n.synopsis || '';
-  document.getElementById('modalEmoji').textContent  = n.emoji || '🎧';
+  document.getElementById('modalEmoji').innerHTML  = icon('headphones');
 
   const img = document.getElementById('modalCoverImg');
   if (n.coverUrl) {
@@ -326,14 +450,14 @@ window.openModal = function(id) {
   }
 
   document.getElementById('modalTags').innerHTML =
-    (n.tags || []).map(t => `<span class="player-tag">${t}</span>`).join('');
+    (Array.isArray(n.tags) ? n.tags : []).map(t => `<span class="player-tag">${esc(t)}</span>`).join('');
 
   audioFiles_modal = n.audioFiles || [];
   const epCount = Math.max(n.episodeCount || 0, audioFiles_modal.length);
   const epList  = document.getElementById('episodeList');
 
   if (epCount === 0) {
-    epList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.85rem">⏳ ยังไม่มีตอน</div>`;
+    epList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.85rem">${icon('hourglass')} ยังไม่มีตอน</div>`;
   } else {
     const GROUP  = 50;
     const groups = [];
@@ -348,14 +472,14 @@ window.openModal = function(id) {
         (_, i) => audioFiles_modal[g.start + i]
       ).some(af => af && af.url);
 
-      const groupIcon  = groupHasAudio ? '▶' : '🔒';
+      const groupIcon  = groupHasAudio ? icon('play') : icon('lock');
       const groupStyle = groupHasAudio ? '' : 'opacity:0.55;cursor:default';
 
       return `<div class="episode-group ${isFirst && groupHasAudio ? 'active' : ''}" style="${groupStyle}"
                    onclick="${groupHasAudio ? `toggleGroup(this,${g.start})` : ''}">
         <div class="eg-icon">${groupIcon}</div>
         <div class="eg-label">ตอนที่ ${g.start + 1} - ${g.end + 1}${groupHasAudio ? '' : ' <span style=\'font-size:0.72rem;color:var(--muted)\'>ยังไม่มีไฟล์</span>'}</div>
-        <div class="eg-arrow">${isFirst && groupHasAudio ? '▴' : '▾'}</div>
+        <div class="eg-arrow">${isFirst && groupHasAudio ? icon('chevron-up') : icon('chevron-down')}</div>
       </div>
       <div class="episode-sublist" id="sublist-${g.start}"
            style="${isFirst && groupHasAudio ? 'display:flex;flex-direction:column' : 'display:none'}">
@@ -363,10 +487,10 @@ window.openModal = function(id) {
           const idx    = g.start + i;
           const af     = audioFiles_modal[idx];
           const hasAudio = af && af.url;
-          const title  = af ? (af.name || `ตอนที่ ${idx + 1}`) : `ตอนที่ ${idx + 1}`;
+          const title  = esc(af ? (af.name || `ตอนที่ ${idx + 1}`) : `ตอนที่ ${idx + 1}`);
           return `<div class="episode-item${hasAudio ? '' : ' locked'}" id="ep-${idx}"
                        onclick="${hasAudio ? `playEpisode(${idx})` : ''}">
-            <div class="ep-play">${hasAudio ? '▶' : '🔒'}</div>
+            <div class="ep-play">${hasAudio ? icon('play') : icon('lock')}</div>
             <div class="ep-info">
               <div class="ep-title">${title}</div>
               <div class="ep-duration" style="${hasAudio ? '' : 'color:var(--muted)'}">${hasAudio ? formatDuration(af.duration) : 'ยังไม่มีไฟล์'}</div>
@@ -388,7 +512,7 @@ window.toggleGroup = function(el, startIdx) {
   document.querySelectorAll('.episode-sublist').forEach(s => s.style.display = 'none');
   document.querySelectorAll('.episode-group').forEach(g => {
     g.classList.remove('active');
-    g.querySelector('.eg-arrow').textContent = '▾';
+    g.querySelector('.eg-arrow').innerHTML = icon('chevron-down');
   });
 
   if (!isOpen) {
@@ -401,10 +525,10 @@ window.toggleGroup = function(el, startIdx) {
       const idx      = startIdx + i;
       const af       = audioFiles_local[idx];
       const hasAudio = af && af.url;
-      const title    = af ? (af.name || `ตอนที่ ${idx + 1}`) : `ตอนที่ ${idx + 1}`;
+      const title    = esc(af ? (af.name || `ตอนที่ ${idx + 1}`) : `ตอนที่ ${idx + 1}`);
       return `<div class="episode-item${hasAudio ? '' : ' locked'}" id="ep-${idx}"
                    onclick="${hasAudio ? `playEpisode(${idx})` : ''}">
-        <div class="ep-play">${hasAudio ? '▶' : '🔒'}</div>
+        <div class="ep-play">${hasAudio ? icon('play') : icon('lock')}</div>
         <div class="ep-info">
           <div class="ep-title">${title}</div>
           <div class="ep-duration" style="${hasAudio ? '' : 'color:var(--muted)'}">${hasAudio ? formatDuration(af.duration) : 'ยังไม่มีไฟล์'}</div>
@@ -415,7 +539,7 @@ window.toggleGroup = function(el, startIdx) {
     sublist.style.display     = 'flex';
     sublist.style.flexDirection = 'column';
     el.classList.add('active');
-    el.querySelector('.eg-arrow').textContent = '▴';
+    el.querySelector('.eg-arrow').innerHTML = icon('chevron-up');
   }
 };
 
@@ -442,7 +566,7 @@ window.playEpisode = function(idx) {
   document.querySelectorAll('.episode-item').forEach((el, i) => {
     el.classList.toggle('playing', i === idx);
     const ep = el.querySelector('.ep-play');
-    if (ep) ep.textContent = i === idx ? '⏸' : '▶';
+    if (ep) ep.innerHTML = i === idx ? icon('pause') : icon('play');
   });
 
   const n       = currentNovel;
@@ -473,9 +597,10 @@ window.playEpisode = function(idx) {
   document.getElementById('npExpandTitle').textContent = n.title;
   document.getElementById('npExpandEp').textContent    = epLabel;
 
-  const coverHtml = n.coverUrl
-    ? `<img src="${n.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover">`
-    : `<span style="font-size:3rem">${n.emoji || '🎧'}</span>`;
+  const npCoverUrl = safeUrl(n.coverUrl);
+  const coverHtml = npCoverUrl
+    ? `<img src="${esc(npCoverUrl)}" alt="" style="width:100%;height:100%;object-fit:cover">`
+    : `<span style="font-size:3rem">${icon('headphones')}</span>`;
   document.getElementById('npCover').innerHTML       = coverHtml;
   document.getElementById('npExpandCover').innerHTML = coverHtml;
 
@@ -649,7 +774,7 @@ window.nextEp = function() {
     if (_nvCurrentIdx < _nvAudioFiles.length - 1) window._nvPlayEp(_nvCurrentIdx + 1, _nvAudioFiles, _nvNovel);
     return;
   }
-  const max = Math.max((currentNovel?.eps || 0), audioFiles_modal.length) - 1;
+  const max = Math.max((currentNovel?.episodeCount || 0), audioFiles_modal.length) - 1;
   if (currentEpIdx < max) playEpisode(currentEpIdx + 1);
 };
 
@@ -663,28 +788,50 @@ audio.addEventListener('timeupdate', () => {
   const thumb = document.getElementById('npBarThumb');
   if (fill)  fill.style.width = pct + '%';
   if (thumb) thumb.style.left = `calc(${pct}% - 7px)`;
+  // [EP-PROGRESS-LIVE] อัปเดต progress bar แดงบน ep-item ที่กำลังเล่น
+  if (_nvCurrentIdx >= 0) {
+    const epEl = document.getElementById('nvEp-' + _nvCurrentIdx);
+    if (epEl) {
+      let bar = epEl.querySelector('.ep-progress-fill');
+      if (!bar) {
+        if (!epEl.querySelector('.ep-progress-wrap')) {
+          epEl.insertAdjacentHTML('beforeend',
+            `<div class="ep-progress-wrap"><div class="ep-progress-fill" style="width:0%"></div></div>`);
+        }
+        bar = epEl.querySelector('.ep-progress-fill');
+      }
+      if (bar) bar.style.width = pct + '%';
+    }
+  }
   document.getElementById('npCurrent').textContent  = formatTime(audio.currentTime);
   document.getElementById('npDuration').textContent = formatTime(audio.duration);
-  // [RESUME-1] save progress ทุก 5 วินาที
+  // [RESUME-1] save progress ทุก 5 วินาที — [HIST-BUG-1] ใช้ saveHistory() แทน setDoc ตรงๆ ให้ field ครบ
   const now = Date.now();
   if (now - _lastSaveTime > 5000 && _nvNovel && _nvCurrentIdx >= 0) {
     _lastSaveTime = now;
-    try {
-      const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      const hi = list.findIndex(h => h.novelId === _nvNovel.id);
-      if (hi >= 0) {
-        list[hi].currentTime = audio.currentTime;
-        list[hi].duration    = audio.duration;
-        list[hi].progress    = audio.currentTime / audio.duration;
-        list[hi].epIdx       = _nvCurrentIdx;
-        list[hi].epLabel     = _nvAudioFiles[_nvCurrentIdx]?.name || `ตอนที่ ${_nvCurrentIdx + 1}`;
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    const epLabel = _nvAudioFiles[_nvCurrentIdx]?.name || `ตอนที่ ${_nvCurrentIdx + 1}`;
+    saveHistory(
+      _nvNovel.id,
+      _nvNovel.title || '',
+      _nvNovel.coverUrl || _nvNovel.cover || '',
+      epLabel,
+      audio.currentTime / audio.duration,
+      {
+        currentTime: audio.currentTime,
+        duration:    audio.duration,
+        epIdx:       _nvCurrentIdx,
       }
-    } catch(e) {}
+    );
+    // [EP-TRACK-1] บันทึก per-ep progress แยกต่างหาก
+    saveEpProgress(_nvNovel.id, _nvCurrentIdx, audio.currentTime, audio.duration);
   }
 });
 
 audio.addEventListener('ended', () => {
+  // [EP-TRACK-DONE] บันทึก 100% เมื่อฟังจบ
+  if (_nvNovel && _nvCurrentIdx >= 0 && audio.duration) {
+    saveEpProgress(_nvNovel.id, _nvCurrentIdx, audio.duration, audio.duration);
+  }
   if (_nvAudioFiles.length > 0 && _nvCurrentIdx < _nvAudioFiles.length - 1) {
     window._nvPlayEp(_nvCurrentIdx + 1, _nvAudioFiles, _nvNovel);
   } else {
@@ -843,9 +990,10 @@ window.setTheme = function(t) {
     audio.currentTime = s.currentTime || 0;
 
     /* อัปเดต UI */
-    const coverHtml = s.coverUrl
-      ? `<img src="${s.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover">`
-      : `<span style="font-size:3rem">🎧</span>`;
+    const rpCoverUrl = safeUrl(s.coverUrl);
+    const coverHtml = rpCoverUrl
+      ? `<img src="${esc(rpCoverUrl)}" alt="" style="width:100%;height:100%;object-fit:cover">`
+      : `<span style="font-size:3rem">${icon('headphones')}</span>`;
     ['npCover','npExpandCover'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = coverHtml;
@@ -868,23 +1016,146 @@ window.setTheme = function(t) {
   }
 })();
 
-/* ===== [IDX-NEW-3] HISTORY — saveHistory + renderHistory ===== */
+/* ===== HISTORY v2 — saveHistory + renderHistory ===== */
+// เขียนใหม่ทั้งหมด: เรียบง่าย, Firestore-first, expire 60 วัน, แสดงแค่ปก+ชื่อ
 
 const HISTORY_KEY = 'gh_history';
 const HISTORY_MAX = 10;
+const HISTORY_EXPIRE_MS = 60 * 24 * 60 * 60 * 1000; // 60 วัน
 
-window.saveHistory = function(novelId, novelTitle, coverUrl, epLabel, progress) {
-  if (!novelId) return;
+// track uid ปัจจุบัน
+let _currentUid = null;
+onAuthStateChanged(auth, u => { _currentUid = u ? u.uid : null; });
+
+// [SEC-2] anonymous local id — ไม่ให้ข้อมูลผู้ใช้ที่ยังไม่ login ชนกันใต้ key 'anon'
+function _anonLocalId() {
+  let id = null;
+  try { id = localStorage.getItem('gh_anon_id'); } catch(e) {}
+  if (!id) {
+    try {
+      id = 'anon-' + (crypto?.randomUUID ? crypto.randomUUID()
+                                          : Date.now().toString(36) + Math.random().toString(36).slice(2));
+      localStorage.setItem('gh_anon_id', id);
+    } catch(e) { id = 'anon-fallback'; }
+  }
+  return id;
+}
+// key ของผู้ใช้ปัจจุบัน — ใช้แทน 'anon' ทุกที่
+function _userKey() { return _currentUid || _anonLocalId(); }
+
+
+// throttle renderHistory — max ทุก 30 วิ
+let _lastRenderHistoryTime = 0;
+function _throttledRenderHistory() {
+  const now = Date.now();
+  if (now - _lastRenderHistoryTime > 30000) {
+    _lastRenderHistoryTime = now;
+    if (window.renderHistory) window.renderHistory();
+  }
+}
+
+// [HISTORY-UID-1] helper: localStorage key ผูกกับ uid (ถ้า login) หรือ anon id ของเบราว์เซอร์
+// [SEC-2] ไม่ใช้ key เดียวร่วมกันทุกคนที่ยังไม่ login
+function _historyKey() {
+  const k = `gh_history_${_userKey()}`;
+  if (!_currentUid) {
+    // ย้ายข้อมูลเดิมที่เคยเก็บใต้ key กลาง 'gh_history' มาครั้งเดียว
+    try {
+      if (!localStorage.getItem(k)) {
+        const legacy = localStorage.getItem(HISTORY_KEY);
+        if (legacy) localStorage.setItem(k, legacy);
+      }
+    } catch(e) {}
+  }
+  return k;
+}
+
+// [EP-TRACK-1] per-ep progress key และ save helper
+// format: gh_ep_{uid}_{novelId} → object { [epIdx]: {currentTime, duration, progress, ts} }
+function _epProgressKey(novelId) {
+  const uid = _userKey();
+  return `gh_ep_${uid}_${novelId}`;
+}
+
+function saveEpProgress(novelId, epIdx, currentTime, duration) {
+  if (!novelId || epIdx < 0 || !duration) return;
+  const entry = {
+    currentTime,
+    duration,
+    progress: currentTime / duration,
+    ts: Date.now()
+  };
+  // localStorage fallback (always)
   try {
-    let list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    // ลบรายการเดิมถ้ามีอยู่แล้ว
-    list = list.filter(h => h.novelId !== novelId);
-    // เพิ่มล่าสุดไว้หน้าสุด
-    list.unshift({ novelId, novelTitle, coverUrl, epLabel, progress: progress || 0, ts: Date.now() });
-    // จำกัดไว้ 10 รายการ
+    const key = _epProgressKey(novelId);
+    const map = JSON.parse(localStorage.getItem(key) || '{}');
+    map[epIdx] = entry;
+    localStorage.setItem(key, JSON.stringify(map));
+  } catch(e) { console.warn('[ep-progress] localStorage error:', e); }
+  // Firestore sync (login only)
+  if (_currentUid) {
+    const ref = doc(db, 'users', _currentUid, 'epProgress', novelId);
+    setDoc(ref, { [epIdx]: { ...entry, ts: serverTimestamp() } }, { merge: true })
+      .catch(e => console.warn('[ep-progress] Firestore error:', e));
+  }
+}
+
+async function getEpProgressMap(novelId) {
+  // local fallback
+  let local = {};
+  try {
+    local = JSON.parse(localStorage.getItem(_epProgressKey(novelId)) || '{}');
+  } catch(e) {}
+  // Firestore merge (login only)
+  if (_currentUid) {
+    try {
+      const snap = await getDoc(doc(db, 'users', _currentUid, 'epProgress', novelId));
+      if (snap.exists()) {
+        const remote = snap.data();
+        // merge: remote ชนะถ้า ts ใหม่กว่า
+        Object.entries(remote).forEach(([idx, val]) => {
+          const localTs = local[idx]?.ts || 0;
+          const remoteTs = val.ts?.toMillis ? val.ts.toMillis() : (val.ts || 0);
+          if (remoteTs >= localTs) local[idx] = { ...val, ts: remoteTs };
+        });
+        // sync merged back to localStorage
+        try { localStorage.setItem(_epProgressKey(novelId), JSON.stringify(local)); } catch(e) {}
+      }
+    } catch(e) { console.warn('[ep-progress] Firestore read error:', e); }
+  }
+  return local;
+}
+
+// saveHistory — เขียน localStorage + Firestore (ถ้า login)
+// fields: novelId, novelTitle, coverUrl, epLabel, epIdx, currentTime, duration, progress, ts
+window.saveHistory = function(novelId, novelTitle, coverUrl, epLabel, progress, extra) {
+  if (!novelId) return;
+  const entry = {
+    novelId,
+    novelTitle: novelTitle || '',
+    coverUrl:   coverUrl   || '',
+    epLabel:    epLabel    || '',
+    progress:   progress   || 0,
+    ts:         Date.now(),
+    ...(extra || {})
+  };
+  // localStorage (always)
+  try {
+    const key = _historyKey();
+    let list = JSON.parse(localStorage.getItem(key) || '[]');
+    const cutoff = Date.now() - HISTORY_EXPIRE_MS;
+    list = list.filter(h => h.novelId !== novelId && (h.ts || 0) > cutoff);
+    list.unshift(entry);
     if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-  } catch(e) { console.warn('saveHistory error:', e); }
+    localStorage.setItem(key, JSON.stringify(list));
+    _throttledRenderHistory();
+  } catch(e) { console.warn('[history] localStorage error:', e); }
+  // Firestore sync (login only)
+  if (_currentUid) {
+    const ref = doc(db, 'users', _currentUid, 'history', novelId);
+    setDoc(ref, { ...entry, ts: serverTimestamp() }, { merge: true })
+      .catch(e => console.warn('[history] Firestore error:', e));
+  }
 };
 
 /* ===== [SPA-3] HOME VIEW ===== */
@@ -904,79 +1175,83 @@ export async function renderHomeView() {
   appView.innerHTML = `
     <!-- HISTORY BAR -->
     <section id="historyBar" class="history-bar">
-      <div class="history-header">
-        <span class="history-title">⏱ ประวัติการฟังล่าสุด</span>
+      <div class="history-bar-inner">
+        <div class="history-bar-header">
+          <span class="history-bar-title">${icon('clock')} ประวัติการฟังล่าสุด</span>
+        </div>
+        <div id="historyItems" class="history-items"></div>
       </div>
-      <div id="historyItems" class="history-items"></div>
     </section>
 
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-content">
-        <div class="hero-badge">🎙️ นิยายเสียงภาษาไทย</div>
-        <h1 class="hero-title">ฟังนิยายที่คุณชื่นชอบ<br>ได้ทุกที่ทุกเวลา</h1>
-        <p class="hero-subtitle">รวมนิยายเสียงคุณภาพสูง พากย์โดยนักพากย์มืออาชีพ อัปเดตใหม่ทุกสัปดาห์</p>
-        <div class="hero-actions">
-          <button class="hero-btn-primary" onclick="navigateToLibrary()">▶ เริ่มฟังเลย</button>
-        </div>
-      </div>
-      <div class="hero-image" id="heroImage">
-        <div class="hero-neon-graphic">
-          <svg class="hero-waveform" viewBox="0 0 260 120" xmlns="http://www.w3.org/2000/svg">
-            <g opacity="0.7">
-              <rect x="0"   y="55" width="6" height="10" rx="3" fill="#e8445a"/>
-              <rect x="10"  y="45" width="6" height="30" rx="3" fill="#e8445a"/>
-              <rect x="20"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
-              <rect x="30"  y="40" width="6" height="40" rx="3" fill="#e8445a"/>
-              <rect x="40"  y="20" width="6" height="80" rx="3" fill="#e8445a"/>
-              <rect x="50"  y="35" width="6" height="50" rx="3" fill="#e8445a"/>
-              <rect x="60"  y="50" width="6" height="20" rx="3" fill="#e8445a"/>
-              <rect x="70"  y="25" width="6" height="70" rx="3" fill="#e8445a"/>
-              <rect x="80"  y="10" width="6" height="100" rx="3" fill="#e8445a"/>
-              <rect x="90"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
-              <rect x="100" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
-              <rect x="110" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
-              <rect x="150" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
-              <rect x="160" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
-              <rect x="170" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
-              <rect x="180" y="20" width="6" height="80" rx="3" fill="#e8445a"/>
-              <rect x="190" y="35" width="6" height="50" rx="3" fill="#e8445a"/>
-              <rect x="200" y="10" width="6" height="100" rx="3" fill="#e8445a"/>
-              <rect x="210" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
-              <rect x="220" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
-              <rect x="230" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
-              <rect x="240" y="40" width="6" height="40" rx="3" fill="#e8445a"/>
-              <rect x="250" y="25" width="6" height="70" rx="3" fill="#e8445a"/>
-            </g>
-          </svg>
-          <div class="hero-headphone">
-            <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" width="160" height="128">
-              <defs>
-                <filter id="heroNeonGlow" x="-40%" y="-40%" width="180%" height="180%">
-                  <feGaussianBlur stdDeviation="4" result="blur1"/>
-                  <feGaussianBlur stdDeviation="10" result="blur2"/>
-                  <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <path d="M 30 100 A 70 75 0 0 1 170 100"
-                    fill="none" stroke="#e8445a" stroke-width="7"
-                    stroke-linecap="round" filter="url(#heroNeonGlow)"/>
-              <path d="M 38 100 A 62 67 0 0 1 162 100"
-                    fill="none" stroke="rgba(232,68,90,0.3)" stroke-width="2"
-                    stroke-linecap="round"/>
-              <rect x="14" y="88" width="28" height="44" rx="12"
-                    fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
-                    filter="url(#heroNeonGlow)"/>
-              <rect x="20" y="96" width="16" height="28" rx="7"
-                    fill="rgba(232,68,90,0.25)"/>
-              <rect x="158" y="88" width="28" height="44" rx="12"
-                    fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
-                    filter="url(#heroNeonGlow)"/>
-              <rect x="164" y="96" width="16" height="28" rx="7"
-                    fill="rgba(232,68,90,0.25)"/>
-            </svg>
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-badge">${icon('mic')} นิยายเสียงภาษาไทย</div>
+          <h1 class="hero-title">ฟังนิยายที่คุณชื่นชอบ<br>ได้ทุกที่ทุกเวลา</h1>
+          <p class="hero-subtitle">รวมนิยายเสียงคุณภาพสูง พากย์โดยนักพากย์มืออาชีพ อัปเดตใหม่ทุกสัปดาห์</p>
+          <div class="hero-actions">
+            <button class="hero-btn-primary" onclick="navigateToLibrary()">${icon('play')} เริ่มฟังเลย</button>
           </div>
-          <div class="hero-crown-badge">👑</div>
+        </div>
+        <div class="hero-image" id="heroImage">
+          <div class="hero-neon-graphic">
+            <svg class="hero-waveform" viewBox="0 0 260 120" xmlns="http://www.w3.org/2000/svg">
+              <g opacity="0.7">
+                <rect x="0"   y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+                <rect x="10"  y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+                <rect x="20"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+                <rect x="30"  y="40" width="6" height="40" rx="3" fill="#e8445a"/>
+                <rect x="40"  y="20" width="6" height="80" rx="3" fill="#e8445a"/>
+                <rect x="50"  y="35" width="6" height="50" rx="3" fill="#e8445a"/>
+                <rect x="60"  y="50" width="6" height="20" rx="3" fill="#e8445a"/>
+                <rect x="70"  y="25" width="6" height="70" rx="3" fill="#e8445a"/>
+                <rect x="80"  y="10" width="6" height="100" rx="3" fill="#e8445a"/>
+                <rect x="90"  y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+                <rect x="100" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+                <rect x="110" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+                <rect x="150" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+                <rect x="160" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+                <rect x="170" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+                <rect x="180" y="20" width="6" height="80" rx="3" fill="#e8445a"/>
+                <rect x="190" y="35" width="6" height="50" rx="3" fill="#e8445a"/>
+                <rect x="200" y="10" width="6" height="100" rx="3" fill="#e8445a"/>
+                <rect x="210" y="30" width="6" height="60" rx="3" fill="#e8445a"/>
+                <rect x="220" y="45" width="6" height="30" rx="3" fill="#e8445a"/>
+                <rect x="230" y="55" width="6" height="10" rx="3" fill="#e8445a"/>
+                <rect x="240" y="40" width="6" height="40" rx="3" fill="#e8445a"/>
+                <rect x="250" y="25" width="6" height="70" rx="3" fill="#e8445a"/>
+              </g>
+            </svg>
+            <div class="hero-headphone">
+              <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" width="160" height="128">
+                <defs>
+                  <filter id="heroNeonGlow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur stdDeviation="4" result="blur1"/>
+                    <feGaussianBlur stdDeviation="10" result="blur2"/>
+                    <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <path d="M 30 100 A 70 75 0 0 1 170 100"
+                      fill="none" stroke="#e8445a" stroke-width="7"
+                      stroke-linecap="round" filter="url(#heroNeonGlow)"/>
+                <path d="M 38 100 A 62 67 0 0 1 162 100"
+                      fill="none" stroke="rgba(232,68,90,0.3)" stroke-width="2"
+                      stroke-linecap="round"/>
+                <rect x="14" y="88" width="28" height="44" rx="12"
+                      fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
+                      filter="url(#heroNeonGlow)"/>
+                <rect x="20" y="96" width="16" height="28" rx="7"
+                      fill="rgba(232,68,90,0.25)"/>
+                <rect x="158" y="88" width="28" height="44" rx="12"
+                      fill="rgba(232,68,90,0.15)" stroke="#e8445a" stroke-width="3"
+                      filter="url(#heroNeonGlow)"/>
+                <rect x="164" y="96" width="16" height="28" rx="7"
+                      fill="rgba(232,68,90,0.25)"/>
+              </svg>
+            </div>
+            <div class="hero-crown-badge">${icon('crown')}</div>
+          </div>
         </div>
       </div>
     </section>
@@ -984,15 +1259,15 @@ export async function renderHomeView() {
     <!-- SEARCH + FILTER TABS -->
     <section class="search-section">
       <div class="search-bar-wrap">
-        <input id="searchInputMain" class="search-input" type="text"
-               placeholder="ค้นหานิยาย, ผู้แต่ง, แท็ก..." oninput="filterNovels()">
-        <span class="search-icon">🔍</span>
+        <input id="searchInputMain" class="search-bar-input" type="text"
+               placeholder="ค้นหานิยาย, ผู้แต่ง, แท็ก..." oninput="filterNovels(this)">
+        <span class="search-icon">${icon('search')}</span>
       </div>
       <div class="filter-tabs">
-        <button class="filter-tab active" onclick="switchFilterTab(this,'popular')">🔥 ยอดนิยม</button>
-        <button class="filter-tab" onclick="switchFilterTab(this,'new')">✨ มาใหม่</button>
-        <button class="filter-tab" onclick="switchFilterTab(this,'updated')">🔄 อัปเดต</button>
-        <button class="filter-tab" onclick="switchFilterTab(this,'all')">📚 ทั้งหมด</button>
+        <button class="filter-tab active" onclick="switchFilterTab(this,'popular')">${icon('flame')} ยอดนิยม</button>
+        <button class="filter-tab" onclick="switchFilterTab(this,'new')">${icon('sparkles')} มาใหม่</button>
+        <button class="filter-tab" onclick="switchFilterTab(this,'updated')">${icon('refresh')} อัปเดต</button>
+        <button class="filter-tab" onclick="switchFilterTab(this,'all')">${icon('book')} ทั้งหมด</button>
       </div>
     </section>
 
@@ -1008,7 +1283,7 @@ export async function renderHomeView() {
     <!-- NEW RELEASES -->
     <section class="novels-section">
       <div class="section-header">
-        <h2 class="section-title">✨ มาใหม่ล่าสุด</h2>
+        <h2 class="section-title">${icon('sparkles')} มาใหม่ล่าสุด</h2>
       </div>
       <div id="newReleasesGrid" class="novels-grid"></div>
     </section>
@@ -1016,7 +1291,7 @@ export async function renderHomeView() {
     <!-- POPULAR -->
     <section class="novels-section">
       <div class="section-header">
-        <h2 class="section-title">🔥 ยอดนิยม</h2>
+        <h2 class="section-title">${icon('flame')} ยอดนิยม</h2>
         <div class="sub-tabs">
           <button class="sub-tab active" onclick="switchTab(this,'all')">ตลอดกาล</button>
           <button class="sub-tab" onclick="switchTab(this,'30day')">30 วัน</button>
@@ -1036,6 +1311,7 @@ export async function renderHomeView() {
   const unsub = onSnapshot(novelsQuery, (snapshot) => {
     allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     filtered  = [...allNovels];
+  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
     renderSection('newReleasesGrid', allNovels.slice(0, 3));
     renderSection('popularGrid',     allNovels.slice(0, 4));
     renderNovels(filtered);
@@ -1052,45 +1328,70 @@ window.navigateToLibrary = function() {
   import('./router.js').then(r => r.navigate('/library'));
 };
 
-window.renderHistory = function() {
-  // helper: วินาที → "m:ss"
-  function _fmtTime(s) {
-    s = Math.floor(s || 0);
-    return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
-  }
+// renderHistory v2 — async, อ่าน Firestore merge localStorage, แสดงปก+ชื่อ, expire 60 วัน
+window.renderHistory = async function() {
   const bar   = document.getElementById('historyBar');
   const items = document.getElementById('historyItems');
   if (!bar || !items) return;
+
+  const cutoff = Date.now() - HISTORY_EXPIRE_MS;
+
+  // อ่าน localStorage ก่อน (fast path)
+  let localList = [];
   try {
-    const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    if (!list.length) { bar.classList.remove('visible'); return; }
-    items.innerHTML = list.map(h => {
-      const pct = Math.min(100, Math.round((h.progress || 0) * 100));
-      const cur = h.currentTime ? _fmtTime(h.currentTime) : '—';
-      const dur = h.duration    ? _fmtTime(h.duration)    : '—';
-      return `
-        <div class="history-item" data-novel-id="${h.novelId}" data-ep-idx="${h.epIdx ?? 0}" data-resume-time="${h.currentTime || 0}" onclick="window._spaNavigate(this)">
-          <div class="history-item-cover">
-            📖
-            <img src="${h.coverUrl || ''}" alt="${h.novelTitle || ''}"
-                 loading="lazy" onerror="this.style.display='none'"
-                 ${h.coverUrl ? '' : 'style="display:none"'}>
-          </div>
-          <div class="history-item-info">
-            <div class="history-item-title">${h.novelTitle || '—'}</div>
-            <div class="history-item-ep">${h.epLabel || ''}</div>
-            <div class="history-progress-wrap">
-              <div class="history-progress-bar">
-                <div class="history-progress-fill" style="width:${pct}%"></div>
-              </div>
-              <span class="history-progress-pct">${cur} / ${dur}</span>
-            </div>
-          </div>
-          <span class="history-item-heart">❤️</span>
-        </div>`;
-    }).join('');
-    bar.classList.add('visible');
-  } catch(e) { console.warn('renderHistory error:', e); }
+    localList = JSON.parse(localStorage.getItem(_historyKey()) || '[]')
+      .filter(h => (h.ts || 0) > cutoff);
+  } catch(e) {}
+
+  // merge Firestore (login only)
+  let list = localList;
+  if (_currentUid) {
+    try {
+      const snap = await getDocs(collection(db, 'users', _currentUid, 'history'));
+      if (!snap.empty) {
+        const remoteMap = {};
+        snap.forEach(d => {
+          const data = d.data();
+          const ts = data.ts?.toMillis ? data.ts.toMillis() : (data.ts || 0);
+          if (ts > cutoff) remoteMap[d.id] = { ...data, ts };
+        });
+        // merge: novel ไหนใน remote ใหม่กว่า local → ใช้ remote
+        const localMap = {};
+        localList.forEach(h => { localMap[h.novelId] = h; });
+        Object.entries(remoteMap).forEach(([novelId, rh]) => {
+          if (!localMap[novelId] || rh.ts > (localMap[novelId].ts || 0)) {
+            localMap[novelId] = rh;
+          }
+        });
+        list = Object.values(localMap)
+          .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+          .slice(0, HISTORY_MAX);
+        // sync merged back to localStorage
+        try { localStorage.setItem(_historyKey(), JSON.stringify(list)); } catch(e) {}
+      }
+    } catch(e) { console.warn('[history] Firestore read error:', e); }
+  }
+
+  if (!list.length) { bar.classList.remove('visible'); return; }
+
+  // แสดงแค่ปก + ชื่อ — กดแล้วเปิด novel view
+  items.innerHTML = list.map(h => {
+    const hCover = safeUrl(h.coverUrl);
+    return `
+    <div class="history-item"
+         data-novel-id="${esc(h.novelId)}"
+         data-ep-idx="${esc(h.epIdx ?? 0)}"
+         data-resume-time="${esc(h.currentTime || 0)}"
+         onclick="window._spaNavigate(this)">
+      <div class="history-item-cover">
+        ${hCover
+          ? `<img src="${esc(hCover)}" alt="${esc(h.novelTitle || '')}" loading="lazy" onerror="this.style.display='none'">`
+          : `<span class="history-cover-placeholder">${icon('book')}</span>`}
+      </div>
+      <div class="history-item-title">${esc(h.novelTitle || '—')}</div>
+    </div>`;
+  }).join('');
+  bar.classList.add('visible');
 };
 
 
@@ -1126,9 +1427,9 @@ window.renderNovelView = async function({ id: novelId }) {
         <span>กำลังโหลด...</span>
       </div>
       <div class="nv-state-box" id="nvStateError" style="display:none">
-        <span class="nv-err-icon">⚠️</span>
+        <span class="nv-err-icon">${icon('alert')}</span>
         <p id="nvErrMsg">เกิดข้อผิดพลาด</p>
-        <a href="/" onclick="event.preventDefault();window.handleRoute('/')" class="nv-back-btn">← กลับหน้าหลัก</a>
+        <a href="/" onclick="event.preventDefault();window.handleRoute('/')" class="nv-back-btn">${icon('arrow-left')} กลับหน้าหลัก</a>
       </div>
       <div id="nvContent" style="display:none"></div>
     </div>`;
@@ -1162,30 +1463,32 @@ window.renderNovelView = async function({ id: novelId }) {
 
   // ── build content
   const st     = novel.status || 'ongoing';
-  const epCnt  = Math.max(novel.episodeCount || novel.eps || 0, audioFiles.length);
-  const tagsHTML = (novel.tags||[]).map(t=>`<span class="nv-tag">${t}</span>`).join('');
-  const coverImg = novel.coverUrl
-    ? `<img src="${novel.coverUrl}" alt="${novel.title}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:12px">`
-    : `<span class="nv-cover-title">${novel.title}</span>`;
+  // [FIX-EPCOUNT] ใช้ episodeCount อย่างเดียว ไม่ fallback ไป eps แล้ว
+  const epCnt  = Math.max(Number.isFinite(novel.episodeCount) ? novel.episodeCount : 0, audioFiles.length);
+  const tagsHTML = (Array.isArray(novel.tags) ? novel.tags : []).map(t=>`<span class="nv-tag">${esc(t)}</span>`).join('');
+  const nvCoverUrl = safeUrl(novel.coverUrl);
+  const coverImg = nvCoverUrl
+    ? `<img src="${esc(nvCoverUrl)}" alt="${esc(novel.title)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:12px">`
+    : `<span class="nv-cover-title">${esc(novel.title)}</span>`;
 
   document.getElementById('nvContent').innerHTML = `
     <div class="nv-main">
-      <a href="/" class="nv-back-btn" onclick="event.preventDefault();window.handleRoute('/')">← ย้อนกลับ</a>
+      <a href="/" class="nv-back-btn" onclick="event.preventDefault();window.handleRoute('/')">${icon('arrow-left')} ย้อนกลับ</a>
 
       <div class="nv-cols">
         <div class="nv-col-left">
           <div class="nv-cover" id="nvCoverBox">${coverImg}</div>
           <div class="nv-info">
-            <h1 class="nv-title">${novel.title}</h1>
-            <p class="nv-author">✍️ ${novel.author||'Unknown'}</p>
+            <h1 class="nv-title">${esc(novel.title)}</h1>
+            <p class="nv-author">${icon('edit')} ${esc(novel.author||'Unknown')}</p>
             <div class="nv-meta">
-              <span class="badge ${STATUS_CLS_NV[st]||'badge-ongoing'}">${STATUS_LABEL_NV[st]||st}</span>
+              <span class="badge ${STATUS_CLS_NV[st]||'badge-ongoing'}">${esc(STATUS_LABEL_NV[st]||st)}</span>
               <span class="badge badge-ep">${epCnt} ตอน</span>
-              ${novel.views ? `<span style="color:#a0a0a0;font-size:13px">• 👁 ${novel.views}</span>` : ''}
+              ${Number.isFinite(novel.views) && novel.views ? `<span style="color:#a0a0a0;font-size:13px">• ${icon('eye')} ${novel.views}</span>` : ''}
             </div>
             <div class="nv-tags">${tagsHTML}</div>
-            <p class="nv-synopsis">${novel.synopsis||''}</p>
-            <button class="nv-play-first-btn" id="nvPlayFirstBtn">▶ เล่นตอนแรก</button>
+            <p class="nv-synopsis">${esc(novel.synopsis||'')}</p>
+            <button class="nv-play-first-btn" id="nvPlayFirstBtn">${icon('play')} เริ่มฟังนิยาย</button>
           </div>
         </div>
         <div class="nv-col-right">
@@ -1197,7 +1500,7 @@ window.renderNovelView = async function({ id: novelId }) {
                   <button class="nv-tab active" id="nvTabAll" onclick="window._nvSetTab('all')">ทั้งหมด</button>
                   <button class="nv-tab" id="nvTabLatest" onclick="window._nvSetTab('latest')">ล่าสุด 10 ตอน</button>
                 </div>
-                <button class="nv-sort-btn" id="nvSortBtn" onclick="window._nvToggleSort()">⇅ <span id="nvSortLabel">เก่า→ใหม่</span></button>
+                <button class="nv-sort-btn" id="nvSortBtn" onclick="window._nvToggleSort()">${icon('sort')} <span id="nvSortLabel">เก่า→ใหม่</span></button>
               </div>
             </div>
             <div class="ep-list" id="nvEpList"></div>
@@ -1215,8 +1518,24 @@ window.renderNovelView = async function({ id: novelId }) {
   }
   requestAnimationFrame(() => _nvBuildEpList(epCnt, audioFiles, novel));
 
-  // ── play first btn
+  // ── play first btn (smart resume)
   document.getElementById('nvPlayFirstBtn').addEventListener('click', () => {
+    // smart resume: หา ep ล่าสุดที่ยังฟังไม่จบ
+    try {
+      const uid = _userKey();
+      const key = `gh_ep_${uid}_${novelId}`;
+      const map = JSON.parse(localStorage.getItem(key) || '{}');
+      const latest = Object.entries(map)
+        .filter(([, v]) => v.currentTime > 0 && (v.progress || 0) < 1.0)
+        .sort(([, a], [, b]) => (b.ts || 0) - (a.ts || 0))[0];
+      if (latest) {
+        const [idxStr, epData] = latest;
+        const epIdx = Number(idxStr);
+        const af = audioFiles[epIdx];
+        if (af?.url) { window._nvPlayEp(epIdx, audioFiles, novel, epData.currentTime); return; }
+      }
+    } catch(e) {}
+    // ไม่เคยฟัง → เล่น ep แรก
     const i = audioFiles.findIndex(af => af && af.url);
     if (i >= 0) window._nvPlayEp(i, audioFiles, novel);
   });
@@ -1226,25 +1545,32 @@ window.renderNovelView = async function({ id: novelId }) {
   document.getElementById('nvContent').style.display = 'block';
   document.title = `${novel.title} — The Golden Hoard Novels`;
 
-  // [RESUME-1] resume จาก history — เล่นตอนและ seek ไปตำแหน่งที่ค้างไว้
+  // [RESUME-FIX-3] resume จาก history-item (sessionStorage)
+  // [REFRESH-RESUME-1] fallback: ถ้าไม่มี sessionStorage (เช่น refresh) → อ่าน Firestore history โดยตรง
+  const _doResume = (epIdx, resumeTime) => {
+    const af = audioFiles[epIdx];
+    if (!af || !af.url) return;
+    const audioEl = document.getElementById('audioEl');
+    if (resumeTime > 0) {
+      const onReady = () => {
+        audioEl.currentTime = resumeTime;
+        audioEl.removeEventListener('canplay', onReady);
+      };
+      audioEl.addEventListener('canplay', onReady);
+    }
+    window._nvPlayEp(epIdx, audioFiles, novel);
+  };
+
   try {
     const resumeKey = 'ghResume_' + novelId;
     const raw = sessionStorage.getItem(resumeKey);
     if (raw) {
+      // path ปกติ: กดจาก history bar
       sessionStorage.removeItem(resumeKey);
       const { epIdx, resumeTime } = JSON.parse(raw);
-      const af = audioFiles[epIdx];
-      if (af && af.url) {
-        window._nvPlayEp(epIdx, audioFiles, novel);
-        // seek หลัง canplay เพื่อให้ browser โหลด metadata ก่อน
-        const audioEl = document.getElementById('audioEl');
-        const onReady = () => {
-          audioEl.currentTime = resumeTime;
-          audioEl.removeEventListener('canplay', onReady);
-        };
-        audioEl.addEventListener('canplay', onReady);
-      }
+      _doResume(epIdx, resumeTime);
     }
+    // [AUTO-RESUME-REMOVED] ไม่ auto-resume เมื่อ refresh — user ต้องกดปุ่มเอง
   } catch(e) {}
 };
 
@@ -1263,15 +1589,30 @@ let _nvDesc = false;   // false = เก่า→ใหม่, true = ใหม�
 let _nvAudioFiles = [], _nvNovel = null;
 let _nvCurrentIdx = -1; // [UX-3] track ep ที่กำลังเล่นอยู่
 
-function _nvBuildEpList(epCnt, audioFiles, novel) {
+async function _nvBuildEpList(epCnt, audioFiles, novel) {
   _nvAudioFiles = audioFiles;
   _nvNovel = novel;
   const list = document.getElementById('nvEpList');
   if (!list) return;
   if (epCnt === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:30px;color:#666">⏳ ยังไม่มีตอน</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:#666">${icon('hourglass')} ยังไม่มีตอน</div>`;
     return;
   }
+
+  // [EP-RESUME] อ่าน history ของนิยายนี้ — ได้ ep ล่าสุดที่ฟัง + resumeTime
+  // [HISTORY-UID-1] อ่านจาก localStorage ผูก uid
+  let histEpIdx = -1, histCurrentTime = 0;
+  try {
+    const hList = JSON.parse(localStorage.getItem(_historyKey()) || '[]');
+    const hEntry = hList.find(h => h.novelId === novel.id);
+    if (hEntry) {
+      histEpIdx       = hEntry.epIdx ?? -1;
+      histCurrentTime = hEntry.currentTime || 0;
+    }
+  } catch(e) {}
+
+  // [EP-TRACK-2] อ่าน per-ep progress map ทุกตอน (async Firestore+localStorage)
+  const epProgressMap = await getEpProgressMap(novel.id);
 
   // สร้าง array index ตาม tab + sort
   let indices = Array.from({ length: epCnt }, (_, i) => i);
@@ -1282,14 +1623,56 @@ function _nvBuildEpList(epCnt, audioFiles, novel) {
   indices.forEach(i => {
     const af  = audioFiles[i];
     const ok  = af && af.url;
-    const lbl = af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`;
+    const lbl = esc(af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`);
+
+    // [EP-TRACK-2] progress จาก per-ep map ก่อน fallback history เดิม
+    const epRec = epProgressMap[i];
+    const epProgress = epRec ? epRec.progress : (i === histEpIdx ? (histCurrentTime && epRec?.duration ? histCurrentTime / epRec.duration : 0) : 0);
+    const epCurrentTime = epRec ? epRec.currentTime : (i === histEpIdx ? histCurrentTime : 0);
+    const isDone = ok && epProgress >= 1.0;
+    const hasProgress = ok && epProgress > 0 && !isDone;
+    const pctStr = hasProgress ? `${Math.round(epProgress * 100)}%` : '0%';
+    const progressHTML = isDone
+      ? `<span class="ep-done-badge">${icon('check')} จบแล้ว</span>`
+      : hasProgress
+        ? `<div class="ep-progress-wrap"><div class="ep-progress-fill" style="width:${pctStr}"></div></div>`
+        : '';
+
     const item = document.createElement('div');
     item.className = 'ep-item' + (ok ? '' : ' no-audio');
     item.id = 'nvEp-' + i;
-    item.innerHTML = `<span class="ep-icon">${ok ? '▶' : '⏳'}</span>
+    item.innerHTML = `<span class="ep-icon">${ok ? icon('play') : icon('hourglass')}</span>
       <span class="ep-label">${lbl}</span>
-      <span class="ep-dur">${ok ? fmtNV(af.duration) : ''}</span>`;
-    if (ok) item.addEventListener('click', () => window._nvPlayEp(i, audioFiles, novel));
+      <span class="ep-dur">${ok ? fmtNV(af.duration) : ''}</span>
+      ${progressHTML}`;
+
+    if (ok) item.addEventListener('click', () => {
+      window._nvPlayEp(i, audioFiles, novel);
+
+      // [RESUME-FIX-2] helper: seek audioEl — รอ canplay ถ้ายังไม่พร้อม
+      const _seekTo = (t) => {
+        if (!(t > 0)) return;
+        const audioEl = document.getElementById('audioEl');
+        if (!audioEl) return;
+        if (audioEl.readyState >= 2) {
+          audioEl.currentTime = t;
+        } else {
+          const onReady = () => {
+            audioEl.currentTime = t;
+            audioEl.removeEventListener('canplay', onReady);
+          };
+          audioEl.addEventListener('canplay', onReady);
+        }
+      };
+
+      // [EP-TRACK-2] ถ้าจบแล้ว (isDone) → เล่นจากต้น, ไม่ seek
+      if (isDone) return;
+      if (item._resumeTime !== undefined) {
+        _seekTo(item._resumeTime);
+      } else {
+        _seekTo(epCurrentTime);
+      }
+    });
     list.appendChild(item);
 
     // [HOTFIX-24b] lazy load duration ถ้าไม่มี field (ข้อมูลเก่า)
@@ -1312,7 +1695,7 @@ function _nvBuildEpList(epCnt, audioFiles, novel) {
     if (activeEl) {
       activeEl.classList.add('active');
       const ic = activeEl.querySelector('.ep-icon');
-      if (ic) ic.textContent = '⏸';
+      if (ic) ic.innerHTML = icon('pause');
     }
   }
 }
@@ -1334,7 +1717,7 @@ window._nvToggleSort = function() {
 };
 
 // ── play episode (ใช้ audio element เดิมใน shell — SPA-5 ต้องตรวจ)
-window._nvPlayEp = function(idx, audioFiles, novel) {
+window._nvPlayEp = function(idx, audioFiles, novel, resumeTime = 0) {
   const audio = document.getElementById('audioEl');
   if (!audio) { console.warn('[SPA-5] ไม่พบ #audioEl element'); return; }
   // [BUG-PREVNEXT-1] อัปเดต global ให้ prevEp/nextEp/ended ใช้ได้เสมอ
@@ -1349,12 +1732,12 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
   // reset active state
   document.querySelectorAll('.ep-item').forEach(el => {
     el.classList.remove('active');
-    const ic = el.querySelector('.ep-icon'); if (ic) ic.textContent = '▶';
+    const ic = el.querySelector('.ep-icon'); if (ic) ic.innerHTML = icon('play');
   });
   const activeEl = document.getElementById('nvEp-' + idx);
   if (activeEl) {
     activeEl.classList.add('active');
-    const ic = activeEl.querySelector('.ep-icon'); if (ic) ic.textContent = '⏸';
+    const ic = activeEl.querySelector('.ep-icon'); if (ic) ic.innerHTML = icon('pause');
     activeEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 
@@ -1362,6 +1745,10 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
   if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
     src = src.replace('/raw/upload/', '/video/upload/');
   audio.src = src; audio.load();
+  if (resumeTime > 0) {
+    const onReady = () => { audio.currentTime = resumeTime; audio.removeEventListener('canplay', onReady); };
+    audio.addEventListener('canplay', onReady);
+  }
   audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
   isPlaying = true;
   syncPlayBtn(true);
@@ -1382,9 +1769,10 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
   if (npExpandTitle) npExpandTitle.textContent = novel?.title || lbl;
   if (npExpandEp)    npExpandEp.textContent    = lbl;
 
-  const coverHTML = novel?.coverUrl
-    ? `<img src="${novel.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover">`
-    : '🎧';
+  const nvCoverSafe = safeUrl(novel?.coverUrl);
+  const coverHTML = nvCoverSafe
+    ? `<img src="${esc(nvCoverSafe)}" alt="" style="width:100%;height:100%;object-fit:cover">`
+    : icon('headphones');
   if (npCover)       npCover.innerHTML       = coverHTML;
   if (npExpandCover) npExpandCover.innerHTML = coverHTML;
 
@@ -1398,13 +1786,15 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
     });
   }
 
-  // save history
+  // [RESUME-BUG-1] reset currentTime/duration/progress เมื่อเปลี่ยน ep ใหม่
   try {
-    const HISTORY_KEY = 'gh_history';
-    const list = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
-    const entry = { novelId: novel.id, novelTitle: novel.title, coverUrl: novel.coverUrl||'', epLabel: lbl, epIdx: idx, progress: 0 };
+    const entry = { novelId: novel.id, novelTitle: novel.title, coverUrl: novel.coverUrl||'', epLabel: lbl, epIdx: idx, currentTime: 0, duration: 0, progress: 0, ts: Date.now() };
+    const key = _historyKey();
+    const list = JSON.parse(localStorage.getItem(key)||'[]');
+    const existing = list.find(h => h.novelId === novel.id) || {};
+    const merged = { ...existing, ...entry };
     const filtered2 = list.filter(h => h.novelId !== novel.id);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify([entry, ...filtered2].slice(0,10)));
+    localStorage.setItem(key, JSON.stringify([merged, ...filtered2].slice(0, HISTORY_MAX)));
   } catch(e) {}
 };
 
@@ -1417,7 +1807,7 @@ window._nvPlayEp = function(idx, audioFiles, novel) {
  * - '/novels/:id' → renderNovelView({ id })
  * - '/library'    → renderLibraryView() (SPA-8, placeholder ตอนนี้)
  *
- * audio element #audioEl อยู่นอก #app-view → ไม่ถูก destroy เมื่อ navigate ✅
+ * audio element #audioEl อยู่นอก #app-view → ไม่ถูก destroy เมื่อ navigate
  */
 import('./router.js').then(router => {
   router.setBase(window._BASE);   // ส่ง BASE ที่ถูกต้องให้ router ก่อน
@@ -1453,7 +1843,7 @@ window.renderLibraryView = async function renderLibraryView() {
   appView.innerHTML = `
     <div class="lib-wrap">
       <div class="lib-header">
-        <h1 class="lib-title">📚 นิยายทั้งหมด</h1>
+        <h1 class="lib-title">${icon('book')} นิยายทั้งหมด</h1>
         <p class="lib-sub" id="libCount"></p>
       </div>
 
@@ -1462,19 +1852,19 @@ window.renderLibraryView = async function renderLibraryView() {
           <input id="libSearch" class="search-input" type="text"
             placeholder="ค้นหานิยาย, ผู้แต่ง, แท็ก..."
             oninput="window._libDoFilter()">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon">${icon('search')}</span>
         </div>
         <div class="filter-tabs" id="libFilterTabs">
-          <button class="filter-tab active" onclick="window._libSetFilter(this,'all')">📚 ทั้งหมด</button>
-          <button class="filter-tab" onclick="window._libSetFilter(this,'ongoing')">🔄 กำลังออก</button>
-          <button class="filter-tab" onclick="window._libSetFilter(this,'completed')">✅ จบแล้ว</button>
-          <button class="filter-tab" onclick="window._libSetFilter(this,'popular')">🔥 ยอดนิยม</button>
+          <button class="filter-tab active" onclick="window._libSetFilter(this,'all')">${icon('book')} ทั้งหมด</button>
+          <button class="filter-tab" onclick="window._libSetFilter(this,'ongoing')">${icon('refresh')} กำลังออก</button>
+          <button class="filter-tab" onclick="window._libSetFilter(this,'completed')">${icon('check')} จบแล้ว</button>
+          <button class="filter-tab" onclick="window._libSetFilter(this,'popular')">${icon('flame')} ยอดนิยม</button>
         </div>
       </div>
 
       <div id="libGrid" class="novels-grid"></div>
       <div id="libEmpty" style="display:none;text-align:center;padding:60px 20px;color:#666;">
-        <div style="font-size:2rem;margin-bottom:12px">🔍</div>
+        <div style="font-size:2rem;margin-bottom:12px">${icon('search')}</div>
         <p>ไม่พบนิยายที่ตรงกับการค้นหา</p>
       </div>
     </div>
@@ -1495,6 +1885,7 @@ window.renderLibraryView = async function renderLibraryView() {
   const unsub = onSnapshot(novelsQuery, (snapshot) => {
     allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     filtered  = [...allNovels];
+  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
     _libDoRender();
   }, (err) => {
     console.warn('[renderLibraryView] Firestore error:', err);
@@ -1560,11 +1951,11 @@ window.renderFavoritesView = async function renderFavoritesView() {
   appView.innerHTML = `
   <div class="lib-container">
     <div class="lib-header">
-      <h1 class="lib-title">❤️ รายการโปรด</h1>
+      <h1 class="lib-title">${icon('heart')} รายการโปรด</h1>
       <span class="lib-count" id="favCount">0 เรื่อง</span>
     </div>
     <div class="novels-grid" id="favGrid">
-      <div class="empty-state"><div class="empty-icon">🤍</div><p>กำลังโหลด...</p></div>
+      <div class="empty-state"><div class="empty-icon">${icon('heart-outline')}</div><p>กำลังโหลด...</p></div>
     </div>
   </div>`;
 
@@ -1577,13 +1968,14 @@ window.renderFavoritesView = async function renderFavoritesView() {
     if (count) count.textContent = favNovels.length + ' เรื่อง';
     grid.innerHTML = favNovels.length
       ? favNovels.map(n => cardHTML(n)).join('')
-      : `<div class="empty-state"><div class="empty-icon">🤍</div><p>ยังไม่มีรายการโปรด<br><small>กดหัวใจ ❤ บนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`;
+      : `<div class="empty-state"><div class="empty-icon">${icon('heart-outline')}</div><p>ยังไม่มีรายการโปรด<br><small>กดรูปหัวใจบนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`;
   }
 
   // ใช้ onSnapshot ของตัวเอง
   const unsub = onSnapshot(novelsQuery, (snapshot) => {
     allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     filtered  = [...allNovels];
+  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
     _renderFavGrid();
   }, (err) => {
     console.warn('[renderFavoritesView] Firestore error:', err);
@@ -1608,27 +2000,39 @@ window._spaNavigate = function(el) {
   // [RESUME-1] ถ้ามี resume data (จาก history-item) → เก็บไว้ใน sessionStorage
   const epIdx      = el.dataset.epIdx;
   const resumeTime = parseFloat(el.dataset.resumeTime || 0);
-  if (epIdx !== undefined && resumeTime > 0) {
+  if (epIdx !== undefined) {
     try { sessionStorage.setItem('ghResume_' + id, JSON.stringify({ epIdx: parseInt(epIdx), resumeTime })); } catch(e) {}
   }
   import('./router.js').then(r => r.navigate('/novels/' + encodeURIComponent(id)));
 };
 
-window.handleRoute = function(path) {
-  import('./router.js').then(r => r.navigate(path));
+/* ===== [NAV-JS-1] Sync active state for bottom-nav & sidebar ===== */
+window._syncNavActive = function(path) {
+  // map: route prefix → item id suffix
+  const map = [
+    { prefix: '/library',   key: 'library'   },
+    { prefix: '/favorites', key: 'favorites' },
+    { prefix: '/novels/',   key: null        }, // novel page — ไม่ highlight
+    { prefix: '/',          key: 'home'      },
+  ];
+  const matched = map.find(m => path === m.prefix || path.startsWith(m.prefix));
+  const activeKey = matched ? matched.key : null;
+
+  // bottom-nav items
+  ['home','library','favorites','login'].forEach(k => {
+    const el = document.getElementById('bnav-' + k);
+    if (el) el.classList.toggle('active', k === activeKey);
+  });
+  // sidebar items
+  ['home','library','favorites','login'].forEach(k => {
+    const el = document.getElementById('snav-' + k);
+    if (el) el.classList.toggle('active', k === activeKey);
+  });
 };
 
-/**
- * window.navigate — bridge สำหรับ inline onclick="navigate(event, path)"
- * รองรับ signature navigate(event, path) และ navigate(path)
- */
-window.navigate = function(eventOrPath, path) {
-  if (typeof eventOrPath === 'object' && eventOrPath.preventDefault) {
-    eventOrPath.preventDefault();
-    window.handleRoute(path);
-  } else {
-    window.handleRoute(eventOrPath);
-  }
+window.handleRoute = function(path) {
+  window._syncNavActive(path);
+  import('./router.js').then(r => r.navigate(path));
 };
 
 

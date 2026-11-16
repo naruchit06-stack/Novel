@@ -2,37 +2,125 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: เช็คว่าเป็น admin (super admin email หรืออยู่ใน admins collection)
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email in ['momoppl01@gmail.com', 'admin@memonster.com'] ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+    /* ============================================================
+       [SEC-3] ไม่มี email admin ฝังใน rules อีกต่อไป
+       สิทธิ์ admin มาจากเอกสาร admins/{uid} เท่านั้น
+
+       ⚠️ ตั้งค่าครั้งแรก (ทำใน Firebase Console เท่านั้น เพราะ rules
+          ไม่ให้ใครเขียน admins ก่อนจะมี super admin):
+          สร้างเอกสาร  admins/{UID ของคุณ}
+            { role: "super", superAdmin: true, active: true,
+              email: "...", displayName: "..." }
+       ============================================================ */
+
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // นิยาย: ทุกคนอ่านได้, admin เท่านั้นที่เขียนได้
+    function adminPath() {
+      return /databases/$(database)/documents/admins/$(request.auth.uid);
+    }
+
+    // เป็น admin = มีเอกสาร admins/{uid} และไม่ได้ถูกปิด (active ไม่ใช่ false)
+    function isAdmin() {
+      return isSignedIn()
+        && exists(adminPath())
+        && get(adminPath()).data.get('active', true) != false;
+    }
+
+    // super admin = admin ที่มี role == "super" หรือ superAdmin == true
+    function isSuperAdmin() {
+      return isAdmin()
+        && (get(adminPath()).data.get('role', '') == 'super'
+            || get(adminPath()).data.get('superAdmin', false) == true);
+    }
+
+    /* ---------- Validation helpers ---------- */
+
+    function isStr(v, maxLen) {
+      return v is string && v.size() <= maxLen;
+    }
+    function isNonNegInt(v) {
+      return v is int && v >= 0;
+    }
+    function isHttpUrl(v) {
+      return v is string
+        && v.size() <= 2048
+        && (v.matches('https://.*') || v.matches('http://.*'));
+    }
+
+    // นิยาย — ตรวจชนิด/ขนาดข้อมูลก่อนเขียน
+    function validNovel(d) {
+      return d.keys().hasOnly([
+               'title','author','description','desc','synopsis','coverUrl',
+               'status','tags','episodeCount','views','likes','rating',
+               'emoji','releaseSchedule','createdAt','updatedAt'
+             ])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && (!('author' in d)        || isStr(d.author, 120))
+        && (!('description' in d)   || isStr(d.description, 5000))
+        && (!('desc' in d)          || isStr(d.desc, 5000))
+        && (!('synopsis' in d)      || isStr(d.synopsis, 5000))
+        && (!('coverUrl' in d)      || d.coverUrl == '' || isHttpUrl(d.coverUrl))
+        && (!('status' in d)        || d.status in
+              ['ongoing','done','new','hiatus','completed','pending'])
+        && (!('tags' in d)          || (d.tags is list && d.tags.size() <= 20))
+        && (!('episodeCount' in d)  || (isNonNegInt(d.episodeCount) && d.episodeCount <= 100000))
+        && (!('views' in d)         || isNonNegInt(d.views))
+        && (!('likes' in d)         || isNonNegInt(d.likes))
+        && (!('rating' in d)        || (d.rating is number && d.rating >= 0 && d.rating <= 10))
+        && (!('emoji' in d)         || isStr(d.emoji, 16))
+        && (!('releaseSchedule' in d) || isStr(d.releaseSchedule, 200));
+    }
+
+    // ตอน — ตรวจชนิด/ขนาดข้อมูลก่อนเขียน
+    function validEpisode(d) {
+      return d.keys().hasOnly([
+               'title','order','audioUrl','fileName','duration',
+               'createdAt','updatedAt','isFree','locked'
+             ])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && (d.order is int || d.order is string)
+        && (!('audioUrl' in d) || d.audioUrl == '' || isHttpUrl(d.audioUrl))
+        && (!('fileName' in d) || isStr(d.fileName, 300))
+        && (!('duration' in d) || (d.duration is number && d.duration >= 0));
+    }
+
+    /* ---------- นิยาย ---------- */
     match /novels/{novelId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update: if isAdmin() && validNovel(request.resource.data);
+      allow delete: if isAdmin();
 
-      // ตอน: ทุกคนอ่านได้, admin เท่านั้นที่เขียนได้
+      /* ---------- ตอน ---------- */
       match /episodes/{episodeId} {
         allow read: if true;
-        allow create, update, delete: if isAdmin();
+        allow create, update: if isAdmin() && validEpisode(request.resource.data);
+        allow delete: if isAdmin();
       }
     }
 
-    // Admins collection: super admin อ่านได้, เขียนได้เฉพาะ super admin
+    /* ---------- Admins ---------- */
     match /admins/{adminId} {
-      allow read: if isAdmin();
-      allow write: if request.auth != null &&
-        request.auth.token.email in ['momoppl01@gmail.com', 'admin@memonster.com'];
+      // admin อ่านรายชื่อได้, super admin เท่านั้นที่เขียนได้
+      allow read:  if isAdmin();
+      allow write: if isSuperAdmin();
     }
 
-    // Users: เจ้าของเท่านั้นอ่าน/เขียนได้
+    /* ---------- Settings (hero image ฯลฯ) ---------- */
+    match /settings/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    /* ---------- Users ---------- */
     match /users/{userId} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid == userId;
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+
+      // subcollections: history, epProgress ฯลฯ
+      match /{document=**} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
   }
 }

@@ -115,6 +115,7 @@
   .ep-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:10px;background:var(--s1);border:1px solid var(--bd);cursor:pointer;transition:all .2s}
   .ep-item:hover{background:var(--s2);border-color:#3a3a3a}
   .ep-item.active{background:rgba(200,150,62,.08);border-color:rgba(200,150,62,.3)}
+  .ep-item.selected{background:rgba(200,150,62,.05);border-color:rgba(200,150,62,.2);}
   .ep-item.no-audio{opacity:.5;cursor:default}
   .ep-icon{font-size:15px;color:var(--t2);width:20px;text-align:center;flex-shrink:0}
   .ep-item.active .ep-icon{color:var(--ac)}
@@ -147,13 +148,17 @@
     .cover{width:160px;height:224px}
     .novel-title-el{font-size:20px}
   }
+  /* [ICON-CSS-1] ไอคอน SVG จาก icons.js */
+  .ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; }
+  [data-icon] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
 </style>
+<script src="icons.js"></script>
 </head>
 <body>
 
 <nav class="navbar" id="novelNavbar">
   <a class="nav-logo" href="index.html">
-    <div class="nav-logo-icon">👑</div>
+    <div class="nav-logo-icon"><span data-icon="crown" data-icon-size="1.1em"></span></div>
     <div class="nav-logo-text">The Golden <span>Hoard</span></div>
   </a>
   <div class="nav-links">
@@ -169,20 +174,20 @@
     <div class="nav-avatar" id="navAvatar">U</div>
     <div class="nav-dropdown">
       <a href="#" id="navUserName" style="cursor:default;pointer-events:none;color:#e8e8e8;font-weight:700">ผู้ใช้</a>
-      <a href="admin.html" id="navAdminBtn" style="display:none">⚙️ จัดการนิยาย</a>
-      <a href="#" class="danger" onclick="handleSignOut&&handleSignOut()">🚪 ออกจากระบบ</a>
+      <a href="admin.html" id="navAdminBtn" style="display:none"><span data-icon="gear"></span> จัดการนิยาย</a>
+      <a href="#" class="danger" onclick="handleSignOut&&handleSignOut()"><span data-icon="logout"></span> ออกจากระบบ</a>
     </div>
   </div>
-  <button class="hamburger-btn" id="hamburgerBtn" onclick="document.getElementById('mobileDrawer').classList.toggle('open')">☰</button>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="document.getElementById('mobileDrawer').classList.toggle('open')"><span data-icon="menu" data-icon-size="1.2em"></span></button>
 </nav>
 <div class="nav-mobile-drawer" id="mobileDrawer">
-  <a href="index.html">🏠 หน้าแรก</a>
-  <a href="index.html" class="active">📚 นิยายทั้งหมด</a>
-  <a href="#" id="mobile-favorites-link">⭐ รายการโปรด</a>
+  <a href="index.html"><span data-icon="home"></span> หน้าแรก</a>
+  <a href="index.html" class="active"><span data-icon="book"></span> นิยายทั้งหมด</a>
+  <a href="#" id="mobile-favorites-link"><span data-icon="star"></span> รายการโปรด</a>
 </div>
 
 <main class="main">
-  <a href="index.html" class="back-btn">← กลับหน้าหลัก</a>
+  <a href="index.html" class="back-btn"><span data-icon="arrow-left"></span> กลับหน้าหลัก</a>
 
   <div id="stateLoading" class="state-box">
     <div class="spinner"></div>
@@ -190,7 +195,7 @@
   </div>
 
   <div id="stateError" class="state-box" style="display:none">
-    <div class="err-icon">⚠️</div>
+    <div class="err-icon"><span data-icon="alert"></span></div>
     <span id="errMsg">ไม่พบนิยายนี้</span>
     <a href="index.html" class="btn btn-sec" style="margin-top:8px;text-decoration:none">กลับหน้าหลัก</a>
   </div>
@@ -208,12 +213,12 @@
         <div class="synopsis" id="novelSynopsis"></div>
         <div class="tags-row" id="tagsRow"></div>
         <div class="action-row">
-          <button class="btn" id="playFirstBtn">▶ ฟังทั้งหมด</button>
+          <button class="btn" id="playFirstBtn"><span data-icon="play"></span> เริ่มฟังนิยาย</button>
         </div>
         <div class="reaction-row">
-          <button class="reaction-btn">👍 <span id="likesEl">0</span></button>
-          <button class="reaction-btn">💬 0</button>
-          <button class="reaction-btn">👎 0</button>
+          <button class="reaction-btn"><span data-icon="thumbup"></span> <span id="likesEl">0</span></button>
+          <button class="reaction-btn"><span data-icon="comment"></span> 0</button>
+          <button class="reaction-btn"><span data-icon="thumbdown"></span> 0</button>
         </div>
       </div>
     </div>
@@ -226,7 +231,7 @@
 <audio id="audio"></audio>
 
 <div id="player-bar">
-  <div class="player-thumb" id="playerThumb">🎧</div>
+  <div class="player-thumb" id="playerThumb"><span data-icon="headphones"></span></div>
   <div class="player-info">
     <div class="player-ep" id="playerEp">-</div>
     <div class="player-sub" id="playerSub">-</div>
@@ -236,9 +241,9 @@
     <div class="time-row"><span id="timeNow">0:00</span><span id="timeTot">0:00</span></div>
   </div>
   <div class="controls">
-    <button class="ctrl" id="prevBtn">⏮</button>
-    <button class="ctrl main" id="playBtn">▶</button>
-    <button class="ctrl" id="nextBtn">⏭</button>
+    <button class="ctrl" id="prevBtn"><span data-icon="prev"></span></button>
+    <button class="ctrl main" id="playBtn"><span data-icon="play"></span></button>
+    <button class="ctrl" id="nextBtn"><span data-icon="next"></span></button>
   </div>
 </div>
 
@@ -258,8 +263,7 @@ const firebaseApp = initializeApp({
 const db = getFirestore(firebaseApp);
 
 /* helpers */
-const $ = id => document.getElementById(id);
-const fmt = s => {
+const $ = id => document.getElementById(id);const fmt = s => {
   if (!s || isNaN(s)) return '0:00';
   s = s|0;
   const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sc=s%60;
@@ -269,6 +273,31 @@ const fmt = s => {
 };
 const STATUS_LABEL = { ongoing:'กำลังดำเนิน', done:'จบแล้ว', new:'ใหม่', hiatus:'หยุดพัก' };
 const STATUS_CLS   = { ongoing:'badge-ongoing', done:'badge-done', new:'badge-new', hiatus:'badge-hiatus' };
+
+/* [SEC-1] XSS guards — ข้อมูลจาก Firestore ต้อง escape ก่อนลง innerHTML */
+const esc = v => {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+};
+const safeUrl = u => {
+  if (!u) return '';
+  const s = String(u).trim();
+  return /^(https?:\/\/|\/|\.\/)/i.test(s) ? s : '';
+};
+/* [SEC-2] anon id แยกต่อเบราว์เซอร์ — ไม่ให้ข้อมูลชนกันใต้ key 'anon' */
+function anonId() {
+  let id = null;
+  try { id = localStorage.getItem('gh_anon_id'); } catch(e) {}
+  if (!id) {
+    try {
+      id = 'anon-' + (crypto?.randomUUID ? crypto.randomUUID()
+                                          : Date.now().toString(36) + Math.random().toString(36).slice(2));
+      localStorage.setItem('gh_anon_id', id);
+    } catch(e) { id = 'anon-fallback'; }
+  }
+  return id;
+}
 
 /* state */
 let novel      = null;
@@ -307,9 +336,10 @@ function render(n) {
   document.title = `${n.title} — The Golden Hoard Novels`;
 
   /* cover */
-  if (n.coverUrl) {
+  const coverUrl = safeUrl(n.coverUrl);
+  if (coverUrl) {
     const img = new Image();
-    img.src = n.coverUrl; img.alt = n.title;
+    img.src = coverUrl; img.alt = n.title;
     $('coverBox').appendChild(img);
     $('coverTitle').style.display = 'none';
   } else {
@@ -317,19 +347,20 @@ function render(n) {
   }
 
   $('novelTitle').textContent  = n.title;
-  $('novelAuthor').textContent = '✍️ ' + (n.author || 'Unknown');
+  $('novelAuthor').innerHTML = icon('edit') + ' ' + esc(n.author || 'Unknown');
   $('novelSynopsis').textContent = n.synopsis || '';
   $('likesEl').textContent = n.likes || 0;
 
   const st    = n.status || 'ongoing';
-  const epCnt = Math.max(n.eps || 0, audioFiles.length);
+  // [FIX-EPCOUNT] ใช้ episodeCount เท่านั้น
+  const epCnt = Math.max(Number.isFinite(n.episodeCount) ? n.episodeCount : 0, audioFiles.length);
   $('metaRow').innerHTML =
-    `<span class="badge ${STATUS_CLS[st]||'badge-ongoing'}">${STATUS_LABEL[st]||st}</span>
+    `<span class="badge ${STATUS_CLS[st]||'badge-ongoing'}">${esc(STATUS_LABEL[st]||st)}</span>
      <span class="badge badge-ep">${epCnt} ตอน</span>
-     ${n.views ? `<span>• 👁 ${n.views}</span>` : ''}`;
+     ${Number.isFinite(n.views) && n.views ? `<span>• ${icon('eye')} ${n.views}</span>` : ''}`;
 
-  if (n.tags && n.tags.length)
-    $('tagsRow').innerHTML = n.tags.map(t => `<span class="tag">${t}</span>`).join('');
+  if (Array.isArray(n.tags) && n.tags.length)
+    $('tagsRow').innerHTML = n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('');
 
   $('epSectionTitle').textContent = `รายการตอน (${epCnt})`;
   buildEpList(epCnt);
@@ -343,26 +374,26 @@ function buildEpList(epCount) {
   const list = $('epList');
   list.innerHTML = '';
   if (epCount === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--t3)">⏳ ยังไม่มีตอน</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--t3)">${icon('hourglass')} ยังไม่มีตอน</div>`;
     return;
   }
   for (let i = 0; i < epCount; i++) {
     const af  = audioFiles[i];
     const ok  = af && af.url;
-    const lbl = af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`;
+    const lbl = esc(af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`);
     const item = document.createElement('div');
     item.className = 'ep-item' + (ok ? '' : ' no-audio');
     item.id = 'ep-' + i;
-    item.innerHTML = `<span class="ep-icon">${ok ? '▶' : '⏳'}</span>
+    item.innerHTML = `<span class="ep-icon">${ok ? icon('play') : icon('hourglass')}</span>
       <span class="ep-label">${lbl}</span>
       <span class="ep-dur">${ok ? fmt(af.duration) : ''}</span>`;
-    if (ok) item.addEventListener('click', () => playEp(i));
+    if (ok) item.addEventListener('click', () => selectEp(i));
     list.appendChild(item);
   }
 }
 
 /* ── play ── */
-function playEp(idx) {
+function playEp(idx, resumeTime = 0) {
   curIdx = idx;
   const af = audioFiles[idx];
   if (!af || !af.url) return;
@@ -370,13 +401,13 @@ function playEp(idx) {
   document.querySelectorAll('.ep-item').forEach(el => {
     el.classList.remove('active');
     const ic = el.querySelector('.ep-icon');
-    if (ic) ic.textContent = '▶';
+    if (ic) ic.innerHTML = icon('play');
   });
   const activeEl = $('ep-' + idx);
   if (activeEl) {
     activeEl.classList.add('active');
     const ic = activeEl.querySelector('.ep-icon');
-    if (ic) ic.textContent = '⏸';
+    if (ic) ic.innerHTML = icon('pause');
     activeEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 
@@ -384,15 +415,20 @@ function playEp(idx) {
   if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
     src = src.replace('/raw/upload/', '/video/upload/');
   audio.src = src; audio.load();
+  if (resumeTime > 0) {
+    const onReady = () => { audio.currentTime = resumeTime; audio.removeEventListener('canplay', onReady); };
+    audio.addEventListener('canplay', onReady);
+  }
   audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
 
   const lbl = af.name || `ตอนที่ ${idx+1}`;
   $('playerEp').textContent  = lbl;
   $('playerSub').textContent = novel?.title || '';
   const thumb = $('playerThumb');
-  thumb.innerHTML = novel?.coverUrl
-    ? `<img src="${novel.coverUrl}" alt="">`
-    : (novel?.emoji || '🎧');
+  const pThumbUrl = safeUrl(novel?.coverUrl);
+  thumb.innerHTML = pThumbUrl
+    ? `<img src="${esc(pThumbUrl)}" alt="">`
+    : icon('headphones');
   $('player-bar').classList.add('visible');
   updateMS(lbl);
 
@@ -416,7 +452,37 @@ function savePlayerState() {
   }));
 }
 
+/* [SMART-RESUME] เลือก ep โดยไม่เล่นทันที — highlight + scroll */
+function selectEp(idx) {
+  document.querySelectorAll('.ep-item').forEach(el => el.classList.remove('selected'));
+  const el = $('ep-' + idx);
+  if (el) { el.classList.add('selected'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  _selectedIdx = idx;
+}
+let _selectedIdx = -1;
+
 $('playFirstBtn').addEventListener('click', () => {
+  // ถ้า user เลือก ep ไว้แล้ว → เล่น ep นั้น
+  if (_selectedIdx >= 0 && audioFiles[_selectedIdx]?.url) {
+    playEp(_selectedIdx);
+    return;
+  }
+  // smart resume: หา ep ล่าสุดที่ยังฟังไม่จบ
+  try {
+    const uid = window._currentUser?.uid || anonId();
+    const key = `gh_ep_${uid}_${novel?.id}`;
+    const map = JSON.parse(localStorage.getItem(key) || '{}');
+    const latest = Object.entries(map)
+      .filter(([, v]) => v.currentTime > 0 && (v.progress || 0) < 1.0)
+      .sort(([, a], [, b]) => (b.ts || 0) - (a.ts || 0))[0];
+    if (latest) {
+      const [idxStr, epData] = latest;
+      const epIdx = Number(idxStr);
+      const af = audioFiles[epIdx];
+      if (af?.url) { playEp(epIdx, epData.currentTime); return; }
+    }
+  } catch(e) {}
+  // ไม่เคยฟัง → เล่น ep แรก
   const i = audioFiles.findIndex(af => af && af.url);
   if (i >= 0) playEp(i);
 });
@@ -428,14 +494,14 @@ $('playBtn').addEventListener('click', () => {
 });
 $('prevBtn').addEventListener('click', () => { if (curIdx > 0) playEp(curIdx-1); });
 $('nextBtn').addEventListener('click', () => {
-  const max = Math.max(novel?.eps||0, audioFiles.length) - 1;
+  const max = Math.max(novel?.episodeCount||0, audioFiles.length) - 1;
   if (curIdx < max) playEp(curIdx+1);
 });
 
-audio.addEventListener('play',  () => { $('playBtn').textContent = '⏸'; });
-audio.addEventListener('pause', () => { $('playBtn').textContent = '▶'; });
+audio.addEventListener('play',  () => { $('playBtn').innerHTML = icon('pause'); });
+audio.addEventListener('pause', () => { $('playBtn').innerHTML = icon('play'); });
 audio.addEventListener('ended', () => {
-  const max = Math.max(novel?.eps||0, audioFiles.length) - 1;
+  const max = Math.max(novel?.episodeCount||0, audioFiles.length) - 1;
   if (curIdx < max) playEp(curIdx+1);
 });
 audio.addEventListener('timeupdate', () => {
@@ -455,13 +521,13 @@ function updateMS(lbl) {
   if (!('mediaSession' in navigator) || !novel) return;
   navigator.mediaSession.metadata = new MediaMetadata({
     title: lbl, artist: novel.author||'The Golden Hoard Novels', album: novel.title,
-    artwork: novel.coverUrl ? [{src:novel.coverUrl,sizes:'512x512',type:'image/jpeg'}] : []
+    artwork: safeUrl(novel.coverUrl) ? [{src:safeUrl(novel.coverUrl),sizes:'512x512',type:'image/jpeg'}] : []
   });
   navigator.mediaSession.setActionHandler('play',          () => audio.play());
   navigator.mediaSession.setActionHandler('pause',         () => audio.pause());
   navigator.mediaSession.setActionHandler('previoustrack', () => { if (curIdx>0) playEp(curIdx-1); });
   navigator.mediaSession.setActionHandler('nexttrack',     () => {
-    const max = Math.max(novel?.eps||0, audioFiles.length)-1;
+    const max = Math.max(novel?.episodeCount||0, audioFiles.length)-1;
     if (curIdx<max) playEp(curIdx+1);
   });
 }

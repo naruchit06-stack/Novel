@@ -100,7 +100,11 @@
     .right-panel { padding: 24px 16px 40px; }
     .form-header h1 { font-size: 1.5rem; }
   }
+  /* [ICON-CSS-1] ไอคอน SVG จาก icons.js */
+  .ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; }
+  [data-icon] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
 </style>
+<script src="icons.js"></script>
 </head>
 <body>
 <div class="bg-art"></div>
@@ -111,16 +115,16 @@
   <div class="brand-logo">The Golden Hoard</div>
   <div class="brand-sub">Audiobooks</div>
   <div class="book-stack">
-    <div class="book-card book-card-1">🎧</div>
-    <div class="book-card book-card-2">⚔️</div>
-    <div class="book-card book-card-3">🐉</div>
+    <div class="book-card book-card-1"><span data-icon="headphones" data-icon-size="2.6em"></span></div>
+    <div class="book-card book-card-2"><span data-icon="shield" data-icon-size="2.6em"></span></div>
+    <div class="book-card book-card-3"><span data-icon="book" data-icon-size="2.6em"></span></div>
   </div>
   <div class="left-tagline">สนุกไปกับ<span>นิยายเสียง</span>ที่คุณชอบ<br>ฟังได้ทุกที่ ทุกเวลา</div>
 </div>
 
 <div class="right-panel">
   <div class="form-header">
-    <h1>ยินดีต้อนรับ 👋</h1>
+    <h1>ยินดีต้อนรับ</h1>
     <p id="form-subtitle">ยังไม่มีบัญชี? <a href="#" onclick="switchTab('register'); return false;">สมัครสมาชิก</a></p>
   </div>
   <div class="tabs">
@@ -138,7 +142,7 @@
     <div class="field"><label>รหัสผ่าน</label>
       <div class="field-pass">
         <input type="password" placeholder="••••••••" id="login-password" onkeydown="if(event.key==='Enter')handleLogin()">
-        <button class="toggle-pass" onclick="togglePass('login-password',this)" type="button">👁️</button>
+        <button class="toggle-pass" onclick="togglePass('login-password',this)" type="button"><span data-icon="eye"></span></button>
       </div>
     </div>
     <div class="field-row">
@@ -154,25 +158,25 @@
     <div class="field"><label>รหัสผ่าน</label>
       <div class="field-pass">
         <input type="password" placeholder="อย่างน้อย 8 ตัวอักษร" id="reg-password">
-        <button class="toggle-pass" onclick="togglePass('reg-password',this)" type="button">👁️</button>
+        <button class="toggle-pass" onclick="togglePass('reg-password',this)" type="button"><span data-icon="eye"></span></button>
       </div>
     </div>
     <div class="field" style="margin-bottom:24px"><label>ยืนยันรหัสผ่าน</label>
       <div class="field-pass">
         <input type="password" placeholder="••••••••" id="reg-confirm" onkeydown="if(event.key==='Enter')handleRegister()">
-        <button class="toggle-pass" onclick="togglePass('reg-confirm',this)" type="button">👁️</button>
+        <button class="toggle-pass" onclick="togglePass('reg-confirm',this)" type="button"><span data-icon="eye"></span></button>
       </div>
     </div>
     <button class="btn-submit" id="btnRegister" onclick="handleRegister()">สมัครสมาชิก</button>
   </div>
 </div>
 
-<div class="toast" id="toast"><span id="toast-icon">✅</span><span id="toast-msg"></span></div>
+<div class="toast" id="toast"><span id="toast-icon"><span data-icon="check"></span></span><span id="toast-msg"></span></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
@@ -193,22 +197,37 @@ const errMsg = {
   'auth/popup-closed-by-user':'ปิดหน้าต่าง Google ก่อนเสร็จสิ้น','auth/too-many-requests':'พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่',
 };
 
-function toast(msg, icon='✅', type='success') {
+function toast(msg, iconName='check', type='success') {
   const t=document.getElementById('toast');
   document.getElementById('toast-msg').textContent=msg;
-  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-icon').innerHTML=icon(iconName);
   t.className='toast show toast-'+type;
   setTimeout(()=>t.classList.remove('show'),4000);
 }
+/* [LOGIN-STUCK-1] กันค้าง: ถ้าหน้าต่าง Google ถูกบล็อก/ปิดกลางทาง promise อาจไม่จบ
+   → ปลดสถานะโหลดเองหลัง 2 นาที เพื่อให้กดเข้าสู่ระบบใหม่ได้ */
+let _loadTimer = null;
 function setLoad(v) {
   document.getElementById('loadingOverlay').classList.toggle('show',v);
   ['btnLogin','btnRegister','btnGoogle'].forEach(id=>document.getElementById(id).disabled=v);
+  clearTimeout(_loadTimer);
+  if (v) _loadTimer = setTimeout(() => {
+    setLoad(false);
+    toast('ใช้เวลานานเกินไป กรุณาเข้าสู่ระบบใหม่อีกครั้ง','alert','error');
+  }, 120000);
 }
-const ADMIN_EMAILS = ['momoppl01@gmail.com', 'admin@memonster.com'];
+// [SEC-3] ไม่ฝัง email admin — ตรวจจาก Firestore admins/{uid}
+async function isAdminUser(user) {
+  if (!user) return false;
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists() && snap.data()?.active !== false;
+  } catch (e) { return false; }
+}
 
-function redirect(user) {
+async function redirect(user) {
   const BASE = window.location.origin + '/';
-  if (user && ADMIN_EMAILS.includes(user.email)) {
+  if (user && await isAdminUser(user)) {
     window.location.href = BASE + 'admin.html';
   } else {
     const r = new URLSearchParams(window.location.search).get('returnTo');
@@ -233,24 +252,31 @@ window.loginWithGoogle = async function() {
   try {
     const r = await signInWithPopup(auth, gProvider);
     await saveProfile(r.user);
-    toast('เข้าสู่ระบบด้วย Google สำเร็จ! 🎉','✅','success');
+    toast('เข้าสู่ระบบด้วย Google สำเร็จ!','check','success');
     setTimeout(()=>redirect(r.user),1000);
-  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); setLoad(false); }
+  } catch(e) {
+    // [LOGIN-STUCK-1] popup ถูกบล็อก/แวดล้อมไม่รองรับ → ใช้ redirect แทน
+    const fallbackCodes = ['auth/popup-blocked','auth/operation-not-supported-in-this-environment','auth/cancelled-popup-request'];
+    if (fallbackCodes.includes(e.code)) {
+      try { await signInWithRedirect(auth, gProvider); return; } catch(e2) {}
+    }
+    toast(errMsg[e.code]||e.message,'x','error'); setLoad(false);
+  }
 };
 
 window.handleLogin = async function() {
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-password').value;
   const remember=document.getElementById('rememberMe').checked;
-  if(!email||!pass){toast('กรุณากรอกอีเมลและรหัสผ่าน','⚠️','error');return;}
+  if(!email||!pass){toast('กรุณากรอกอีเมลและรหัสผ่าน','alert','error');return;}
   setLoad(true);
   try {
     await setPersistence(auth, remember?browserLocalPersistence:browserSessionPersistence);
     const r = await signInWithEmailAndPassword(auth, email, pass);
     await saveProfile(r.user);
-    toast('เข้าสู่ระบบสำเร็จ! 🎉','✅','success');
+    toast('เข้าสู่ระบบสำเร็จ!','check','success');
     setTimeout(()=>redirect(r.user),1000);
-  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); setLoad(false); }
+  } catch(e) { toast(errMsg[e.code]||e.message,'x','error'); setLoad(false); }
 };
 
 window.handleRegister = async function() {
@@ -258,26 +284,26 @@ window.handleRegister = async function() {
   const email=document.getElementById('reg-email').value.trim();
   const pass=document.getElementById('reg-password').value;
   const confirm=document.getElementById('reg-confirm').value;
-  if(!name||!email||!pass||!confirm){toast('กรุณากรอกข้อมูลให้ครบ','⚠️','error');return;}
-  if(pass!==confirm){toast('รหัสผ่านไม่ตรงกัน','❌','error');return;}
-  if(pass.length<8){toast('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร','⚠️','error');return;}
+  if(!name||!email||!pass||!confirm){toast('กรุณากรอกข้อมูลให้ครบ','alert','error');return;}
+  if(pass!==confirm){toast('รหัสผ่านไม่ตรงกัน','x','error');return;}
+  if(pass.length<8){toast('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร','alert','error');return;}
   setLoad(true);
   try {
     const r = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(r.user,{displayName:name});
     await saveProfile(r.user, name);
-    toast(`ยินดีต้อนรับ ${name}! 🎉`,'✅','success');
+    toast(`ยินดีต้อนรับ ${name}!`,'check','success');
     setTimeout(()=>redirect(r.user),1200);
-  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); setLoad(false); }
+  } catch(e) { toast(errMsg[e.code]||e.message,'x','error'); setLoad(false); }
 };
 
 window.handleForgotPassword = async function() {
   const email=document.getElementById('login-email').value.trim();
-  if(!email){toast('กรอกอีเมลในช่องด้านบนก่อน','⚠️','error');return;}
+  if(!email){toast('กรอกอีเมลในช่องด้านบนก่อน','alert','error');return;}
   try {
     await sendPasswordResetEmail(auth, email);
-    toast('ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว ตรวจสอบกล่องจดหมาย','📧','success');
-  } catch(e) { toast(errMsg[e.code]||e.message,'❌','error'); }
+    toast('ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว ตรวจสอบกล่องจดหมาย','mail','success');
+  } catch(e) { toast(errMsg[e.code]||e.message,'x','error'); }
 };
 
 window.switchTab = function(tab) {
@@ -295,10 +321,10 @@ function togglePass(id, btn) {
   const input = document.getElementById(id);
   if (input.type === 'password') {
     input.type = 'text';
-    btn.textContent = '🙈';
+    btn.innerHTML = icon('eye-off');
   } else {
     input.type = 'password';
-    btn.textContent = '👁️';
+    btn.innerHTML = icon('eye');
   }
 }
 </script>

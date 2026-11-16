@@ -644,3 +644,260 @@ index.html (shell คงที่)
 | **[HERO-FIX-3]** app.js — ย้าย SVG waveform + headphone + crown เข้า renderHomeView() hero-image div (เดิมว่างเปล่า ทำให้กราฟิกไม่โชว์เพราะ innerHTML ทับ) | ✅ เสร็จ | FILE: app.js | LINES: 776 | SECTION: renderHomeView() hero-image HTML |
 | **[HERO-FIX-2]** style.css — ลด .hero min-height: 60vh → 38vh และ .hero-inner padding: 60px → 32px แก้ช่องว่างใหญ่ใต้ history bar | ✅ เสร็จ | FILE: style.css | LINES: 626, 656 | SECTION: .hero min-height, .hero-inner padding |
 | **[HERO-FIX-1]** style.css — แก้ .hero-waveform ใช้ position:absolute + transform:translate(-50%,-30%) แทน bottom:20px, เพิ่ม z-index:1; .hero-headphone z-index:2; .hero-image + .hero-neon-graphic overflow:visible — แก้ graphic ไม่โชว์ใน Hero ฝั่งขวา | ✅ เสร็จ | FILE: style.css | LINES: 714–807 | SECTION: .hero-image, .hero-neon-graphic, .hero-waveform, .hero-headphone |
+| **[HOTFIX-FAV-1]** app.js — แก้ toggleFav() บัค: การ์ดหายจากหน้าหลักเมื่อกด unfav เพราะ card.remove() ทำงานโดยไม่เช็ค view ให้ถูกต้อง — แยก isFavPage ออกมาเป็นตัวแปร แล้ว card.remove() เฉพาะเมื่อ isFavPage === true จริงๆ | ✅ เสร็จ | FILE: app.js | LINES: 191–196 | SECTION: toggleFav() — else branch card.remove() |
+| **[HOTFIX-FAV-2]** app.js — revert icon กลับเป็น ❤️/🤍 (ถูกเปลี่ยนเป็น ✔/+ ค้างโดยผิดพลาด) | ✅ เสร็จ | FILE: app.js | LINES: 150–151, 183, 188 | SECTION: cardHTML() button icon, toggleFav() add/remove branch |
+| **[CARD-WIDTH-1]** style.css — แก้ .novels-grid จาก repeat(auto-fill, minmax(160px,1fr)) → repeat(4,1fr) ให้การ์ดกว้างเท่ารูป reference | ✅ เสร็จ | FILE: style.css | LINES: 215–220 | SECTION: .novels-grid grid-template-columns |
+| **[COIN-2]** style.css — ลบ .banner, .banner-icon, .banner-text, .banner-btn, .banner-btn:hover CSS ออกทั้งหมด | ✅ เสร็จ | FILE: style.css | LINES: 185–200 | SECTION: .banner block CSS |
+| **[NETLIFY-1]** app.js — แก้ window._BASE = '' (Netlify root deploy) + appView.dataset.view = 'home' ใน renderHomeView() แก้บัคกด nav แล้ว content ไม่ refresh เพราะ dataset.view ค้างค่าเดิม | ✅ เสร็จ | FILE: app.js | LINES: 30, 755 | SECTION: window._BASE, renderHomeView() |
+| **[NETLIFY-2]** app.js — เพิ่ม appView.dataset.view = 'library' ใน renderLibraryView() และ 'home' ใน renderHomeView() ครบทุก view แก้บัคเปลี่ยนหน้าแล้ว content ค้าง | ✅ เสร็จ | FILE: app.js | LINES: 1278, 755 | SECTION: renderLibraryView(), renderHomeView() |
+| **[NETLIFY-3]** app.js — แก้ _handleDeepLink() ป้องกัน redirect loop บน Netlify: ถ้า decoded ?_r= ยังมี _r= ซ้อนอยู่ให้ replaceState ไป / แทน (Netlify ใช้ _redirects ไม่ใช่ 404.html) | ✅ เสร็จ | FILE: app.js | LINES: 1439–1445 | SECTION: _handleDeepLink() |
+| **[NETLIFY-4]** 404.html — เพิ่ม 'favorites' ใน knownRoutes + ป้องกัน loop ถ้า search มี _r= อยู่แล้วให้ redirect ไป root แทน แก้ HTTP 414 loop บน Netlify | ✅ เสร็จ | FILE: 404.html | LINES: 23–26 | SECTION: knownRoutes + loop guard |
+| **[NETLIFY-6]** สร้าง _redirects — Netlify SPA fix: /* → /index.html 200 ป้องกัน 414 loop ทุก route | ✅ เสร็จ | FILE: _redirects | LINES: 1–2 |
+| **[BUG-CF-NAV-1]** index.html — แก้ navigate() ลบ history.pushState() ออก + เพิ่ม popup HTML (#sleepPopup, #npSleepLabel) + stub functions ครบ | ✅ เสร็จ | FILE: index.html | LINES: 132–220 |
+| **[SLEEP-STUB-1]** index.html — เพิ่ม stub functions toggleSleepTimer/closeSleepPopup/adjustSleepMins/setSleepMins ใน script block ให้ inline onclick เรียกได้ก่อน ES module โหลด | ✅ เสร็จ | FILE: index.html | LINES: 185–200 | SECTION: script block stubs |
+
+---
+
+## 🟡 Phase 7 — SPA Shell Refactor
+
+| Task | สถานะ |
+|------|-------|
+| **[SHELL-1]** ตรวจ renderHomeView() เทียบ static HTML | ✅ เสร็จ |
+| **[SHELL-2]** rewrite renderHomeView() ใช้ class เดิม + ล้าง #app-view | ✅ เสร็จ | FILE: app.js LINES: 760–883, index.html LINES: 71–324 |
+| **[SHELL-3]** renderLibraryView() ใช้ onSnapshot ตัวเอง + คืน unsub | ✅ เสร็จ | FILE: app.js | LINES: 1321–1330 |
+| **[SHELL-4]** renderFavoritesView() รอ allNovels ก่อน render | ✅ เสร็จ | FILE: app.js | LINES: 1383–1422 |
+
+---
+
+## 🔴 Phase 8 — Bug Fixes + Player Redesign
+
+| Task | สถานะ |
+|------|-------|
+| **[NAV-ONCLICK-1]** index.html — แก้ nav onclick → event.preventDefault(); window.handleRoute() | ✅ เสร็จ | FILE: index.html | LINES: 16,23,24,57,58 |
+| **[LOGIN-REDIRECT-1]** login.html — แก้ redirect() BASE → window.location.origin | ✅ เสร็จ | FILE: login.html | LINES: 210–216 |
+| **[PLAYER-NEW-1]** index.html — redesign player HTML: ตัด expanded+modal, layout ใหม่ตามรูป | ✅ เสร็จ | FILE: index.html | LINES: 74–157 | SECTION: #nowPlaying |
+| **[PLAYER-NEW-2]** style.css — CSS player bar ใหม่ | ✅ เสร็จ | FILE: style.css | LINES: 370–497 | SECTION: .now-playing, .np-progress-top, .np-main-row, .np-ctrl-btn, .np-play, .np-icon-btn |
+| **[PLAYER-NEW-3]** app.js — drag progress bar (mouse+touch) + _syncVolIcon SVG + mediaSession syncPlayBtn | ✅ เสร็จ | FILE: app.js | LINES: 582–660 | SECTION: timeupdate, _initProgressDrag, _syncVolIcon, mediaSession |
+| **[PLAYER-ICON-FIX]** app.js — เพิ่ม syncPlayBtn(true) ใน _nvPlayEp() แก้ icon ▶/⏸ สลับผิด | ✅ เสร็จ | FILE: app.js | LINES: 1197 | SECTION: _nvPlayEp() audio.play() |
+| **[PLAYER-NEW-2b]** index.html + style.css — เปลี่ยน progress bar เขียว + SVG icons ทุกปุ่มตามรูป + play btn ขาว/ดำ | ✅ เสร็จ | FILE: index.html | LINES: 94–113 | SECTION: np-center controls | FILE: style.css | LINES: 384–392, 420–424 | SECTION: np-progress-top-fill/thumb, np-play |
+| **[PLAYER-SVG-FIX]** app.js — แก้ syncPlayBtn() toggle svgPlay/svgPause แทน textContent emoji | ✅ เสร็จ | FILE: app.js | LINES: 430–436 | SECTION: syncPlayBtn() |
+| **[BUG-PREVNEXT-1]** app.js — แก้ prevEp()/nextEp() ใช้ _nvCurrentIdx/_nvAudioFiles/_nvNovel; เพิ่ม global assignment ใน _nvPlayEp(); แก้ ended autoplay SPA mode | ✅ เสร็จ | FILE: app.js | LINES: 574–592, 611–617, 1255–1262 | SECTION: prevEp(), nextEp(), ended, _nvPlayEp() |
+| **[RESUME-1]** app.js — save progress ทุก 5 วินาทีใน timeupdate (_lastSaveTime throttle); history-item เพิ่ม data-ep-idx + data-resume-time; _spaNavigate เก็บ sessionStorage ghResume_<id>; renderNovelView resume + seek canplay | ✅ เสร็จ | FILE: app.js | LINES: 582–610, 990, 1499–1508, 1136–1165 | SECTION: timeupdate, history-item HTML, _spaNavigate(), renderNovelView() resume block |
+| **[RESP-1]** style.css — แก้ .novels-grid: เพิ่ม @media (max-width:768px) → repeat(2,1fr) gap:12px และ @media (max-width:400px) → gap:8px | ✅ เสร็จ | FILE: style.css | LINES: 199–217 | SECTION: .novels-grid responsive |
+| **[RESP-2]** style.css — ลบ .novels-grid override ซ้ำที่บรรทัด 508 (ขัดกับ RESP-1) + แก้ .content padding mobile → 0 12px 32px | ✅ เสร็จ | FILE: style.css | LINES: 507–509 | SECTION: @media 768px block |
+| **[MOB-1]** style.css — เพิ่ม @media (max-width:480px) สำหรับ .novel-card-h: stack vertical, cover full-width 180px, ปรับ font-size title, clamp desc 3 บรรทัด | ✅ เสร็จ | FILE: style.css | LINES: 972–993 | SECTION: novel-card-h mobile small screen |
+| **[MOB-2]** style.css — เพิ่ม @media (max-width:480px): search-section padding ลด, filter-tabs scroll แนวนอน (no-wrap), section-header wrap, sub-tabs scroll แนวนอน | ✅ เสร็จ | FILE: style.css | LINES: 1042–1063 | SECTION: MOB-2 search+filter+section-header mobile |
+| **[MOB-3]** style.css — เพิ่ม @media (max-width:480px): footer padding/gap ลด, newsletter-form stack vertical, features-grid 2col+ลด icon/font | ✅ เสร็จ | FILE: style.css | LINES: 1310–1330 | SECTION: MOB-3 footer+features mobile |
+
+---
+
+## 📱 Phase 9 — Mobile Fix (จากการตรวจ 2026-05-26)
+
+> ตรวจพบปัญหาที่ยังค้างหลังจาก Phase 8 ทำเสร็จ — ต้องแก้เพื่อให้ใช้งานบนโทรศัพท์ได้ครบ
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[MOB-PLAYER-1]** | style.css — @media (max-width:480px): ซ่อน `.np-ctrl-btn` rewind/forward 10วิ (2 ปุ่ม) เหลือแค่ prev/play/next — player bar บนมือถือแน่นเกินไป 5 ปุ่มเรียงชิดกัน | ✅ เสร็จ | FILE: style.css | LINES: 483–489 | SECTION: @media 480px .np-skip display:none | FILE: index.html | LINES: 96, 120 | SECTION: rewind/forward btn class np-skip |
+| **[MOB-NAV-1]** | style.css — @media (max-width:768px): ซ่อน `.nav-btn-fill` ใน navbar ด้วย ให้ปุ่ม login/register อยู่ใน drawer เท่านั้น | ✅ เสร็จ | FILE: style.css | LINES: 540–544 | SECTION: @media 768px .nav-btn-fill display:none |
+| **[MOB-HERO-1]** | style.css — @media (max-width:480px): ลด .hero min-height → auto, padding → 20px 16px แก้ hero สูงเกินบนจอเล็ก | ✅ เสร็จ | FILE: style.css | LINES: 1835–1846 | SECTION: @media 480px .hero min-height:auto, .hero-inner flex-direction:column padding:20px 16px |
+| **[MOB-CONTENT-1]** | style.css — @media (max-width:480px): เพิ่ม .content padding → 0 12px 24px (ปัจจุบันมีแค่ 768px ไม่มี 480px) | ✅ เสร็จ | FILE: style.css | LINES: 1835–1849 | SECTION: @media 480px .content padding:0 12px 24px |
+| **[MOB-HERO-FIX]** | style.css — แก้ @media 480px hero: ซ่อน .hero-image (display:none), .hero-title font-size:1.6rem, .hero-desc font-size:0.82rem, .hero-inner flex-direction:row padding:24px 16px 28px — แก้ hero text ล้นทับกราฟิก | ✅ เสร็จ | FILE: style.css | LINES: 1835–1865 | SECTION: @media 480px hero block |
+| **[MOB-PLAYER-2]** | style.css — แก้ @media 640px: ซ่อน .np-right ทุก icon btn + volume slider ทั้งหมด, max-width:none ให้ np-title ขยายเต็ม, np-left flex:1; แก้ @media 480px: ซ่อน .np-pill-btn (speed) ด้วย — player bar พอดีบนมือถือ | ✅ เสร็จ | FILE: style.css | LINES: 476–488 | SECTION: @media 640px, @media 480px player |
+| **[HIST-EP-FIX]** app.js — แก้ _nvBuildEpList() อ่าน history จาก Firestore แทน localStorage (หลัง HISTORY-SYNC-1 ทำให้ ep progress bar ไม่โชว์); async inject progress bar + _resumeTime หลัง render; click handler อ่าน item._resumeTime ด้วย | ✅ เสร็จ | FILE: app.js | LINES: 1312–1382 | SECTION: _nvBuildEpList() history read + click handler |
+| **[HIST-NV-1]** app.js — เพิ่ม #historyBar HTML + renderHistory() call ใน renderNovelView() เพื่อให้ history bar โชว์ใน novel view ด้วย (เดิมมีแค่ home view) | ✅ เสร็จ | FILE: app.js | LINES: 1158–1163, 1269 | SECTION: renderNovelView() loading innerHTML + show content block |
+| **[BUG-SYNOPSIS-1]** app.js — แก้ novel.synopsis → novel.description\|novel.synopsis ให้ตรงกับ field ที่ admin.html บันทึก (admin ใช้ field `description` ไม่ใช่ `synopsis`) | ✅ เสร็จ | FILE: app.js | LINES: 1223 | SECTION: renderNovelView() nv-synopsis |
+| **[EP-PROGRESS-LIVE]** app.js — เพิ่ม live update progress bar แดงบน ep-item ที่ active ใน timeupdate: สร้าง .ep-progress-wrap/.ep-progress-fill ถ้ายังไม่มี แล้วอัปเดต width ทุก tick — ทำให้หลอดแดงโชว์ real-time และค้างไว้หลัง reload | ✅ เสร็จ | FILE: app.js | LINES: 666–679 | SECTION: timeupdate handler |
+| **[EP-BAR-FIX]** app.js — แก้ _nvBuildEpList() Firestore async inject: แยก guard ออกจากกัน — set epEl._resumeTime เสมอถ้า idx >= 0 (เดิม return ถ้า pct<=0 ทำให้ _resumeTime ไม่ถูก set); inject progress bar เฉพาะ pct > 0 เหมือนเดิม | ✅ เสร็จ | FILE: app.js | LINES: 1337–1346 | SECTION: _nvBuildEpList() Firestore then() block |
+| **[HIST-RESUME-FIX]** app.js — Bug1: แก้ _spaNavigate() ลบเงื่อนไข resumeTime > 0 → เก็บ sessionStorage ghResume_ ทุกครั้งที่มี epIdx (แม้ resumeTime=0); Bug2: แก้ click handler ใน _nvBuildEpList() ให้ fallback อ่าน Firestore history โดยตรงถ้า item._resumeTime ยัง undefined (async ยังไม่ resolve) | ✅ เสร็จ | FILE: app.js | LINES: 1729, 1392–1394 | SECTION: _spaNavigate() sessionStorage guard, _nvBuildEpList() click handler resumeAt |
+| **[HISTORY-SYNC-1]** | app.js — ย้าย history จาก localStorage → Firestore users/{uid}/history/{novelId} ผูกกับ uid: เพิ่ม setDoc+serverTimestamp import, _currentUid tracker, _historyRef helper, แก้ saveHistory/renderHistory/timeupdate save/_nvPlayEp save ทั้งหมด; firestore.rules — เพิ่ม subcollection wildcard ให้ users/{userId} ครอบ history | ✅ เสร็จ | FILE: app.js | LINES: 873–888, 1055–1094, 670–684, 1437–1444 | FILE: firestore.rules | LINES: 33–40 |
+
+### ลำดับการทำ
+```
+1. [MOB-PLAYER-1] — ซ่อนปุ่ม rewind/forward บน 480px
+2. [MOB-NAV-1]    — ซ่อน register btn บน navbar mobile
+3. [MOB-HERO-1]   — ลด hero height บน 480px
+4. [MOB-CONTENT-1]— เพิ่ม content padding 480px
+```
+
+---
+
+## 🔴 Phase 10 — History Bug Fix (2026-05-27)
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[HIST-BUG-1]** | app.js — แก้ timeupdate save: เปลี่ยนจาก setDoc ตรงๆ → เรียก saveHistory() แทน เพื่อให้ field novelTitle/coverUrl ครบ (เดิม progressData ขาด 2 field นี้ ทำให้ history bar แสดงผลไม่ได้) | ✅ เสร็จ | FILE: app.js | LINES: 683–704 | SECTION: timeupdate save block |
+| **[HIST-BUG-2]** | app.js — แก้ history bar ไม่อัพเดท: เพิ่ม _throttledRenderHistory() (throttle 30วิ) + เรียกหลัง saveHistory() write สำเร็จทั้ง Firestore และ localStorage path | ✅ เสร็จ | FILE: app.js | LINES: 901–913, 916–930 | SECTION: _throttledRenderHistory(), saveHistory() .then() + localStorage block |
+| **[RESUME-FIX-1]** | app.js — แก้ click handler ใน _nvBuildEpList(): แยก _seekTo() helper; ถ้า _resumeTime ยัง undefined และ login อยู่ → อ่าน Firestore โดยตรงแทนที่จะรอ async resolve จาก outer scope — แก้บัคกดตอนแล้วเล่นจากต้นแทนที่จะฟังต่อ | ✅ เสร็จ | FILE: app.js | LINES: 1393–1427 | SECTION: _nvBuildEpList() click handler |
+| **[RESUME-FIX-2]** | app.js — แก้ _seekTo() ใน click handler: เพิ่มเช็ค audioEl.readyState >= 2 → seek ทันทีถ้า audio data พร้อมแล้ว แทนที่จะผูก canplay เสมอ — แก้ root cause: _nvPlayEp() ทำ audio.load() → canplay fires ก่อน listener ผูก ทำให้ seek ไม่เกิด | ✅ เสร็จ | FILE: app.js | LINES: 1397–1413 | SECTION: _nvBuildEpList() _seekTo() |
+| **[RESUME-FIX-3]** | app.js — แก้ resume block ใน renderNovelView(): สลับลำดับ ผูก canplay listener ก่อน แล้วค่อยเรียก _nvPlayEp() — แก้ root cause เดียวกัน: audio.load() ใน _nvPlayEp() ทำให้ canplay fires ก่อน listener ผูก → seek ไม่เกิด (path กดจาก history bar) | ✅ เสร็จ | FILE: app.js | LINES: 1287–1309 | SECTION: renderNovelView() resume block |
+| **[RESUME-FIX-4]** | router.js — แก้ navigate() ให้ render ซ้ำได้ถ้า path เดิมแต่มี ghResume_ ใน sessionStorage — root cause: ถ้าอยู่หน้า novel เดิมแล้วกด history item → pathname เหมือนกัน → return ทันที → renderNovelView() ไม่ถูกเรียก → resume block ไม่ทำงาน | ✅ เสร็จ | FILE: router.js | LINES: 84–89 | SECTION: navigate() same-path guard |
+| **[RESUME-FIX-5]** | app.js — แก้ _nvPlayEp() ไม่ reset progress:0 เมื่อ save history: ลบ progress:0 ออกจาก entry + localStorage merge existing แทน replace — เดิมทับ currentTime/progress ทุกครั้งที่กด ep | ✅ เสร็จ | FILE: app.js | LINES: 1545–1556 | SECTION: _nvPlayEp() save history block |
+| **[HISTORY-V2-A]** | app.js — ลบ saveHistory+renderHistory เก่าทิ้ง เขียนใหม่: saveHistory v2 (expire 60วัน, merge Firestore), renderHistory v2 (แสดงแค่ปก+ชื่อ, scroll แนวนอน, filter expired) | ✅ เสร็จ | FILE: app.js | LINES: 887–935, 1102–1152 | SECTION: HISTORY v2 block |
+| **[HISTORY-V2-B]** | style.css — แก้ .history-item เป็น vertical card (ปกบน ชื่อล่าง): flex-direction:column, width:80px, cover 80x106px border-radius:8px, title ล่างกลาง font 0.7rem, ลบ .history-item-info/.history-item-ep/.history-progress-*/.history-item-heart CSS ที่ไม่ใช้แล้ว | ✅ เสร็จ | FILE: style.css | LINES: 1536–1638 | SECTION: .history-item card block |
+| **[HISTORY-V2-C]** | app.js + style.css — แก้ history bar HTML ใน renderHomeView(): เพิ่ม .history-bar-inner wrapper + แก้ class .history-header→.history-bar-header, .history-title→.history-bar-title; style.css: เพิ่ม display:none + .history-bar.visible{display:block} | ✅ เสร็จ | FILE: app.js | LINES: 958–965 | FILE: style.css | LINES: 1473–1477 |
+
+---
+
+## 🔴 Phase 11 — Resume Bug (2026-05-28)
+
+### 🔍 วิเคราะห์ปัญหา: "ฟังล่าสุด กด resume แล้วหาย"
+
+**Symptom:** กดการ์ดใน history bar แล้ว resume ไม่ทำงาน — เล่นจากต้นแทน
+
+**Flow ที่เกิดขึ้น:**
+1. user กด history-item → `_spaNavigate(this)` อ่าน `data-resume-time`
+2. `data-resume-time` มาจาก `h.currentTime || 0` ใน renderHistory v2 (บรรทัด 1140)
+3. ถ้า `currentTime` ไม่มีใน Firestore → `resumeTime = 0`
+4. sessionStorage เก็บ `{ epIdx, resumeTime: 0 }`
+5. resume block ใน renderNovelView() (บรรทัด 1296) check `if (resumeTime > 5)` → **false → ไม่ seek**
+
+**Root Cause หลัก — `currentTime` หายจาก Firestore:**
+
+`_nvPlayEp()` save block (บรรทัด 1546) ใช้ `merge:true` และ **ไม่ส่ง `currentTime`** → ถ้า user เปลี่ยน ep ใหม่ Firestore จะมี `epIdx` ใหม่ แต่ `currentTime` ยังเป็นของ ep เก่า → resume ผิด ep + ผิดเวลา
+
+**Root Cause รอง — เปลี่ยน ep แล้ว `currentTime` ไม่ถูก reset:**
+
+เมื่อ user กด ep ใหม่ `_nvPlayEp()` save `epIdx: newIdx` แต่ `currentTime` ยังเป็นของ ep เก่า (timeupdate ยังไม่ได้ save รอบใหม่ภายใน 5 วิ) → Firestore record มี `epIdx = N` แต่ `currentTime = เวลาของ ep N-1`
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[RESUME-BUG-1]** | app.js — แก้ `_nvPlayEp()` save block: เพิ่ม `currentTime: 0, duration: 0, progress: 0` ใน entry เพื่อ reset เมื่อเปลี่ยน ep ใหม่ — ป้องกัน `currentTime` ของ ep เก่าค้างอยู่กับ `epIdx` ใหม่ | ✅ เสร็จ | FILE: app.js | LINES: 1546 | SECTION: _nvPlayEp() save history block |
+| **[RESUME-BUG-2]** | app.js — แก้ resume block ใน renderNovelView(): เปลี่ยน `if (resumeTime > 5)` → `if (resumeTime > 0)` เพื่อให้ seek ทุกครั้งที่มี resumeTime แม้ < 5 วิ | ✅ เสร็จ | FILE: app.js | LINES: 1296 | SECTION: renderNovelView() resume block |
+| **[RESUME-BUG-2b]** | app.js — แก้ `_seekTo()` ใน _nvBuildEpList() click handler: เปลี่ยน `if (!(t > 5))` → `if (!(t > 0))` — path กดจาก ep list โดยตรง (ต่างจาก BUG-2 ที่เป็น path กดจาก history bar) | ✅ เสร็จ | FILE: app.js | LINES: 1402 | SECTION: _nvBuildEpList() _seekTo() |
+
+---
+
+## 🔴 Phase 12 — Refresh Resume Bug (2026-05-28)
+
+### 🔍 ปัญหา: "กด refresh แล้วไม่ resume + หลอดตอนไม่แสดง"
+
+**Root cause:** resume block ใน renderNovelView() เช็คแค่ sessionStorage — แต่ refresh ล้าง sessionStorage → ไม่มีข้อมูล → ไม่ resume และ ไม่ play ตอนใดเลย
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[REFRESH-RESUME-1]** | app.js — แก้ resume block ใน renderNovelView(): refactor เป็น `_doResume(epIdx, resumeTime)` helper; เพิ่ม else-if branch: ถ้าไม่มี sessionStorage และ login อยู่ → อ่าน Firestore history โดยตรง → resume อัตโนมัติหลัง refresh | ✅ เสร็จ | FILE: app.js | LINES: 1285–1308 | SECTION: renderNovelView() resume block |
+
+---
+
+## 🔴 Phase 13 — History UID Fix (2026-05-29)
+
+### 🔍 ปัญหา: Firestore `users` collection ไม่มีในโปรเจค — ใช้แค่ Auth
+
+**Root cause:** saveHistory/renderHistory/resume block ทั้งหมดเขียน/อ่าน Firestore `users/{uid}/history` แต่ collection นี้ไม่ได้เปิดใช้งาน → write fail เงียบๆ → history ไม่ถูกบันทึก → resume/หลอดตอนไม่แสดง
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[HISTORY-UID-1]** | app.js — เปลี่ยนทั้งหมดจาก Firestore → localStorage ผูก uid: เพิ่ม `_historyKey()` helper (คืน `gh_history_{uid}` ถ้า login, `gh_history` ถ้าไม่ login); แก้ saveHistory/renderHistory (sync แทน async); แก้ resume block ใช้ localStorage แทน getDoc Firestore | ✅ เสร็จ |
+| **[HISTORY-UID-1b]** | app.js — cleanup: แก้ _nvBuildEpList/click handler/_nvPlayEp save block ทั้งหมดให้ใช้ `_historyKey()` แทน Firestore; ลบ `_historyRef()` helper; ลบ `setDoc, serverTimestamp` ออกจาก import — ไม่มี Firestore history calls เหลือแล้ว | ✅ เสร็จ | FILE: app.js | LINES: 23, 899, 1336–1365, 1418–1434, 1546–1558 |
+
+---
+
+## 🔴 Phase 13b — Auto-Resume Bug Fix (2026-05-29)
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[AUTO-RESUME-FIX]** | app.js — ลบ `else` block ที่ auto-resume จาก localStorage ทุกครั้งที่เข้าหน้า novel (บรรทัด 1330–1337 เดิม) — แก้บัคเล่นตอนล่าสุดอัตโนมัติโดยไม่รอ user กดเลือกตอน | ✅ เสร็จ | FILE: app.js | LINES: 1330–1337 | SECTION: renderNovelView() resume else block |
+| **[AUTO-RESUME-FIX-2]** | app.js — ลบ sessionStorage resume set ออกจาก `_spaNavigate()` (บรรทัด 1753–1756 เดิม) — history-item click จะแค่ navigate ไปหน้า novel โดยไม่ auto-play ให้ user กดเลือกตอนเอง | ✅ เสร็จ | FILE: app.js | LINES: 1749–1759 | SECTION: _spaNavigate() sessionStorage resume block |
+| **[AUTO-RESUME-FIX-3]** | app.js — ลบ `data-ep-idx` / `data-resume-time` ออกจาก history-item HTML + แก้ comment; history-item ใช้แค่ `data-novel-id` navigate ไปหน้า novel ปกติ | ✅ เสร็จ | FILE: app.js | LINES: 1156–1162 | SECTION: renderHistory() history-item HTML |
+
+---
+
+## 🔴 Phase 14 — Per-Episode Progress Tracking (2026-05-29)
+
+### 🔍 ปัญหา: เก็บ history แค่ ep ล่าสุดของแต่ละเรื่อง — ep อื่นที่ฟังค้างไว้หาย
+
+**Root cause:** `saveHistory()` filter ด้วย `novelId` → เก็บได้แค่ 1 record ต่อ novel → ep เก่าที่ฟังค้างไว้ถูกลบออกทุกครั้งที่บันทึก ep ใหม่
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[EP-TRACK-1]** | app.js — เพิ่ม `_epProgressKey()` helper (คืน `gh_ep_{uid}_{novelId}` หรือ anonymous); เพิ่ม `saveEpProgress(novelId,epIdx,currentTime,duration)` บันทึก per-ep object {currentTime,duration,progress,ts}; แก้ timeupdate save เรียก `saveEpProgress()` ด้วย (ควบคู่กับ saveHistory เดิม) | ✅ เสร็จ | FILE: app.js | LINES: 909–937 (_epProgressKey, saveEpProgress, getEpProgressMap), 699 (timeupdate saveEpProgress call) | SECTION: _epProgressKey(), saveEpProgress(), getEpProgressMap(), timeupdate handler |
+| **[EP-TRACK-2]** | app.js — แก้ `_nvBuildEpList()`: อ่าน per-ep progress map จาก localStorage; แสดง progress bar ทุก ep ที่เคยฟัง (ไม่ใช่แค่ ep ล่าสุด); ถ้า progress ≥ 0.95 → แสดง badge "✓ จบแล้ว" แทน progress bar; ถ้า isDone → click เล่นจากต้น (ไม่ seek); style.css — เพิ่ม .ep-done-badge CSS (สีเขียว) | ✅ เสร็จ | FILE: app.js | LINES: 1362–1432 | SECTION: _nvBuildEpList() history read + ep render loop | FILE: style.css | LINES: 1701–1710 | SECTION: .ep-done-badge |
+| **[EP-TRACK-DONE]** | app.js — เปลี่ยน threshold isDone จาก 0.95 → 1.0 (100%); เพิ่ม ended handler บันทึก saveEpProgress(duration, duration) บังคับ progress=1.0 เมื่อฟังจบ (เพราะ currentTime อาจไม่ถึง duration พอดี) | ✅ เสร็จ | FILE: app.js | LINES: 1392 (isDone threshold), 705–711 (ended handler) | SECTION: _nvBuildEpList() isDone, ended event |
+
+---
+
+## 🔴 Phase 16 — novel.html Smart Resume + No Auto-Play (2026-05-29)
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[NOVEL-SMART-1]** | novel.html — เปลี่ยนปุ่ม label "ฟังทั้งหมด" → "เริ่มฟังนิยาย"; ep click → selectEp() highlight ไม่เล่น; playFirstBtn smart resume จาก localStorage gh_ep_{uid}_{novelId} หา ep ts ล่าสุด progress < 1.0; เพิ่ม resumeTime param ใน playEp(); CSS .ep-item.selected | ✅ เสร็จ | FILE: novel.html |
+
+---
+
+## 🔴 Phase 15 — Smart Resume Button (2026-05-29)
+
+### 🔍 ปัญหา: ปุ่ม "เล่นตอนแรก" ไม่สมาร์ท + ไม่ควร auto-resume เมื่อเข้าหน้า novel
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[SMART-RESUME-BTN]** | app.js — แก้ nvPlayFirstBtn click handler: อ่าน `_epProgressKey(novelId)` → หา ep ที่มี ts ล่าสุด + progress < 1.0 (ยังไม่จบ) → `_doResume(epIdx, currentTime)`; ถ้าไม่มี → เล่น ep แรก; label ปุ่ม "เริ่มฟังนิยาย" | ✅ เสร็จ | FILE: app.js | LINES: 1293–1308 | SECTION: nvPlayFirstBtn click handler |
+
+---
+
+## 🔴 Phase 17 — No Auto-Play + Smart Resume Button in SPA (2026-05-30)
+
+### 🔍 ปัญหา: กดเข้าหน้า novel แล้วเล่นอัตโนมัติโดยไม่รอ user กด + ปุ่มชื่อ "เล่นตอนแรก" ไม่สมาร์ท
+
+**Root cause:** else block ใน renderNovelView() (บรรทัด 1330–1337) อ่าน localStorage แล้วเรียก `_doResume()` ทันทีเมื่อเข้าหน้า novel แม้ไม่ได้กดจาก history bar
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[NO-AUTOPLAY-1]** | app.js — ลบ else block auto-resume ใน renderNovelView(): เดิม else อ่าน localStorage `_historyKey()` แล้วเรียก `_doResume()` อัตโนมัติ → ลบทิ้ง user ต้องกดปุ่มเองเท่านั้น | ✅ เสร็จ | FILE: app.js | LINES: 1330–1337 | SECTION: renderNovelView() resume else block |
+| **[SMART-BTN-SPA-1]** | app.js — แก้ nvPlayFirstBtn label "เล่นตอนแรก" → "เริ่มฟังนิยาย" | ✅ เสร็จ | FILE: app.js | LINES: 1265 | SECTION: renderNovelView() HTML nvPlayFirstBtn |
+| **[SMART-BTN-SPA-2]** | app.js — แก้ nvPlayFirstBtn click handler: smart resume จาก `gh_ep_{uid}_{novelId}` localStorage → หา ep ts ล่าสุด progress < 1.0 → เล่นต่อ; ถ้าไม่เคยฟัง → เล่น ep แรก | ✅ เสร็จ | FILE: app.js | LINES: 1296–1316 | SECTION: renderNovelView() nvPlayFirstBtn click handler |
+| **[SMART-BTN-SPA-3]** | app.js — เพิ่ม resumeTime param ใน `_nvPlayEp(idx, audioFiles, novel, resumeTime=0)` + canplay seek listener เมื่อ resumeTime > 0 | ✅ เสร็จ | FILE: app.js | LINES: 1494, 1521–1525 | SECTION: _nvPlayEp() signature + audio seek block |
+
+---
+
+## 🔴 Phase 18 — Cross-Device Sync via Firestore (2026-05-30)
+
+### 🔍 ปัญหา: ฟังบน tablet แล้วเปลี่ยนมือถือ — progress หาย เพราะ localStorage ไม่ข้ามอุปกรณ์
+
+**Root cause:** saveEpProgress + saveHistory เขียนแค่ localStorage ผูก uid — login uid เดียวกันก็ไม่ sync เพราะ localStorage เป็น per-device
+
+**แผน:** เขียน Firestore users/{uid}/epProgress/{novelId} ควบคู่ localStorage (fallback)
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[SYNC-A]** | app.js — เพิ่ม setDoc, serverTimestamp ใน Firestore import | ✅ เสร็จ | FILE: app.js | LINES: 23 | SECTION: import |
+| **[SYNC-B]** | app.js — แก้ saveEpProgress(): เขียน localStorage เสมอ (fallback) + ถ้า login เขียน Firestore users/{uid}/epProgress/{novelId} merge:true | ✅ เสร็จ | FILE: app.js | LINES: 927–947 | SECTION: saveEpProgress() |
+| **[SYNC-C]** | app.js — แก้ getEpProgressMap() → async Firestore+localStorage merge (ts-based); แก้ _nvBuildEpList() → async + await | ✅ เสร็จ | FILE: app.js | LINES: 950–970, 1393, 1416 | SECTION: getEpProgressMap(), _nvBuildEpList() |
+| **[SYNC-D]** | app.js — แก้ saveHistory(): เพิ่ม Firestore write users/{uid}/history/{novelId} merge:true ควบคู่ localStorage | ✅ เสร็จ | FILE: app.js | LINES: 976–1003 | SECTION: saveHistory() |
+| **[SYNC-E]** | app.js — แก้ renderHistory() → async, อ่าน Firestore users/{uid}/history/ merge localStorage (ts-based), sync กลับ localStorage | ✅ เสร็จ | FILE: app.js | LINES: 1175–1237 | SECTION: renderHistory() |
+
+---
+
+## 🔴 Phase 19 — PWA (Progressive Web App) (2026-05-30)
+
+### 🔍 เป้าหมาย: ให้ user กด "ติดตั้งแอพ" บน Android/iOS ได้
+
+**Stack:** Cloudflare Workers static assets — upload ไฟล์ตรงๆ ผ่าน dashboard
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[PWA-A]** | สร้าง manifest.json: name, short_name, icons (192/512), theme_color, background_color, display:standalone, start_url | ✅ เสร็จ | FILE: manifest.json | LINES: full file (new) | SECTION: name, short_name, icons 192/512, theme_color #1a1a2e, display:standalone |
+| **[PWA-B]** | สร้าง sw.js: service worker cache static assets (index.html, style.css, app.js, router.js) | ✅ เสร็จ | FILE: sw.js | LINES: full file (new) | SECTION: install, activate, fetch handlers |
+| **[PWA-C]** | แก้ index.html: เพิ่ม <link rel="manifest">, register sw.js ใน <script>, meta theme-color | ✅ เสร็จ | FILE: index.html | LINES: 8–9 (manifest+theme-color), 224–229 (sw register) | SECTION: <head> manifest link, <body> sw.js register script |
+
+---
+
+## 🔴 Phase 20 — Navigation Redesign: Bottom Nav (Mobile) + Sidebar (Desktop) (2026-05-30)
+
+### 🔍 เป้าหมาย: เปลี่ยน layout การนำทาง
+
+**ความต้องการ:**
+- **Mobile (≤768px)** → Bottom Navigation Bar แนวนอนด้านล่าง (แบบ App)
+- **Tablet/Desktop (≥768px)** → Sidebar ด้านซ้าย (แทน Topbar)
+- ใช้เฉพาะปุ่มที่มีในไฟล์อยู่แล้ว: หน้าแรก | คลังนิยาย | รายการโปรด | เข้าสู่ระบบ
+
+**Design Reference:**
+- รูป 1 (mobile): Bottom nav bar — icon + label, active = แดง
+- รูป 2 (desktop): Sidebar ซ้าย — icon + label, active = highlight
+
+| Task | รายละเอียด | สถานะ |
+|------|-----------|-------|
+| **[BNAV-CSS-1]** | style.css — เพิ่ม CSS .bottom-nav bar สำหรับ mobile ≤768px: fixed bottom, flex row, 4-5 items, icon+label, active color var(--primary) | ✅ เสร็จ | FILE: style.css | LINES: 1889–1943 | SECTION: .bottom-nav, .bottom-nav-item, active state |
+| **[BNAV-HTML-1]** | index.html — เพิ่ม `<nav class="bottom-nav">` element ก่อน </body>: หน้าแรก / คลังนิยาย / รายการโปรด / เข้าสู่ระบบ (ซ่อน top navbar บน mobile) | ❌ ยังไม่ทำ |
+| **[SIDEBAR-CSS-1]** | style.css — เพิ่ม CSS .sidebar สำหรับ desktop ≥768px: fixed left, width 220px, flex column, icon+label, active highlight | ❌ ยังไม่ทำ |
+| **[SIDEBAR-HTML-1]** | index.html — เพิ่ม `<aside class="sidebar">` element: หน้าแรก / คลังนิยาย / รายการโปรด / เข้าสู่ระบบ + ซ่อน top navbar บน desktop | ❌ ยังไม่ทำ |
+| **[NAV-JS-1]** | app.js — sync active state กับ bottom-nav และ sidebar ตาม route ปัจจุบัน | ❌ ยังไม่ทำ |

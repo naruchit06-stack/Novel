@@ -1,0 +1,21 @@
+# ไฟล์ที่ไม่ควรขึ้น GitHub
+tools/cloudinary.json
+tools/.env
+*.env
+.env.*
+
+# ไฟล์ชั่วคราว / ทดสอบ
+_temp*.html
+*_preview*.html
+*.log
+
+# ระบบปฏิบัติการ / IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
