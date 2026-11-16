@@ -1,4 +1,11 @@
-# MeMonster Novel — GitHub Pages + Firebase Setup
+# The Golden Hoard Novels
+
+**เว็บจริง:** https://naruchit06-stack.github.io/Novel/
+**โค้ด:** https://github.com/naruchit06-stack/Novel
+
+> เว็บถูก deploy เป็น GitHub Pages แบบ project site (ใต้ `/Novel/`)
+> `app.js` / `router.js` / `404.html` / `sw.js` อ่าน base path จาก `import.meta.url` เอง
+> จึงรองรับทั้ง root และ subfolder — ไม่ต้องแก้โค้ดเมื่อย้ายโดเมน
 
 ## วิธีนำขึ้น GitHub Pages
 
@@ -84,3 +91,22 @@ Firebase Console → Authentication → Settings → Authorized domains
 - ✅ ปก upload ผ่าน Cloudinary
 - ✅ ไฟล์เสียง upload ผ่าน Firebase Storage
 - ✅ ลบ/แก้ไขนิยายได้
+
+---
+
+## ยอดใช้จริงของ Cloudinary (แถบพื้นที่จัดเก็บในหน้าแอดมิน)
+
+หน้าแอดมินแสดง **ยอดใช้จริง** ได้ 2 ทาง (เลือกทางเดียว):
+
+1. **Cloudflare Worker (แนะนำสำหรับเว็บจริง)** — ดู `cloudflare-worker/README.md`
+   แล้วเอา URL มาใส่ในหน้าแอดมิน → "ตั้งค่าการเชื่อมต่อ Cloudinary"
+2. **ตัวอ่านในเครื่อง** — เติม `tools/cloudinary.json` แล้วรัน `python tools/usage_proxy.py`
+   (เว็บจะลองเรียก `http://127.0.0.1:8100` เองอัตโนมัติ)
+
+ถ้ายังไม่ตั้งค่าทั้งสองทาง แถบจะแสดง **ค่าประมาณ** จากไฟล์ในระบบ พร้อมบอกสาเหตุ
+
+## หลัง deploy ครั้งแรก (สำคัญ)
+
+- Firebase Console → Authentication → Settings → **Authorized domains**
+  ต้องมี `naruchit06-stack.github.io` ไม่งั้น Google Sign-In จะขึ้น `auth/unauthorized-domain`
+- เข้า `/Novel/admin.html` แล้วล็อกอินด้วยบัญชีแอดมิน (UID ต้องมีเอกสารใน collection `admins`)
