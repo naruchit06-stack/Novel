@@ -9,6 +9,7 @@ tools/.env
 _temp*.html
 *_preview*.html
 *.log
+tools/tts_azure_log.txt
 
 # ระบบปฏิบัติการ / IDE
 .DS_Store
