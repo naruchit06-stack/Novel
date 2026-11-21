@@ -1,0 +1,1 @@
+[!] ยังไม่มี key/region — ตั้ง env หรือสร้างไฟล์ C:\Users\นฤชิต\Downloads\Novel-rooms\Web novel\test 0.0.4\tools\azure.json
