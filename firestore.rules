@@ -35,6 +35,28 @@ service cloud.firestore {
             || get(adminPath()).data.get('superAdmin', false) == true);
     }
 
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function membershipPath() {
+      return /databases/$(database)/documents/settings/membership;
+    }
+
+    // สมาชิก = users/{uid}.memberUntil เป็น timestamp และยังไม่หมดอายุ
+    function isMember() {
+      return isSignedIn()
+        && exists(userPath())
+        && get(userPath()).data.get('memberUntil', null) is timestamp
+        && get(userPath()).data.get('memberUntil', null) > request.time;
+    }
+
+    // สวิตช์ระบบสมาชิกปิดอยู่ = เปิดทุกตอนให้ทุกคน
+    function membershipOpen() {
+      return !exists(membershipPath())
+        || get(membershipPath()).data.get('enabled', false) != true;
+    }
+
     /* ---------- Validation helpers ---------- */
 
     function isStr(v, maxLen) {
@@ -76,14 +98,29 @@ service cloud.firestore {
     // ตอน — ตรวจชนิด/ขนาดข้อมูลก่อนเขียน
     function validEpisode(d) {
       return d.keys().hasOnly([
-               'title','order','audioUrl','fileName','duration',
-               'createdAt','updatedAt','isFree','locked'
+               'title','order','audioUrl','audioKey','fileName','duration',
+               'createdAt','updatedAt','isFree','locked','premium'
              ])
         && d.title is string && d.title.size() > 0 && d.title.size() <= 200
         && (d.order is int || d.order is string)
-        && (!('audioUrl' in d) || d.audioUrl == '' || isHttpUrl(d.audioUrl))
+        && (!('audioUrl' in d) || d.audioUrl == null || d.audioUrl == '' || isHttpUrl(d.audioUrl))
+        && (!('audioKey' in d) || d.audioKey == null
+              || (d.audioKey is string && d.audioKey.size() > 0 && d.audioKey.size() <= 400
+                  && d.audioKey.matches('audio/[A-Za-z0-9._/-]+')))
         && (!('fileName' in d) || isStr(d.fileName, 300))
-        && (!('duration' in d) || (d.duration is number && d.duration >= 0));
+        && (!('duration' in d) || (d.duration is number && d.duration >= 0))
+        && (!('premium' in d)  || d.premium is bool);
+    }
+
+    function validPaymentRequest(d) {
+      return d.keys().hasOnly(['uid','name','email','amount','note','status','createdAt'])
+        && d.uid is string
+        && d.uid.size() > 0 && d.uid.size() <= 128
+        && d.status == 'pending'
+        && d.amount is number && d.amount > 0 && d.amount <= 100000
+        && (!('name' in d)  || isStr(d.name, 120))
+        && (!('email' in d) || isStr(d.email, 200))
+        && (!('note' in d)  || isStr(d.note, 500));
     }
 
     /* ---------- นิยาย ---------- */
@@ -94,7 +131,11 @@ service cloud.firestore {
 
       /* ---------- ตอน ---------- */
       match /episodes/{episodeId} {
-        allow read: if true;
+        allow read: if membershipOpen()
+          || isAdmin()
+          || isMember()
+          || resource.data.keys().hasAny(['premium']) == false
+          || resource.data.premium == false;
         allow create, update: if isAdmin() && validEpisode(request.resource.data);
         allow delete: if isAdmin();
       }
@@ -107,7 +148,7 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
-    /* ---------- Settings (hero image ฯลฯ) ---------- */
+    /* ---------- Settings (hero image, membership ฯลฯ) ---------- */
     match /settings/{docId} {
       allow read:  if true;
       allow write: if isAdmin();
@@ -115,12 +156,40 @@ service cloud.firestore {
 
     /* ---------- Users ---------- */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isAdmin();
+
+      allow create: if isSignedIn() && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+             'uid','email','displayName','photoURL','role',
+             'lastLogin','createdAt'
+           ]);
+
+      allow update: if isSignedIn() && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'uid','email','displayName','photoURL','role',
+             'lastLogin','createdAt'
+           ]);
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
 
       // subcollections: history, epProgress ฯลฯ
       match /{document=**} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
+    }
+
+    /* ---------- Payment requests ---------- */
+    match /paymentRequests/{requestId} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && validPaymentRequest(request.resource.data);
+
+      allow read: if isAdmin();
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAdmin();
     }
   }
 }

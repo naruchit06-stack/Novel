@@ -1232,6 +1232,144 @@ body.admin-body {
   font-size: 12px; color: var(--muted); text-align: right;
 }
 .ep-progress-label.visible { display: block; }
+
+/* ===== MEMBERSHIP PANEL ===== */
+.member-mgmt-wrap { display: none; }
+.member-mgmt-wrap.visible { display: block; }
+
+.mmg-header {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 20px 22px; margin-bottom: 18px;
+  background: var(--admin-card); border: 1px solid var(--admin-border);
+  border-radius: 14px;
+}
+.mmg-header h2 { margin: 0 0 4px; font-size: 17px; color: #fff; }
+.mmg-header p  { margin: 0; font-size: 12px; color: var(--muted); }
+.mmg-header-icon { color: var(--gold); }
+.mmg-header-badges { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.mmg-badge {
+  font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
+  color: var(--muted); background: var(--admin-surface);
+  border: 1px solid var(--admin-border); white-space: nowrap;
+}
+.mmg-badge.hot {
+  color: #ff8fa3; background: rgba(232,68,90,0.12);
+  border-color: rgba(232,68,90,0.35);
+}
+.mmg-btn-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px;
+  border-radius: 999px; background: var(--primary); color: #fff;
+  font-size: 10px; font-weight: 800; line-height: 1;
+}
+
+.mmg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 1100px) { .mmg-grid { grid-template-columns: 1fr; } }
+.mmg-card {
+  background: var(--admin-card); border: 1px solid var(--admin-border);
+  border-radius: 14px; padding: 20px;
+}
+.mmg-card-wide { grid-column: 1 / -1; }
+.mmg-card h3 {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+  font-size: 14px; color: #fff;
+}
+.mmg-card h3 .ico { color: var(--gold); }
+.mmg-count {
+  font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+  color: var(--gold); background: rgba(245,197,66,0.12);
+  border: 1px solid rgba(245,197,66,0.3);
+}
+.mmg-label { display: block; margin: 14px 0 5px; font-size: 11px; color: var(--muted); }
+.mmg-input {
+  width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px;
+  background: var(--admin-surface); border: 1px solid var(--admin-border);
+  color: #fff; font-family: inherit; font-size: 13px;
+}
+.mmg-input:focus { outline: none; border-color: var(--gold); }
+.mmg-check {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: 13px; color: var(--text-secondary);
+}
+.mmg-check input { width: 16px; height: 16px; accent-color: var(--gold); cursor: pointer; }
+.mmg-qr-row { display: flex; gap: 14px; align-items: flex-start; margin-top: 8px; }
+.mmg-qr-preview {
+  width: 104px; height: 104px; border-radius: 10px; flex-shrink: 0;
+  background: #fff; border: 1px solid var(--admin-border);
+  display: flex; align-items: center; justify-content: center;
+  color: #b9b9c8; font-size: 26px; overflow: hidden;
+}
+.mmg-qr-preview img { width: 100%; height: 100%; object-fit: contain; }
+.mmg-qr-actions { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.mmg-hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.mmg-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.mmg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 16px; border-radius: 8px; cursor: pointer;
+  background: var(--admin-surface); color: var(--text-secondary);
+  border: 1px solid var(--admin-border); font-family: inherit; font-size: 12px; font-weight: 700;
+}
+.mmg-btn:hover { color: #fff; border-color: rgba(255,255,255,0.22); }
+.mmg-btn.primary { background: var(--gold); color: #1a1200; border-color: transparent; }
+.mmg-btn.primary:hover { filter: brightness(1.08); }
+.mmg-btn:disabled { opacity: 0.6; cursor: default; }
+.mmg-msg { min-height: 16px; margin-top: 10px; font-size: 11px; color: var(--muted); }
+
+.mmg-ep-list { max-height: 320px; overflow-y: auto; margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.mmg-ep-row {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  background: var(--admin-surface); border: 1px solid var(--admin-border);
+  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+}
+.mmg-ep-row.on { border-color: rgba(245,197,66,0.4); background: rgba(245,197,66,0.06); }
+.mmg-ep-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mmg-switch { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+.mmg-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.mmg-switch span {
+  position: absolute; inset: 0; border-radius: 999px;
+  background: var(--admin-border); transition: background .18s;
+}
+.mmg-switch span::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
+  border-radius: 50%; background: #9a9ab0; transition: transform .18s, background .18s;
+}
+.mmg-switch input:checked + span { background: rgba(245,197,66,0.35); }
+.mmg-switch input:checked + span::after { transform: translateX(18px); background: var(--gold); }
+
+.mmg-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+.mmg-req {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 12px 14px; background: var(--admin-surface);
+  border: 1px solid var(--admin-border); border-radius: 10px;
+}
+.mmg-req-main { flex: 1; min-width: 220px; }
+.mmg-req-name { font-size: 13px; font-weight: 700; color: #fff; }
+.mmg-req-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.6; word-break: break-all; }
+.mmg-req-amount { font-size: 15px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+.mmg-req-btns { display: flex; gap: 8px; }
+.mmg-btn-approve {
+  padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+  background: #16a34a; color: #fff; font-family: inherit; font-size: 12px; font-weight: 700;
+}
+.mmg-btn-approve:hover { filter: brightness(1.08); }
+.mmg-btn-reject {
+  padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  background: transparent; color: #ff8fa3; border: 1px solid rgba(232,68,90,0.4);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+}
+.mmg-btn-reject:hover { background: rgba(232,68,90,0.12); }
+.mmg-empty { padding: 18px; text-align: center; font-size: 12px; color: var(--muted); }
+
+.mmg-toast {
+  position: fixed; right: 22px; bottom: 22px; z-index: 9998;
+  max-width: 320px; padding: 13px 16px; border-radius: 10px;
+  background: var(--admin-card); border: 1px solid rgba(245,197,66,0.4);
+  color: var(--text); font-size: 13px; box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+  opacity: 0; transform: translateY(12px); transition: opacity .22s, transform .22s;
+}
+.mmg-toast.show { opacity: 1; transform: translateY(0); }
+.mmg-toast .ico { color: var(--gold); margin-right: 6px; }
 </style>
 <script src="icons.js"></script>
 </head>
@@ -1247,6 +1385,9 @@ body.admin-body {
     </div>
   </div>
   <div class="admin-topbar-right">
+    <button class="mmg-btn" id="mmgTopBtn" type="button">
+      <span data-icon="users"></span> สมาชิก <span class="mmg-btn-badge" id="mmgTopBadge" style="display:none">0</span>
+    </button>
     <a href="#" class="btn-view-web" onclick="event.preventDefault();location.href=(window._BASE||'')+'/'"><span data-icon="globe"></span> ดูหน้าเว็บ</a>
   </div>
 </header>
@@ -1321,6 +1462,7 @@ body.admin-body {
         </div>
         <div class="panel-left-actions">
           <button class="btn-add-novel" id="btnAddNovel">+ เพิ่มนิยาย</button>
+          <button class="btn-manage-admin" id="btnMemberMgmt"><span data-icon="users"></span> สมาชิก <span class="mmg-btn-badge" id="mmgMemberBadge" style="display:none">0</span></button>
           <button class="btn-manage-admin" id="btnManageAdmin"><span data-icon="crown"></span> จัดการแอดมิน</button>
         </div>
       </div>
@@ -1482,6 +1624,78 @@ body.admin-body {
         </div>
       </div>
 
+      <div class="member-mgmt-wrap" id="memberMgmtWrap">
+        <div class="mmg-header">
+          <div class="mmg-header-icon"><span data-icon="users" data-icon-size="1.6em"></span></div>
+          <div>
+            <h2>สมาชิกและการชำระเงิน</h2>
+            <p>ตั้งค่า QR รับโอน · ล็อกตอนเฉพาะสมาชิก · อนุมัติรายการแจ้งโอน</p>
+          </div>
+          <div class="mmg-header-badges">
+            <span class="mmg-badge" id="mmgHeaderPending">รออนุมัติ 0</span>
+            <span class="mmg-badge" id="mmgHeaderSignup">ผู้สมัครใหม่ 0</span>
+          </div>
+        </div>
+
+        <div class="mmg-grid">
+
+          <div class="mmg-card">
+            <h3><span data-icon="gear"></span> ตั้งค่าระบบสมาชิก</h3>
+            <label class="mmg-check">
+              <input type="checkbox" id="mmgEnabled">
+              <span>เปิดใช้ระบบสมาชิก (ปิด = ฟังได้ทุกตอนเหมือนเดิม)</span>
+            </label>
+            <label class="mmg-label" for="mmgPriceText">ราคาที่แสดงให้ผู้ใช้เห็น</label>
+            <input class="mmg-input" type="text" id="mmgPriceText" maxlength="120" placeholder="เช่น 99 บาท / 30 วัน">
+            <label class="mmg-label" for="mmgMemberDays">จำนวนวันต่อการอนุมัติ 1 ครั้ง</label>
+            <input class="mmg-input" type="number" id="mmgMemberDays" min="1" max="3650" value="30">
+            <label class="mmg-label">รูป QR รับโอน</label>
+            <div class="mmg-qr-row">
+              <div class="mmg-qr-preview" id="mmgQrPreview"><span data-icon="image"></span></div>
+              <div class="mmg-qr-actions">
+                <button class="mmg-btn" id="mmgQrPick" type="button"><span data-icon="folder"></span> อัปโหลดรูป QR</button>
+                <input type="file" id="mmgQrFile" accept="image/*" style="display:none">
+                <span class="mmg-hint" id="mmgQrMsg">รูปจะถูกเก็บที่ membership/qr.png ใน Firebase Storage</span>
+              </div>
+            </div>
+            <label class="mmg-label" for="mmgQrUrl">หรือวางลิงก์รูป QR เอง</label>
+            <input class="mmg-input" type="url" id="mmgQrUrl" maxlength="2048" placeholder="https://...">
+            <div class="mmg-actions">
+              <button class="mmg-btn primary" id="mmgSaveCfg" type="button"><span data-icon="save"></span> บันทึกการตั้งค่า</button>
+            </div>
+            <div class="mmg-msg" id="mmgCfgMsg"></div>
+          </div>
+
+          <div class="mmg-card">
+            <h3><span data-icon="lock"></span> ล็อกตอนสำหรับสมาชิก</h3>
+            <label class="mmg-label" for="mmgNovelSelect">เลือกนิยาย</label>
+            <select class="mmg-input" id="mmgNovelSelect"></select>
+            <div class="mmg-ep-list" id="mmgEpList">
+              <div class="mmg-empty">เลือกนิยายเพื่อดูรายการตอน</div>
+            </div>
+            <div class="mmg-actions">
+              <button class="mmg-btn" id="mmgMigrate" type="button"><span data-icon="bolt"></span> ตั้งค่า premium ให้ตอนเก่า</button>
+            </div>
+            <div class="mmg-msg" id="mmgEpMsg"></div>
+          </div>
+
+          <div class="mmg-card mmg-card-wide">
+            <h3><span data-icon="clipboard"></span> รายการรออนุมัติ <span class="mmg-count" id="mmgPendingCount">0</span></h3>
+            <div class="mmg-list" id="mmgPendingList">
+              <div class="mmg-empty">ไม่มีรายการรออนุมัติ</div>
+            </div>
+          </div>
+
+          <div class="mmg-card mmg-card-wide">
+            <h3><span data-icon="users"></span> ผู้สมัครใหม่ <span class="mmg-count" id="mmgSignupCount">0</span></h3>
+            <div class="mmg-list" id="mmgSignupList">
+              <div class="mmg-empty">ยังไม่มีผู้สมัครใหม่</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div><!-- /panel-right -->
   </div><!-- /admin-main -->
 </div><!-- /admin-wrapper -->
@@ -1491,9 +1705,11 @@ body.admin-body {
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, doc,
-         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch, addDoc }
+import { getFirestore, collection, onSnapshot, query, orderBy, where, doc,
+         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch, addDoc, Timestamp }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
+                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 /* ===== FIREBASE INIT ===== */
 window._BASE = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
@@ -1507,6 +1723,7 @@ const app = initializeApp({
 });
 const auth = getAuth(app);
 const db   = getFirestore(app);
+const storage = getStorage(app);
 
 /* ===== SEC-1: XSS GUARDS ===== */
 function esc(v) {
@@ -1524,6 +1741,7 @@ function safeUrl(u) {
 // เอกสาร admins/{uid} ที่มี role:'super' หรือ superAdmin:true
 const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmr6ln5hy/image/upload';
 const CLOUDINARY_PRESET = 'ml_default';
+const AUDIO_WORKER = 'https://novel-audio.hollymons4654.workers.dev';
 
 /* ===== STATE ===== */
 let allNovels       = [];
@@ -1555,6 +1773,7 @@ function initAdmin() {
   loadNovels();
   loadAdminList();
   bindEvents();
+  initMemberPanel();
   if (!isSuperAdmin) {
     document.getElementById('btnManageAdmin').style.display = 'none';
   }
@@ -1824,6 +2043,7 @@ function loadNovels() {
     allNovels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     document.getElementById('novelCountBadge').textContent = allNovels.length;
     applyFilter();
+    mmgFillNovelSelect();
   });
 }
 
@@ -1921,9 +2141,11 @@ window.openEdit = async function(id) {
   selectedNovelId = id;
   // Hide admin panel, show edit form
   document.getElementById('adminMgmtWrap').classList.remove('visible');
+  document.getElementById('memberMgmtWrap').classList.remove('visible');
   document.getElementById('rightPlaceholder').style.display = 'none';
   document.getElementById('editFormWrap').style.display = 'block';
   document.getElementById('btnManageAdmin').classList.remove('active');
+  document.getElementById('btnMemberMgmt').classList.remove('active');
 
   // Mark selected
   document.querySelectorAll('.novel-list-item').forEach(el => {
@@ -1995,13 +2217,15 @@ async function loadEpisodes(novelId, novel) {
       </div>
       <div class="ep-items" id="epItems_${esc(novelId)}">
         ${eps.map(ep => {
-          const hasFile = ep.audioUrl || ep.fileName;
+          const hasFile = ep.audioUrl || ep.audioKey || ep.fileName;
+          const srcTag  = ep.audioKey ? '<span class="mmg-count">R2</span>'
+                        : ep.audioUrl ? '<span class="mmg-count">Cloudinary</span>' : '';
           return `
           <div class="ep-item">
             <div class="ep-item-num">ตอนที่ ${esc(ep.order || '—')}</div>
             ${hasFile
               ? `<div class="ep-item-icon">${icon('play')}</div>
-                 <div class="ep-item-name">${esc(ep.fileName || ep.title || 'ไม่มีชื่อ')}</div>
+                 <div class="ep-item-name">${esc(ep.fileName || ep.title || 'ไม่มีชื่อ')} ${srcTag}${ep.premium === true ? ' <span class="mmg-count">สมาชิก</span>' : ''}</div>
                  <div class="ep-item-time">0:00</div>`
               : `<div class="ep-item-icon">${icon('lock')}</div>
                  <div class="ep-item-no-file">ไม่มีไฟล์</div>`
@@ -2068,15 +2292,21 @@ window.deleteNovelConfirm = function(id, title) {
 let _epModalNovelId = null;
 let _epModalEpId    = null; // null = add, string = edit
 let _epModalFile    = null;
+let _epModalPremium = false;
+let _epModalKey     = '';
 
 function openEpModal(novelId, epId, epData) {
   _epModalNovelId = novelId;
   _epModalEpId    = epId || null;
   _epModalFile    = null;
+  _epModalPremium = !!(epData && epData.premium === true);
+  _epModalKey     = (epData && epData.audioKey) || '';
   document.getElementById('epModalTitle').textContent  = epId ? 'แก้ไขตอน' : 'เพิ่มตอนใหม่';
   document.getElementById('epModalEpTitle').value      = epData?.title || '';
   document.getElementById('epModalOrder').value        = epData?.order || '';
-  document.getElementById('epModalFileName').textContent = epData?.fileName || 'ยังไม่ได้เลือกไฟล์';
+  document.getElementById('epModalPremium').checked    = _epModalPremium;
+  const srcLabel = _epModalKey ? ' • เก็บบน R2' : (epData?.audioUrl ? ' • เก็บบน Cloudinary' : '');
+  document.getElementById('epModalFileName').textContent = (epData?.fileName || 'ยังไม่ได้เลือกไฟล์') + srcLabel;
   document.getElementById('epModal').classList.add('open');
 }
 window.closeEpModal = function() {
@@ -2090,16 +2320,72 @@ window.onEpFileChange = function(input) {
   _epModalFile = input.files[0] || null;
   document.getElementById('epModalFileName').textContent = _epModalFile ? _epModalFile.name : 'ยังไม่ได้เลือกไฟล์';
 };
+function r2Slug(text, fallback) {
+  const s = String(text || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return s ? s.slice(0, 50) : fallback;
+}
+
+function r2SafeName(name, fallback) {
+  const s = String(name || '').replace(/\.[A-Za-z0-9]{2,5}$/, '').normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-').replace(/-+/g, '-').replace(/^[-.]+|[-.]+$/g, '');
+  return s ? s.slice(0, 60) : fallback;
+}
+
+function r2AudioKey(novelId, order, fileName) {
+  const novel = allNovels.find(n => n.id === novelId);
+  const id    = String(novelId || '').replace(/[^A-Za-z0-9]/g, '').toLowerCase() || 'novel';
+  const slug  = r2Slug(novel && novel.title, id);
+  const safe  = r2SafeName(fileName, 'ep' + (order || 1));
+  return 'audio/' + slug + '/ep' + (order || 1) + '-' + safe + '.mp3';
+}
+
+async function r2Upload(file, key, bar, label) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('ไม่พบผู้ใช้ที่เข้าสู่ระบบ');
+  const token = await user.getIdToken();
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', AUDIO_WORKER + '/upload?key=' + encodeURIComponent(key));
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.setRequestHeader('Content-Type', file.type || 'audio/mpeg');
+    xhr.upload.onprogress = (e) => {
+      if (!e.lengthComputable) return;
+      const pct = Math.round((e.loaded / e.total) * 100);
+      if (bar)   bar.style.width = pct + '%';
+      if (label) label.textContent = 'กำลังอัปโหลดเข้า R2... ' + pct + '%';
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) { resolve(); return; }
+      let detail = '';
+      try { detail = JSON.parse(xhr.responseText).error || ''; } catch (e) {}
+      reject(new Error('อัปโหลด R2 ล้มเหลว ' + xhr.status + (detail ? ' (' + detail + ')' : '')));
+    };
+    xhr.onerror = () => reject(new Error('อัปโหลด R2 ไม่สำเร็จ — เชื่อมต่อ Worker ไม่ได้'));
+    xhr.send(file);
+  });
+}
+
 window.saveEpisode = async function() {
-  const title = document.getElementById('epModalEpTitle').value.trim();
-  const order = parseInt(document.getElementById('epModalOrder').value) || 0;
+  const title   = document.getElementById('epModalEpTitle').value.trim();
+  const order   = parseInt(document.getElementById('epModalOrder').value) || 0;
+  const premium = document.getElementById('epModalPremium').checked;
   if (!title) { alert('กรุณากรอกชื่อตอน'); return; }
+  if (premium && !_epModalFile && !_epModalKey && !_epModalEpId) {
+    alert('ติ๊ก premium ต้องเลือกไฟล์เสียง เพื่ออัปโหลดเข้า R2');
+    return;
+  }
+  if (!premium && !_epModalFile && _epModalKey) {
+    alert('ตอนนี้เก็บไฟล์บน R2 — ถ้าจะปลดล็อกให้คนทั่วไป ต้องอัปโหลดไฟล์ใหม่เข้า Cloudinary (ยกเลิกติ๊ก premium แล้วเลือกไฟล์)');
+    return;
+  }
 
   const btn = document.getElementById('epModalSaveBtn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
 
   try {
-    let audioUrl = null, fileName = null, duration = null;
+    let audioUrl = null, audioKey = null, fileName = null, duration = null;
 
     // [HOTFIX-24a] Helper: อ่าน duration จาก audio file ก่อน upload
     function getAudioDuration(file) {
@@ -2129,33 +2415,51 @@ window.saveEpisode = async function() {
       fd.append('file', _epModalFile);
       fd.append('upload_preset', 'ml_default');
 
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'https://api.cloudinary.com/v1_1/dmr6ln5hy/video/upload');
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100);
-            bar.style.width = pct + '%';
-            label.textContent = 'กำลังอัปโหลด... ' + pct + '%';
-          }
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const json = JSON.parse(xhr.responseText);
-            audioUrl = json.secure_url;
-            fileName = _epModalFile.name;
-            bar.style.width = '100%';
-            label.textContent = 'อัปโหลดสำเร็จ';
-            resolve();
-          } else { reject(new Error('Upload failed')); }
-        };
-        xhr.onerror = () => reject(new Error('Network error'));
-        xhr.send(fd);
-      });
+      if (premium) {
+        audioKey = r2AudioKey(_epModalNovelId, order, _epModalFile.name);
+        fileName = _epModalFile.name;
+        await r2Upload(_epModalFile, audioKey, bar, label);
+        bar.style.width = '100%';
+        label.textContent = 'อัปโหลดเข้า R2 สำเร็จ';
+      } else {
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', 'https://api.cloudinary.com/v1_1/dmr6ln5hy/video/upload');
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              bar.style.width = pct + '%';
+              label.textContent = 'กำลังอัปโหลด... ' + pct + '%';
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const json = JSON.parse(xhr.responseText);
+              audioUrl = json.secure_url;
+              fileName = _epModalFile.name;
+              bar.style.width = '100%';
+              label.textContent = 'อัปโหลดสำเร็จ';
+              resolve();
+            } else { reject(new Error('Upload failed')); }
+          };
+          xhr.onerror = () => reject(new Error('Network error'));
+          xhr.send(fd);
+        });
+      }
     }
 
-    const epData = { title, order, updatedAt: new Date() };
-    if (audioUrl) { epData.audioUrl = audioUrl; epData.fileName = fileName; epData.duration = duration; }
+    const epData = { title, order, updatedAt: new Date(), premium };
+    if (premium && audioKey) {
+      epData.audioKey  = audioKey;
+      epData.audioUrl  = null;
+      epData.fileName  = fileName;
+      epData.duration  = duration;
+    } else if (!premium && audioUrl) {
+      epData.audioUrl  = audioUrl;
+      epData.audioKey  = null;
+      epData.fileName  = fileName;
+      epData.duration  = duration;
+    }
 
     if (_epModalEpId) {
       // Edit existing
@@ -2188,6 +2492,11 @@ window.editEpisode = async function(novelId, epId) {
 };
 window.deleteEpisode = async function(novelId, epId, order) {
   if (!confirm(`ลบตอนที่ ${order}?`)) return;
+  let r2Key = '';
+  try {
+    const snap = await getDoc(doc(db, 'novels', novelId, 'episodes', epId));
+    if (snap.exists()) r2Key = snap.data().audioKey || '';
+  } catch (e) {}
   try {
     await deleteDoc(doc(db, 'novels', novelId, 'episodes', epId));
     // ลด episodeCount ใน novel document
@@ -2195,6 +2504,7 @@ window.deleteEpisode = async function(novelId, epId, order) {
     const newCount = Math.max((novel?.episodeCount || 1) - 1, 0);
     await updateDoc(doc(db, 'novels', novelId), { episodeCount: newCount });
     openEdit(novelId);
+    if (r2Key) alert('ลบตอนแล้ว แต่ไฟล์บน R2 ยังอยู่:\n' + r2Key + '\n\nWorker ยังไม่มี endpoint ลบไฟล์ — ลบเองใน Cloudflare Dashboard → R2 → novel-audio');
   } catch(e) { alert('ลบล้มเหลว: ' + e.message); }
 };
 
@@ -2392,6 +2702,8 @@ function bindEvents() {
       }
     } else {
       document.getElementById('adminMgmtWrap').classList.add('visible');
+      document.getElementById('memberMgmtWrap').classList.remove('visible');
+      document.getElementById('btnMemberMgmt').classList.remove('active');
       document.getElementById('editFormWrap').style.display = 'none';
       document.getElementById('rightPlaceholder').style.display = 'none';
       document.getElementById('btnManageAdmin').classList.add('active');
@@ -2405,6 +2717,482 @@ function bindEvents() {
     document.getElementById('newAdminPassword').value = '';
     document.getElementById('newAdminRole').value     = 'admin';
     document.getElementById('adminFormMsg').textContent = '';
+  });
+}
+
+/* ===== MEMBERSHIP PANEL ===== */
+const MEMBER_SETTINGS_REF = doc(db, 'settings', 'membership');
+const MEMBER_DAY_MS = 86400000;
+
+let _mmgInit       = false;
+let _mmgCfg        = { enabled: false, priceText: '', memberDays: 30, qrUrl: '' };
+let _mmgPending    = [];
+let _mmgSignups    = [];
+let _mmgNovelId    = '';
+let _mmgUnsubPay   = null;
+let _mmgUnsubUsers = null;
+let _mmgLastPending = null;
+let _mmgLastSignup  = null;
+let _mmgToastEl     = null;
+let _mmgToastTimer  = null;
+
+function mmgTs(v) {
+  if (!v) return 0;
+  if (typeof v.toMillis === 'function') return v.toMillis();
+  if (typeof v.toDate === 'function') return v.toDate().getTime();
+  if (typeof v.seconds === 'number') return v.seconds * 1000;
+  if (v instanceof Date) return v.getTime();
+  if (typeof v === 'number') return v;
+  return 0;
+}
+
+function mmgToDate(v) {
+  const ms = mmgTs(v);
+  return ms > 0 ? new Date(ms) : null;
+}
+
+function mmgFmtDateTime(v) {
+  const d = mmgToDate(v);
+  if (!d) return 'ไม่ระบุเวลา';
+  try {
+    return d.toLocaleString('th-TH', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch (e) { return d.toISOString().slice(0, 16).replace('T', ' '); }
+}
+
+function mmgFmtDate(v) {
+  const d = mmgToDate(v);
+  if (!d) return '—';
+  try { return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  catch (e) { return d.toISOString().slice(0, 10); }
+}
+
+function mmgMsg(id, text, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || 'var(--muted)';
+}
+
+function mmgToast(text, iconName) {
+  if (!_mmgToastEl) {
+    _mmgToastEl = document.createElement('div');
+    _mmgToastEl.className = 'mmg-toast';
+    document.body.appendChild(_mmgToastEl);
+  }
+  _mmgToastEl.innerHTML = (iconName ? icon(iconName) : '') + esc(text);
+  _mmgToastEl.classList.add('show');
+  clearTimeout(_mmgToastTimer);
+  _mmgToastTimer = setTimeout(() => _mmgToastEl.classList.remove('show'), 4500);
+}
+
+function mmgPaintQr(url) {
+  const box = document.getElementById('mmgQrPreview');
+  if (!box) return;
+  const safe = safeUrl(url);
+  box.innerHTML = safe ? `<img src="${esc(safe)}" alt="QR รับโอน">` : icon('image');
+}
+
+async function mmgLoadSettings() {
+  try {
+    const snap = await getDoc(MEMBER_SETTINGS_REF);
+    const d = snap.exists() ? snap.data() : {};
+    _mmgCfg = {
+      enabled: d.enabled === true,
+      priceText: typeof d.priceText === 'string' ? d.priceText : '',
+      memberDays: Number(d.memberDays) > 0 ? Number(d.memberDays) : 30,
+      qrUrl: typeof d.qrUrl === 'string' ? d.qrUrl : ''
+    };
+  } catch (e) {
+    console.warn('[mmg/settings]', e);
+  }
+  const enabledEl = document.getElementById('mmgEnabled');
+  if (enabledEl) enabledEl.checked = _mmgCfg.enabled;
+  document.getElementById('mmgPriceText').value  = _mmgCfg.priceText;
+  document.getElementById('mmgMemberDays').value = _mmgCfg.memberDays;
+  document.getElementById('mmgQrUrl').value      = _mmgCfg.qrUrl;
+  mmgPaintQr(_mmgCfg.qrUrl);
+}
+
+async function mmgSaveSettings() {
+  const days      = Number(document.getElementById('mmgMemberDays').value);
+  const priceText = document.getElementById('mmgPriceText').value.trim();
+  const qrUrl     = document.getElementById('mmgQrUrl').value.trim();
+  const enabled   = document.getElementById('mmgEnabled').checked;
+
+  if (!Number.isFinite(days) || days < 1 || days > 3650) {
+    mmgMsg('mmgCfgMsg', 'จำนวนวันต้องอยู่ระหว่าง 1 - 3650 วัน', '#ff6b85');
+    return;
+  }
+  if (qrUrl && !/^https?:\/\//i.test(qrUrl)) {
+    mmgMsg('mmgCfgMsg', 'ลิงก์รูป QR ต้องขึ้นต้นด้วย https://', '#ff6b85');
+    return;
+  }
+
+  const btn = document.getElementById('mmgSaveCfg');
+  btn.disabled = true;
+  try {
+    await setDoc(MEMBER_SETTINGS_REF, {
+      enabled, priceText, memberDays: days, qrUrl, updatedAt: new Date()
+    }, { merge: true });
+    _mmgCfg = { enabled, priceText, memberDays: days, qrUrl };
+    mmgPaintQr(qrUrl);
+    mmgMsg('mmgCfgMsg', 'บันทึกการตั้งค่าแล้ว', '#4ade80');
+  } catch (e) {
+    mmgMsg('mmgCfgMsg', 'บันทึกไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function mmgUploadQr(file) {
+  const msg = document.getElementById('mmgQrMsg');
+  msg.textContent = 'กำลังอัปโหลด...';
+  msg.style.color = 'var(--muted)';
+  try {
+    const objRef = storageRef(storage, 'membership/qr.png');
+    await uploadBytes(objRef, file, { contentType: file.type || 'image/png' });
+    const url = await getDownloadURL(objRef);
+    document.getElementById('mmgQrUrl').value = url;
+    mmgPaintQr(url);
+    await setDoc(MEMBER_SETTINGS_REF, { qrUrl: url, updatedAt: new Date() }, { merge: true });
+    _mmgCfg.qrUrl = url;
+    msg.textContent = 'อัปโหลดและบันทึกลง settings/membership แล้ว';
+    msg.style.color = '#4ade80';
+  } catch (e) {
+    msg.textContent = 'อัปโหลดไม่สำเร็จ (' + (e.code || e.message || 'ไม่ทราบสาเหตุ') + ') — วางลิงก์รูปในช่องด้านล่างแทนได้';
+    msg.style.color = '#ff6b85';
+  }
+}
+
+function mmgFillNovelSelect() {
+  const sel = document.getElementById('mmgNovelSelect');
+  if (!sel) return;
+  const keep = sel.value || _mmgNovelId;
+  sel.innerHTML = '<option value="">— เลือกนิยาย —</option>' +
+    allNovels.map(n => `<option value="${esc(n.id)}">${esc(n.title || 'ไม่มีชื่อ')}</option>`).join('');
+  if (keep && allNovels.some(n => n.id === keep)) sel.value = keep;
+}
+
+async function mmgLoadEpisodes(novelId) {
+  const box = document.getElementById('mmgEpList');
+  _mmgNovelId = novelId || '';
+  if (!novelId) {
+    box.innerHTML = '<div class="mmg-empty">เลือกนิยายเพื่อดูรายการตอน</div>';
+    return;
+  }
+  box.innerHTML = '<div class="mmg-empty">กำลังโหลด...</div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order', 'asc')));
+    if (!snap.size) {
+      box.innerHTML = '<div class="mmg-empty">นิยายเรื่องนี้ยังไม่มีตอน</div>';
+      return;
+    }
+    box.innerHTML = snap.docs.map(d => {
+      const ep = d.data();
+      const on = ep.premium === true;
+      return `<div class="mmg-ep-row${on ? ' on' : ''}">
+        <span class="mmg-ep-name">ตอนที่ ${esc(ep.order ?? '—')} · ${esc(ep.title || 'ไม่มีชื่อ')}${ep.audioKey ? ' · R2' : ''}</span>
+        <label class="mmg-switch">
+          <input type="checkbox" data-novel="${esc(novelId)}" data-ep="${esc(d.id)}" data-r2="${ep.audioKey ? '1' : '0'}"${on ? ' checked' : ''}>
+          <span></span>
+        </label>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('input[type="checkbox"]').forEach(inp => {
+      inp.addEventListener('change', mmgTogglePremium);
+    });
+  } catch (e) {
+    console.warn('[mmg/episodes]', e);
+    box.innerHTML = '<div class="mmg-empty">โหลดรายการตอนไม่สำเร็จ</div>';
+  }
+}
+
+async function mmgTogglePremium(e) {
+  const inp   = e.currentTarget;
+  const on    = inp.checked;
+  const row   = inp.closest('.mmg-ep-row');
+  if (!on && inp.dataset.r2 === '1' && !confirm('ตอนนี้ไฟล์อยู่บน R2 (ไม่มี audioUrl) — ถ้าปลดล็อก ผู้ใช้ทั่วไปจะยังเล่นไม่ได้จนกว่าจะอัปโหลดไฟล์เข้า Cloudinary ใหม่ ดำเนินการต่อ?')) {
+    inp.checked = true;
+    return;
+  }
+  inp.disabled = true;
+  try {
+    await updateDoc(doc(db, 'novels', inp.dataset.novel, 'episodes', inp.dataset.ep), {
+      premium: on,
+      updatedAt: new Date()
+    });
+    if (row) row.classList.toggle('on', on);
+    mmgMsg('mmgEpMsg', on ? 'ล็อกตอนนี้สำหรับสมาชิกแล้ว' : 'ปลดล็อกตอนนี้แล้ว', '#4ade80');
+  } catch (err) {
+    inp.checked = !on;
+    mmgMsg('mmgEpMsg', 'บันทึกไม่สำเร็จ: ' + (err.message || err.code || ''), '#ff6b85');
+  } finally {
+    inp.disabled = false;
+  }
+}
+
+async function mmgMigrateLegacy() {
+  if (!confirm('ตั้งค่า premium: false ให้ทุกตอนที่ยังไม่มีฟิลด์นี้? (ทำครั้งเดียวหลังวาง rules ใหม่)')) return;
+  const btn = document.getElementById('mmgMigrate');
+  btn.disabled = true;
+  mmgMsg('mmgEpMsg', 'กำลังปรับข้อมูล...', 'var(--muted)');
+  let fixed = 0, failed = 0;
+  try {
+    const novelsSnap = await getDocs(collection(db, 'novels'));
+    for (const nDoc of novelsSnap.docs) {
+      const epSnap  = await getDocs(collection(db, 'novels', nDoc.id, 'episodes'));
+      const targets = epSnap.docs.filter(d => typeof d.data().premium !== 'boolean');
+      for (const t of targets) {
+        try {
+          await updateDoc(doc(db, 'novels', nDoc.id, 'episodes', t.id), { premium: false });
+          fixed++;
+        } catch (e) { failed++; }
+      }
+    }
+    mmgMsg('mmgEpMsg', `ปรับข้อมูลแล้ว ${fixed} ตอน` + (failed ? ` • ล้มเหลว ${failed} ตอน` : ''), failed ? '#fbbf24' : '#4ade80');
+    if (_mmgNovelId) mmgLoadEpisodes(_mmgNovelId);
+  } catch (e) {
+    mmgMsg('mmgEpMsg', 'ปรับข้อมูลไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function mmgRenderPending() {
+  const box = document.getElementById('mmgPendingList');
+  if (!box) return;
+  if (!_mmgPending.length) {
+    box.innerHTML = '<div class="mmg-empty">ไม่มีรายการรออนุมัติ</div>';
+    return;
+  }
+  box.innerHTML = _mmgPending.map(r => `
+    <div class="mmg-req">
+      <div class="mmg-req-main">
+        <div class="mmg-req-name">${esc(r.name || 'ไม่ระบุชื่อ')}</div>
+        <div class="mmg-req-sub">
+          ${esc(r.email || '—')} · uid: ${esc(r.uid || '—')}<br>
+          หมายเหตุ: ${esc(r.note || '—')} · แจ้งเมื่อ ${esc(mmgFmtDateTime(r.createdAt))}
+        </div>
+      </div>
+      <div class="mmg-req-amount">${Number(r.amount || 0).toLocaleString('th-TH')} ฿</div>
+      <div class="mmg-req-btns">
+        <button class="mmg-btn-approve" type="button" data-approve="${esc(r.id)}">อนุมัติ</button>
+        <button class="mmg-btn-reject" type="button" data-reject="${esc(r.id)}">ปฏิเสธ</button>
+      </div>
+    </div>`).join('');
+}
+
+function mmgRenderSignups() {
+  const box = document.getElementById('mmgSignupList');
+  if (!box) return;
+  if (!_mmgSignups.length) {
+    box.innerHTML = '<div class="mmg-empty">ยังไม่มีผู้สมัครใหม่</div>';
+    return;
+  }
+  const fresh = _mmgSignups.filter(u => u.signupSeen !== true);
+  const seen  = _mmgSignups.filter(u => u.signupSeen === true).slice(0, 20);
+  const rows  = [...fresh, ...seen].map(u => {
+    const isNew = u.signupSeen !== true;
+    return `
+    <div class="mmg-req">
+      <div class="mmg-req-main">
+        <div class="mmg-req-name">${esc(u.displayName || u.email || u.id)}${isNew ? ' <span class="mmg-count">ใหม่</span>' : ''}</div>
+        <div class="mmg-req-sub">
+          ${esc(u.email || '—')} · สมัคร/เข้าใช้ล่าสุด ${esc(mmgFmtDateTime(u.createdAt || u.lastLogin))}
+        </div>
+      </div>
+      <div class="mmg-req-btns">
+        ${isNew
+          ? `<button class="mmg-btn" type="button" data-seen="${esc(u.id)}"><span data-icon="check"></span> รับทราบ</button>`
+          : '<span class="mmg-badge">รับทราบแล้ว</span>'}
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML = rows;
+  box.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); });
+}
+
+function mmgUpdateBadges() {
+  const pending = _mmgPending.length;
+  const fresh   = _mmgSignups.filter(u => u.signupSeen !== true).length;
+  const total   = pending + fresh;
+
+  const pairs = [
+    ['mmgMemberBadge', total],
+    ['mmgTopBadge', total]
+  ];
+  pairs.forEach(([id, n]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = String(n);
+    el.style.display = n > 0 ? 'inline-flex' : 'none';
+  });
+
+  const hp = document.getElementById('mmgHeaderPending');
+  if (hp) {
+    hp.textContent = `รออนุมัติ ${pending}`;
+    hp.classList.toggle('hot', pending > 0);
+  }
+  const hs = document.getElementById('mmgHeaderSignup');
+  if (hs) {
+    hs.textContent = `ผู้สมัครใหม่ ${fresh}`;
+    hs.classList.toggle('hot', fresh > 0);
+  }
+  const pc = document.getElementById('mmgPendingCount');
+  if (pc) pc.textContent = String(pending);
+  const sc = document.getElementById('mmgSignupCount');
+  if (sc) sc.textContent = String(fresh);
+
+  if (_mmgLastPending !== null && pending > _mmgLastPending) {
+    mmgToast(`มีแจ้งโอนใหม่ ${pending - _mmgLastPending} รายการ`, 'clipboard');
+  }
+  if (_mmgLastSignup !== null && fresh > _mmgLastSignup) {
+    mmgToast(`มีผู้สมัครใหม่ ${fresh - _mmgLastSignup} คน`, 'users');
+  }
+  _mmgLastPending = pending;
+  _mmgLastSignup  = fresh;
+}
+
+function mmgSubscribe() {
+  if (!_mmgUnsubPay) {
+    _mmgUnsubPay = onSnapshot(
+      query(collection(db, 'paymentRequests'), where('status', '==', 'pending')),
+      snap => {
+        _mmgPending = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => mmgTs(b.createdAt) - mmgTs(a.createdAt));
+        mmgRenderPending();
+        mmgUpdateBadges();
+      },
+      err => console.warn('[mmg/pending]', err)
+    );
+  }
+  if (!_mmgUnsubUsers) {
+    _mmgUnsubUsers = onSnapshot(
+      collection(db, 'users'),
+      snap => {
+        _mmgSignups = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (mmgTs(b.createdAt) || mmgTs(b.lastLogin)) - (mmgTs(a.createdAt) || mmgTs(a.lastLogin)));
+        mmgRenderSignups();
+        mmgUpdateBadges();
+      },
+      err => console.warn('[mmg/users]', err)
+    );
+  }
+}
+
+async function mmgApprove(reqId, btn) {
+  const req = _mmgPending.find(r => r.id === reqId);
+  if (!req || !req.uid) return;
+  const days = Number(_mmgCfg.memberDays) > 0 ? Number(_mmgCfg.memberDays) : 30;
+  if (!confirm(`อนุมัติให้ ${req.name || req.email || req.uid} เป็นสมาชิก ${days} วัน?`)) return;
+  if (btn) btn.disabled = true;
+  try {
+    const userRef = doc(db, 'users', req.uid);
+    const snap    = await getDoc(userRef);
+    const cur     = snap.exists() ? mmgToDate(snap.data().memberUntil) : null;
+    const base    = cur && cur.getTime() > Date.now() ? cur : new Date();
+    const until   = new Date(base.getTime() + days * MEMBER_DAY_MS);
+    await setDoc(userRef, {
+      memberUntil: Timestamp.fromDate(until),
+      memberSince: snap.exists() && snap.data().memberSince ? snap.data().memberSince : new Date()
+    }, { merge: true });
+    await updateDoc(doc(db, 'paymentRequests', reqId), {
+      status: 'approved',
+      reviewedBy: currentUser ? currentUser.uid : '',
+      reviewedAt: new Date()
+    });
+    mmgToast(`อนุมัติแล้ว · สมาชิกถึง ${mmgFmtDate(until)}`, 'check');
+  } catch (e) {
+    alert('อนุมัติไม่สำเร็จ: ' + (e.message || e.code || ''));
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function mmgReject(reqId, btn) {
+  if (!confirm('ปฏิเสธรายการแจ้งโอนนี้?')) return;
+  if (btn) btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'paymentRequests', reqId), {
+      status: 'rejected',
+      reviewedBy: currentUser ? currentUser.uid : '',
+      reviewedAt: new Date()
+    });
+    mmgToast('ปฏิเสธรายการแล้ว', 'x');
+  } catch (e) {
+    alert('ปฏิเสธไม่สำเร็จ: ' + (e.message || e.code || ''));
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function mmgSeenSignup(uid, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'users', uid), { signupSeen: true });
+  } catch (e) {
+    alert('บันทึกไม่สำเร็จ: ' + (e.message || e.code || ''));
+    if (btn) btn.disabled = false;
+  }
+}
+
+function mmgTogglePanel(force) {
+  const wrap = document.getElementById('memberMgmtWrap');
+  const btn  = document.getElementById('btnMemberMgmt');
+  if (!wrap || !btn) return;
+  const open = force === undefined ? !wrap.classList.contains('visible') : force === true;
+  if (open) {
+    document.getElementById('adminMgmtWrap').classList.remove('visible');
+    document.getElementById('btnManageAdmin').classList.remove('active');
+    document.getElementById('editFormWrap').style.display = 'none';
+    document.getElementById('rightPlaceholder').style.display = 'none';
+    wrap.classList.add('visible');
+    btn.classList.add('active');
+    mmgFillNovelSelect();
+    mmgSubscribe();
+  } else {
+    wrap.classList.remove('visible');
+    btn.classList.remove('active');
+    if (selectedNovelId) document.getElementById('editFormWrap').style.display = 'block';
+    else document.getElementById('rightPlaceholder').style.display = 'flex';
+  }
+}
+
+async function initMemberPanel() {
+  if (_mmgInit) return;
+  _mmgInit = true;
+
+  await mmgLoadSettings();
+  mmgFillNovelSelect();
+  mmgSubscribe();
+
+  document.getElementById('mmgSaveCfg').addEventListener('click', mmgSaveSettings);
+  document.getElementById('mmgQrPick').addEventListener('click', () => document.getElementById('mmgQrFile').click());
+  document.getElementById('mmgQrFile').addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (f) mmgUploadQr(f);
+  });
+  document.getElementById('mmgQrUrl').addEventListener('change', (e) => mmgPaintQr(e.target.value.trim()));
+  document.getElementById('mmgNovelSelect').addEventListener('change', (e) => mmgLoadEpisodes(e.target.value));
+  document.getElementById('mmgMigrate').addEventListener('click', mmgMigrateLegacy);
+  document.getElementById('btnMemberMgmt').addEventListener('click', () => mmgTogglePanel());
+  document.getElementById('mmgTopBtn').addEventListener('click', () => {
+    mmgTogglePanel(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('mmgPendingList').addEventListener('click', (e) => {
+    const ap = e.target.closest('[data-approve]');
+    if (ap) { mmgApprove(ap.dataset.approve, ap); return; }
+    const rj = e.target.closest('[data-reject]');
+    if (rj) mmgReject(rj.dataset.reject, rj);
+  });
+
+  document.getElementById('mmgSignupList').addEventListener('click', (e) => {
+    const sn = e.target.closest('[data-seen]');
+    if (sn) mmgSeenSignup(sn.dataset.seen, sn);
   });
 }
 </script>
@@ -2422,6 +3210,10 @@ function bindEvents() {
       <span class="ep-modal-file-name" id="epModalFileName">ยังไม่ได้เลือกไฟล์</span>
       <input type="file" id="epModalFileInput" accept="audio/*" style="display:none" onchange="onEpFileChange(this)">
     </div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:16px;color:var(--text-secondary);font-size:13px;">
+      <input type="checkbox" id="epModalPremium" style="width:16px;height:16px;margin:0;">
+      <span>ตอนนี้ล็อกเฉพาะสมาชิก (premium) — ไฟล์เก็บใน R2</span>
+    </label>
     <div class="ep-modal-actions">
       <button class="btn-ep-cancel" onclick="closeEpModal()">ยกเลิก</button>
       <button class="btn-ep-save" id="epModalSaveBtn" onclick="saveEpisode()"><span data-icon="save"></span> บันทึก</button>

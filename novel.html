@@ -249,6 +249,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -304,6 +305,38 @@ let novel      = null;
 let audioFiles = [];
 let curIdx     = -1;
 const audio    = $('audio');
+
+const AUDIO_WORKER = 'https://novel-audio.hollymons4654.workers.dev';
+const auth = getAuth(firebaseApp);
+let _signCache = { key: '', url: '', exp: 0 };
+
+function isR2(af) { return !!(af && af.audioKey && !af.url); }
+
+async function signAudio(key) {
+  if (_signCache.key === key && _signCache.url && _signCache.exp - Date.now() > 60000) return _signCache.url;
+  const user  = auth.currentUser;
+  const token = user ? await user.getIdToken().catch(() => '') : '';
+  if (!token) throw new Error('MEMBERS_ONLY');
+  const res = await fetch(AUDIO_WORKER + '/sign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify({ key })
+  });
+  if (res.status === 403) throw new Error('MEMBERS_ONLY');
+  if (!res.ok) throw new Error('SIGN_' + res.status);
+  const data = await res.json();
+  if (!data || !data.url) throw new Error('SIGN_BAD_RESPONSE');
+  _signCache = { key, url: data.url, exp: Number(data.expiresAt) || (Date.now() + 600000) };
+  return data.url;
+}
+
+async function episodeSrc(af) {
+  if (isR2(af)) return await signAudio(af.audioKey);
+  let src = af.url || '';
+  if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
+    src = src.replace('/raw/upload/', '/video/upload/');
+  return src;
+}
 
 /* ── load ── */
 const novelId = new URLSearchParams(location.search).get('id');
@@ -379,7 +412,7 @@ function buildEpList(epCount) {
   }
   for (let i = 0; i < epCount; i++) {
     const af  = audioFiles[i];
-    const ok  = af && af.url;
+    const ok  = af && (af.url || af.audioKey);
     const lbl = esc(af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`);
     const item = document.createElement('div');
     item.className = 'ep-item' + (ok ? '' : ' no-audio');
@@ -393,10 +426,19 @@ function buildEpList(epCount) {
 }
 
 /* ── play ── */
-function playEp(idx, resumeTime = 0) {
-  curIdx = idx;
+async function playEp(idx, resumeTime = 0) {
   const af = audioFiles[idx];
-  if (!af || !af.url) return;
+  if (!af || (!af.url && !af.audioKey)) return;
+
+  let playSrc;
+  try {
+    playSrc = await episodeSrc(af);
+  } catch (e) {
+    if (e && e.message === 'MEMBERS_ONLY') alert('ตอนนี้สำหรับสมาชิก — กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิก');
+    else console.warn('[r2/sign]', e);
+    return;
+  }
+  curIdx = idx;
 
   document.querySelectorAll('.ep-item').forEach(el => {
     el.classList.remove('active');
@@ -411,15 +453,12 @@ function playEp(idx, resumeTime = 0) {
     activeEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 
-  let src = af.url;
-  if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
-    src = src.replace('/raw/upload/', '/video/upload/');
-  audio.src = src; audio.load();
+  audio.src = playSrc; audio.load();
   if (resumeTime > 0) {
     const onReady = () => { audio.currentTime = resumeTime; audio.removeEventListener('canplay', onReady); };
     audio.addEventListener('canplay', onReady);
   }
-  audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
+  audio.play().catch(() => { audio.play().catch(()=>{}); });
 
   const lbl = af.name || `ตอนที่ ${idx+1}`;
   $('playerEp').textContent  = lbl;
@@ -463,7 +502,7 @@ let _selectedIdx = -1;
 
 $('playFirstBtn').addEventListener('click', () => {
   // ถ้า user เลือก ep ไว้แล้ว → เล่น ep นั้น
-  if (_selectedIdx >= 0 && audioFiles[_selectedIdx]?.url) {
+  if (_selectedIdx >= 0 && (audioFiles[_selectedIdx]?.url || audioFiles[_selectedIdx]?.audioKey)) {
     playEp(_selectedIdx);
     return;
   }
@@ -503,6 +542,32 @@ audio.addEventListener('pause', () => { $('playBtn').innerHTML = icon('play'); }
 audio.addEventListener('ended', () => {
   const max = Math.max(novel?.episodeCount||0, audioFiles.length) - 1;
   if (curIdx < max) playEp(curIdx+1);
+});
+
+let _resigning = false;
+audio.addEventListener('error', async () => {
+  const af = audioFiles[curIdx];
+  if (!isR2(af) || _resigning) return;
+  _resigning = true;
+  const resumeAt = audio.currentTime || 0;
+  const wantPlay = !audio.paused;
+  try {
+    _signCache = { key: '', url: '', exp: 0 };
+    const fresh = await signAudio(af.audioKey);
+    const seekAndPlay = () => {
+      audio.removeEventListener('canplay', seekAndPlay);
+      if (resumeAt > 0) audio.currentTime = resumeAt;
+      if (wantPlay) audio.play().catch(() => {});
+    };
+    audio.addEventListener('canplay', seekAndPlay);
+    audio.src = fresh;
+    audio.load();
+  } catch (e) {
+    if (e && e.message === 'MEMBERS_ONLY') alert('ตอนนี้สำหรับสมาชิก — กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิก');
+    else console.warn('[r2/resign]', e);
+  } finally {
+    _resigning = false;
+  }
 });
 audio.addEventListener('timeupdate', () => {
   if (!audio.duration) return;

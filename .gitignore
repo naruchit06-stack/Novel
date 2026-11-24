@@ -21,3 +21,7 @@ desktop.ini
 # Python
 __pycache__/
 *.pyc
+work/
+BRIEF-membership.md
+BRIEF-r2-integration.md
+PROGRESS.md

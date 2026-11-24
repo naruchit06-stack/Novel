@@ -12,6 +12,16 @@ service firebase.storage {
         && firestore.get(adminPath()).data.get('active', true) != false;
     }
 
+    function userPath() {
+      return /databases/(default)/documents/users/$(request.auth.uid);
+    }
+    function isMember() {
+      return request.auth != null
+        && firestore.exists(userPath())
+        && firestore.get(userPath()).data.get('memberUntil', null) is timestamp
+        && firestore.get(userPath()).data.get('memberUntil', null) > request.time;
+    }
+
     // [SEC-4] จำกัดขนาด + ชนิดไฟล์
     function validUpload() {
       return request.resource.size < 100 * 1024 * 1024   // ไม่เกิน 100 MB
@@ -22,6 +32,18 @@ service firebase.storage {
     match /novels/{allPaths=**} {
       allow read: if true;
       // delete ไม่มี request.resource → ตรวจแค่สิทธิ์
+      allow write: if isAdmin() && (request.method == 'delete' || validUpload());
+    }
+
+    // รูป QR รับโอน: อ่านได้ทุกคน, เขียนได้เฉพาะ admin
+    match /membership/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && (request.method == 'delete' || validUpload());
+    }
+
+    // ไฟล์เสียงเฉพาะสมาชิก: อ่านได้เฉพาะ admin/สมาชิกที่ยังไม่หมดอายุ
+    match /audio-premium/{allPaths=**} {
+      allow read: if isAdmin() || isMember();
       allow write: if isAdmin() && (request.method == 'delete' || validUpload());
     }
   }

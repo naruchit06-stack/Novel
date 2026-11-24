@@ -20,7 +20,7 @@
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getDocs, setDoc, serverTimestamp }
+import { getFirestore, collection, onSnapshot, query, orderBy, where, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -72,6 +72,338 @@ function safeUrl(u) {
 window.safeUrl = safeUrl;
 
 
+const membershipDocRef = doc(db, 'settings', 'membership');
+let _membership = { enabled: false, priceText: '', memberDays: 30, qrUrl: '' };
+let _membershipLoaded = false;
+let _memberUntil = null;
+let _memberCheckedUid = null;
+let _authUser = null;
+let _adminKnown = null;
+let _nvLocked = new Set();
+
+function toDateVal(v) {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (typeof v.toDate === 'function') return v.toDate();
+  if (typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+  if (typeof v === 'number') return new Date(v);
+  return null;
+}
+
+async function loadMembershipSettings(force) {
+  if (_membershipLoaded && !force) return _membership;
+  try {
+    const snap = await getDoc(membershipDocRef);
+    if (snap.exists()) {
+      const d = snap.data() || {};
+      _membership = {
+        enabled: d.enabled === true,
+        priceText: typeof d.priceText === 'string' ? d.priceText : '',
+        memberDays: Number(d.memberDays) > 0 ? Number(d.memberDays) : 30,
+        qrUrl: safeUrl(d.qrUrl)
+      };
+    }
+  } catch (e) {
+    console.warn('[membership/settings]', e);
+  }
+  _membershipLoaded = true;
+  return _membership;
+}
+
+async function loadMemberStatus(user) {
+  _memberUntil = null;
+  _memberCheckedUid = user ? user.uid : null;
+  if (!user) return null;
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    _memberUntil = snap.exists() ? toDateVal(snap.data().memberUntil) : null;
+  } catch (e) {
+    _memberUntil = null;
+  }
+  return _memberUntil;
+}
+
+let _memberUnsub = null;
+
+function watchMemberStatus(user) {
+  if (_memberUnsub) { _memberUnsub(); _memberUnsub = null; }
+  if (!user) return;
+  _memberUnsub = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+    const wasActive = isMemberActive();
+    _memberUntil = snap.exists() ? toDateVal(snap.data().memberUntil) : null;
+    if (!wasActive && isMemberActive()) {
+      closeUnlockDialog();
+      refreshNovelForMembership();
+    }
+  }, (e) => console.warn('[membership/watch]', e));
+}
+
+function isMemberActive() {
+  return !!_memberUntil && _memberUntil.getTime() > Date.now();
+}
+
+function fmtMemberUntil() {
+  if (!_memberUntil) return '';
+  try {
+    return _memberUntil.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch (e) {
+    return _memberUntil.toISOString().slice(0, 10);
+  }
+}
+
+function isEpisodeLocked(af, idx) {
+  if (!_membership.enabled) return false;
+  if (_adminKnown === true) return false;
+  if (idx !== undefined && _nvLocked.has(idx)) return true;
+  return !!(af && af.premium === true) && !isMemberActive();
+}
+
+async function isAdminNow() {
+  if (_adminKnown === true) return true;
+  if (!_authUser) return false;
+  _adminKnown = await checkIsAdmin(_authUser);
+  return _adminKnown === true;
+}
+
+const AUDIO_WORKER  = 'https://novel-audio.hollymons4654.workers.dev';
+const SIGN_MIN_LEFT = 60000;
+
+let _r2Sign    = { key: '', url: '', expiresAt: 0 };
+let _r2Pending = null;
+
+class MembersOnlyError extends Error {
+  constructor() { super('MEMBERS_ONLY'); this.code = 'MEMBERS_ONLY'; }
+}
+
+function isR2Episode(af) {
+  return !!(af && af.audioKey && !af.url);
+}
+
+async function r2SignUrl(key) {
+  if (!key) throw new Error('NO_KEY');
+  if (_r2Sign.key === key && _r2Sign.url && _r2Sign.expiresAt - Date.now() > SIGN_MIN_LEFT) return _r2Sign.url;
+  if (_r2Pending && _r2Pending.key === key) return _r2Pending.promise;
+  const promise = (async () => {
+    const user  = auth.currentUser;
+    const token = user ? await user.getIdToken().catch(() => '') : '';
+    if (!token) throw new MembersOnlyError();
+    const res = await fetch(AUDIO_WORKER + '/sign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ key })
+    });
+    if (res.status === 403) throw new MembersOnlyError();
+    if (!res.ok) throw new Error('SIGN_' + res.status);
+    const data = await res.json();
+    if (!data || !data.url) throw new Error('SIGN_BAD_RESPONSE');
+    _r2Sign = { key, url: data.url, expiresAt: Number(data.expiresAt) || (Date.now() + 600000) };
+    return _r2Sign.url;
+  })();
+  _r2Pending = { key, promise };
+  try { return await promise; }
+  finally { if (_r2Pending && _r2Pending.promise === promise) _r2Pending = null; }
+}
+
+async function resolveEpisodeSrc(af) {
+  if (isR2Episode(af)) return await r2SignUrl(af.audioKey);
+  let src = af.url || '';
+  if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
+    src = src.replace('/raw/upload/', '/video/upload/');
+  return src;
+}
+
+async function showMembersOnly(novel) {
+  try { await openUnlockDialog(novel); } catch (e) {}
+  if (_unlockEl && _unlockEl.classList.contains('open')) return;
+  alert('ตอนนี้สำหรับสมาชิก — กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิกที่ยังไม่หมดอายุ');
+}
+
+async function loadEpisodesForAccess(novelId, epCnt) {
+  const epsRef   = collection(db, 'novels', novelId, 'episodes');
+  const fullOpen = !_membership.enabled || isMemberActive() || await isAdminNow();
+  const cacheKey = novelId + (fullOpen ? '|full' : '|free');
+  if (_epCache[cacheKey]) return _epCache[cacheKey];
+
+  let out;
+  if (fullOpen) {
+    const snap = await getDocs(query(epsRef, orderBy('order', 'asc')));
+    const list = snap.docs.map(d => ({ id: d.id, url: d.data().audioUrl, name: d.data().title, ...d.data() }));
+    out = { list, locked: new Set(), count: list.length };
+  } else {
+    let snap = null;
+    try {
+      snap = await getDocs(query(epsRef, where('premium', '==', false)));
+    } catch (e) {
+      console.warn('[membership/episodes]', e);
+      try { snap = await getDocs(query(epsRef, orderBy('order', 'asc'))); } catch (e2) { snap = null; }
+    }
+    const total = Math.max(Number(epCnt) || 0, snap ? snap.size : 0);
+    const list  = new Array(total);
+    const rest  = [];
+    if (snap) {
+      snap.docs.forEach(d => {
+        const data = d.data();
+        const rec  = { id: d.id, url: data.audioUrl, name: data.title, ...data };
+        const idx  = Number(data.order) - 1;
+        if (Number.isInteger(idx) && idx >= 0 && idx < total && !list[idx]) list[idx] = rec;
+        else rest.push(rec);
+      });
+      rest.forEach(r => list.push(r));
+    }
+    const locked = new Set();
+    for (let i = 0; i < total; i++) if (!list[i]) locked.add(i);
+    out = { list, locked, count: total };
+  }
+  _epCache[cacheKey] = out;
+  return out;
+}
+
+async function refreshNovelForMembership() {
+  if (!_membershipLoaded) await loadMembershipSettings();
+  if (!_nvNovel || !document.getElementById('nvEpList')) return;
+  const epCnt = Math.max(Number.isFinite(_nvNovel.episodeCount) ? _nvNovel.episodeCount : 0, _nvAudioFiles.length);
+  try {
+    const eps = await loadEpisodesForAccess(_nvNovel.id, epCnt);
+    _nvBuildEpList(epCnt, eps.list, _nvNovel, eps.locked);
+  } catch (e) {
+    console.warn('[membership/refresh]', e);
+  }
+}
+
+let _unlockEl = null;
+
+function buildUnlockDom() {
+  if (_unlockEl && document.body.contains(_unlockEl)) return _unlockEl;
+  _unlockEl = document.createElement('div');
+  _unlockEl.className = 'gh-unlock-overlay';
+  _unlockEl.innerHTML = `
+    <div class="gh-unlock-card" role="dialog" aria-modal="true" aria-label="ปลดล็อกตอนสมาชิก">
+      <button class="gh-unlock-close" type="button" aria-label="ปิด">✕</button>
+      <div class="gh-unlock-title">${icon('lock')} ตอนนี้สำหรับสมาชิก</div>
+      <div class="gh-unlock-body"></div>
+    </div>`;
+  _unlockEl.querySelector('.gh-unlock-close').addEventListener('click', closeUnlockDialog);
+  _unlockEl.addEventListener('click', (e) => { if (e.target === _unlockEl) closeUnlockDialog(); });
+  document.body.appendChild(_unlockEl);
+  return _unlockEl;
+}
+
+function closeUnlockDialog() {
+  if (!_unlockEl) return;
+  _unlockEl.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function openUnlockDialog(novel) {
+  await loadMembershipSettings();
+  if (!_membership.enabled) return;
+  const el  = buildUnlockDom();
+  const box = el.querySelector('.gh-unlock-body');
+  box.innerHTML = '<div class="gh-unlock-note">กำลังโหลดข้อมูล...</div>';
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  await renderUnlockBody(box, novel);
+}
+
+async function renderUnlockBody(box, novel) {
+  const priceLine = _membership.priceText
+    ? `<div class="gh-unlock-price">${esc(_membership.priceText)}</div>`
+    : '';
+  const qrBlock = _membership.qrUrl
+    ? `<img class="gh-unlock-qr" src="${esc(_membership.qrUrl)}" alt="QR รับโอน">`
+    : `<div class="gh-unlock-note">แอดมินยังไม่ได้อัปโหลด QR รับโอน</div>`;
+
+  if (!_authUser) {
+    box.innerHTML = `
+      ${qrBlock}
+      ${priceLine}
+      <div class="gh-unlock-note">เข้าสู่ระบบก่อน แล้วกลับมาแจ้งโอนได้ทันที (สมาชิก ${_membership.memberDays} วันต่อการอนุมัติ 1 ครั้ง)</div>
+      <button class="gh-unlock-btn" id="ghUnlockLogin" type="button">เข้าสู่ระบบ</button>`;
+    box.querySelector('#ghUnlockLogin').addEventListener('click', () => {
+      window.location.href = (window._BASE || '') + '/login.html';
+    });
+    return;
+  }
+
+  if (isMemberActive()) {
+    box.innerHTML = `
+      <div class="gh-unlock-note">คุณเป็นสมาชิกอยู่แล้ว ใช้ได้ถึง ${esc(fmtMemberUntil())}</div>
+      <button class="gh-unlock-btn" id="ghUnlockClose" type="button">ปิด</button>`;
+    box.querySelector('#ghUnlockClose').addEventListener('click', closeUnlockDialog);
+    return;
+  }
+
+  let pending = null;
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'paymentRequests'),
+      where('uid', '==', _authUser.uid),
+      where('status', '==', 'pending')
+    ));
+    pending = snap.empty ? null : snap.docs[0].data();
+  } catch (e) {
+    console.warn('[membership/pending]', e);
+  }
+
+  if (pending) {
+    const amt = Number(pending.amount) || 0;
+    box.innerHTML = `
+      ${qrBlock}
+      ${priceLine}
+      <div class="gh-unlock-pending">
+        <strong>รอตรวจสอบ</strong>
+        <span>แจ้งโอน ${amt.toLocaleString('th-TH')} บาทแล้ว แอดมินกำลังตรวจสอบ</span>
+      </div>
+      <button class="gh-unlock-btn ghost" id="ghUnlockClose" type="button">ปิด</button>`;
+    box.querySelector('#ghUnlockClose').addEventListener('click', closeUnlockDialog);
+    return;
+  }
+
+  box.innerHTML = `
+    ${qrBlock}
+    ${priceLine}
+    <div class="gh-unlock-note">โอนตาม QR ด้านบน แล้วกรอกยอดที่โอนจริงเพื่อแจ้งแอดมิน (สมาชิก ${_membership.memberDays} วันต่อการอนุมัติ 1 ครั้ง)</div>
+    <label class="gh-unlock-label" for="ghUnlockAmount">ยอดเงินที่โอน (บาท)</label>
+    <input class="gh-unlock-input" id="ghUnlockAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="เช่น 99">
+    <label class="gh-unlock-label" for="ghUnlockNote">หมายเหตุ (ไม่บังคับ)</label>
+    <textarea class="gh-unlock-input" id="ghUnlockNote" rows="2" maxlength="500" placeholder="เช่น ชื่อบัญชีผู้โอน / เลขอ้างอิง"></textarea>
+    <div class="gh-unlock-msg" id="ghUnlockMsg"></div>
+    <button class="gh-unlock-btn" id="ghUnlockSubmit" type="button">แจ้งโอนแล้ว</button>`;
+
+  const submitBtn = box.querySelector('#ghUnlockSubmit');
+  const msgEl     = box.querySelector('#ghUnlockMsg');
+
+  submitBtn.addEventListener('click', async () => {
+    const amount = Number(box.querySelector('#ghUnlockAmount').value);
+    const note   = (box.querySelector('#ghUnlockNote').value || '').trim();
+    msgEl.textContent = '';
+    if (!Number.isFinite(amount) || amount <= 0) {
+      msgEl.textContent = 'กรุณากรอกยอดเงินที่โอนให้ถูกต้อง';
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'กำลังส่ง...';
+    try {
+      await addDoc(collection(db, 'paymentRequests'), {
+        uid: _authUser.uid,
+        name: _authUser.displayName || (_authUser.email || '').split('@')[0] || 'ผู้ใช้',
+        email: _authUser.email || '',
+        amount,
+        note,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+      await renderUnlockBody(box, novel);
+    } catch (e) {
+      console.warn('[membership/request]', e);
+      msgEl.textContent = 'ส่งไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'แจ้งโอนแล้ว';
+    }
+  });
+}
+
+
 /* ===== 2. AUTH ===== */
 // [SEC-3] ไม่ฝัง email admin ใน client อีกต่อไป — ตรวจจาก Firestore admins/{uid} เท่านั้น
 // (เอกสาร admins/{uid} ต้องมีอยู่จริง, field active ไม่ใช่ false)
@@ -87,6 +419,8 @@ async function checkIsAdmin(user) {
 }
 
 onAuthStateChanged(auth, async (user) => {
+  _authUser = user;
+  if (!user) _adminKnown = null;
   // [JS-1] Navbar elements
   const loginBtn      = document.getElementById('navLoginBtn');
   const registerBtn   = document.getElementById('navRegisterBtn');
@@ -124,6 +458,7 @@ onAuthStateChanged(auth, async (user) => {
     if (adminBtn) {
       const isAdmin = await checkIsAdmin(user);
       window._isAdmin = isAdmin;
+      _adminKnown = isAdmin;
       adminBtn.style.display = isAdmin ? 'flex' : 'none';
     }
     // แสดงประวัติการฟัง
@@ -137,6 +472,10 @@ onAuthStateChanged(auth, async (user) => {
     if (userMenu)  userMenu.style.display  = 'none';
     if (adminBtn)  adminBtn.style.display  = 'none';
   }
+
+  await loadMemberStatus(user);
+  watchMemberStatus(user);
+  await refreshNovelForMembership();
 });
 
 window.handleSignOut = async function() {
@@ -762,21 +1101,64 @@ window.togglePlay = function() {
   }
 };
 
+function _nvPlayableDir(from, dir) {
+  let i = from + dir;
+  while (i >= 0 && i < _nvAudioFiles.length) {
+    const af = _nvAudioFiles[i];
+    if (af && (af.url || af.audioKey) && !isEpisodeLocked(af, i)) return i;
+    i += dir;
+  }
+  return -1;
+}
+
 window.prevEp = function() {
   if (_nvAudioFiles.length > 0) {
-    if (_nvCurrentIdx > 0) window._nvPlayEp(_nvCurrentIdx - 1, _nvAudioFiles, _nvNovel);
+    const p = _nvPlayableDir(_nvCurrentIdx, -1);
+    if (p >= 0) window._nvPlayEp(p, _nvAudioFiles, _nvNovel);
     return;
   }
   if (currentEpIdx > 0) playEpisode(currentEpIdx - 1);
 };
 window.nextEp = function() {
   if (_nvAudioFiles.length > 0) {
-    if (_nvCurrentIdx < _nvAudioFiles.length - 1) window._nvPlayEp(_nvCurrentIdx + 1, _nvAudioFiles, _nvNovel);
+    const n = _nvPlayableDir(_nvCurrentIdx, 1);
+    if (n >= 0) window._nvPlayEp(n, _nvAudioFiles, _nvNovel);
     return;
   }
   const max = Math.max((currentNovel?.episodeCount || 0), audioFiles_modal.length) - 1;
   if (currentEpIdx < max) playEpisode(currentEpIdx + 1);
 };
+
+let _r2Resigning = false;
+audio.addEventListener('error', async () => {
+  const af = _nvAudioFiles[_nvCurrentIdx];
+  if (!isR2Episode(af) || _r2Resigning) return;
+  _r2Resigning = true;
+  const resumeAt = audio.currentTime || 0;
+  const wantPlay = isPlaying || !audio.paused;
+  try {
+    _r2Sign = { key: '', url: '', expiresAt: 0 };
+    const fresh = await r2SignUrl(af.audioKey);
+    const seekAndPlay = () => {
+      audio.removeEventListener('canplay', seekAndPlay);
+      if (resumeAt > 0) audio.currentTime = resumeAt;
+      if (wantPlay) audio.play().catch(() => {});
+    };
+    audio.addEventListener('canplay', seekAndPlay);
+    audio.src = fresh;
+    audio.load();
+  } catch (e) {
+    if (e && e.code === 'MEMBERS_ONLY') {
+      isPlaying = false;
+      syncPlayBtn(false);
+      if (_nvNovel) await showMembersOnly(_nvNovel);
+    } else {
+      console.warn('[r2/resign]', e);
+    }
+  } finally {
+    _r2Resigning = false;
+  }
+});
 
 
 /* ===== 9. PROGRESS BAR & TIME ===== */
@@ -833,7 +1215,8 @@ audio.addEventListener('ended', () => {
     saveEpProgress(_nvNovel.id, _nvCurrentIdx, audio.duration, audio.duration);
   }
   if (_nvAudioFiles.length > 0 && _nvCurrentIdx < _nvAudioFiles.length - 1) {
-    window._nvPlayEp(_nvCurrentIdx + 1, _nvAudioFiles, _nvNovel);
+    const nx = _nvPlayableDir(_nvCurrentIdx, 1);
+    if (nx >= 0) window._nvPlayEp(nx, _nvAudioFiles, _nvNovel);
   } else {
     nextEp();
   }
@@ -1438,6 +1821,7 @@ window.renderNovelView = async function({ id: novelId }) {
 
   let novel, audioFiles;
   try {
+    await loadMembershipSettings();
     // [PERF-2] เช็ค novel cache ก่อน — ถ้ามีแล้วไม่ hit Firestore
     if (_novelCache[novelId]) {
       novel = _novelCache[novelId];
@@ -1448,14 +1832,9 @@ window.renderNovelView = async function({ id: novelId }) {
       _novelCache[novelId] = novel;
     }
 
-    // [PERF-3] เช็ค episode cache ก่อน — ถ้ามีแล้วไม่ getDocs ซ้ำ
-    if (_epCache[novelId]) {
-      audioFiles = _epCache[novelId];
-    } else {
-      const epSnap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order','asc')));
-      audioFiles = epSnap.docs.map(d => ({ url: d.data().audioUrl, name: d.data().title, ...d.data() }));
-      _epCache[novelId] = audioFiles;
-    }
+    const eps = await loadEpisodesForAccess(novelId, novel.episodeCount || 0);
+    audioFiles = eps.list;
+    _nvLocked  = eps.locked;
   } catch(e) {
     console.error('[renderNovelView]', e);
     _nvErr('โหลดข้อมูลไม่สำเร็จ'); return;
@@ -1466,6 +1845,9 @@ window.renderNovelView = async function({ id: novelId }) {
   // [FIX-EPCOUNT] ใช้ episodeCount อย่างเดียว ไม่ fallback ไป eps แล้ว
   const epCnt  = Math.max(Number.isFinite(novel.episodeCount) ? novel.episodeCount : 0, audioFiles.length);
   const tagsHTML = (Array.isArray(novel.tags) ? novel.tags : []).map(t=>`<span class="nv-tag">${esc(t)}</span>`).join('');
+  const memberBadge = isMemberActive()
+    ? `<div class="nv-member-badge">${icon('crown')} สมาชิกถึง ${esc(fmtMemberUntil())}</div>`
+    : '';
   const nvCoverUrl = safeUrl(novel.coverUrl);
   const coverImg = nvCoverUrl
     ? `<img src="${esc(nvCoverUrl)}" alt="${esc(novel.title)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:12px">`
@@ -1489,6 +1871,7 @@ window.renderNovelView = async function({ id: novelId }) {
             <div class="nv-tags">${tagsHTML}</div>
             <p class="nv-synopsis">${esc(novel.synopsis||'')}</p>
             <button class="nv-play-first-btn" id="nvPlayFirstBtn">${icon('play')} เริ่มฟังนิยาย</button>
+            ${memberBadge}
           </div>
         </div>
         <div class="nv-col-right">
@@ -1516,7 +1899,7 @@ window.renderNovelView = async function({ id: novelId }) {
       .map(() => `<div class="ep-skeleton"><span class="ep-sk-icon"></span><span class="ep-sk-label"></span><span class="ep-sk-dur"></span></div>`)
       .join('');
   }
-  requestAnimationFrame(() => _nvBuildEpList(epCnt, audioFiles, novel));
+  requestAnimationFrame(() => _nvBuildEpList(epCnt, audioFiles, novel, _nvLocked));
 
   // ── play first btn (smart resume)
   document.getElementById('nvPlayFirstBtn').addEventListener('click', () => {
@@ -1532,11 +1915,11 @@ window.renderNovelView = async function({ id: novelId }) {
         const [idxStr, epData] = latest;
         const epIdx = Number(idxStr);
         const af = audioFiles[epIdx];
-        if (af?.url) { window._nvPlayEp(epIdx, audioFiles, novel, epData.currentTime); return; }
+        if (af && (af.url || af.audioKey)) { window._nvPlayEp(epIdx, audioFiles, novel, epData.currentTime); return; }
       }
     } catch(e) {}
     // ไม่เคยฟัง → เล่น ep แรก
-    const i = audioFiles.findIndex(af => af && af.url);
+    const i = audioFiles.findIndex(af => af && (af.url || af.audioKey));
     if (i >= 0) window._nvPlayEp(i, audioFiles, novel);
   });
 
@@ -1589,9 +1972,10 @@ let _nvDesc = false;   // false = เก่า→ใหม่, true = ใหม�
 let _nvAudioFiles = [], _nvNovel = null;
 let _nvCurrentIdx = -1; // [UX-3] track ep ที่กำลังเล่นอยู่
 
-async function _nvBuildEpList(epCnt, audioFiles, novel) {
+async function _nvBuildEpList(epCnt, audioFiles, novel, locked) {
   _nvAudioFiles = audioFiles;
   _nvNovel = novel;
+  if (locked) _nvLocked = locked;
   const list = document.getElementById('nvEpList');
   if (!list) return;
   if (epCnt === 0) {
@@ -1622,7 +2006,7 @@ async function _nvBuildEpList(epCnt, audioFiles, novel) {
   list.innerHTML = '';
   indices.forEach(i => {
     const af  = audioFiles[i];
-    const ok  = af && af.url;
+    const ok  = af && (af.url || af.audioKey);
     const lbl = esc(af ? (af.name || `ตอนที่ ${i+1}`) : `ตอนที่ ${i+1}`);
 
     // [EP-TRACK-2] progress จาก per-ep map ก่อน fallback history เดิม
@@ -1638,16 +2022,24 @@ async function _nvBuildEpList(epCnt, audioFiles, novel) {
         ? `<div class="ep-progress-wrap"><div class="ep-progress-fill" style="width:${pctStr}"></div></div>`
         : '';
 
-    const item = document.createElement('div');
-    item.className = 'ep-item' + (ok ? '' : ' no-audio');
-    item.id = 'nvEp-' + i;
-    item.innerHTML = `<span class="ep-icon">${ok ? icon('play') : icon('hourglass')}</span>
-      <span class="ep-label">${lbl}</span>
-      <span class="ep-dur">${ok ? fmtNV(af.duration) : ''}</span>
-      ${progressHTML}`;
+    const isLocked = isEpisodeLocked(af, i);
 
-    if (ok) item.addEventListener('click', () => {
-      window._nvPlayEp(i, audioFiles, novel);
+    const item = document.createElement('div');
+    item.className = 'ep-item' + (isLocked ? ' ep-premium-locked' : (ok ? '' : ' no-audio'));
+    item.id = 'nvEp-' + i;
+    item.innerHTML = isLocked
+      ? `<span class="ep-icon">${icon('lock')}</span>
+         <span class="ep-label">${lbl}</span>
+         <span class="ep-dur">ต้องเป็นสมาชิก</span>`
+      : `<span class="ep-icon">${ok ? icon('play') : icon('hourglass')}</span>
+         <span class="ep-label">${lbl}</span>
+         ${af && af.premium === true ? `<span class="ep-premium-tag">${icon('crown')} สมาชิก</span>` : ''}
+         <span class="ep-dur">${ok ? fmtNV(af.duration) : ''}</span>
+         ${progressHTML}`;
+
+    if (isLocked) item.addEventListener('click', () => openUnlockDialog(novel));
+    else if (ok) item.addEventListener('click', async () => {
+      await window._nvPlayEp(i, audioFiles, novel);
 
       // [RESUME-FIX-2] helper: seek audioEl — รอ canplay ถ้ายังไม่พร้อม
       const _seekTo = (t) => {
@@ -1676,7 +2068,7 @@ async function _nvBuildEpList(epCnt, audioFiles, novel) {
     list.appendChild(item);
 
     // [HOTFIX-24b] lazy load duration ถ้าไม่มี field (ข้อมูลเก่า)
-    if (ok && (!af.duration || af.duration === 0)) {
+    if (ok && af.url && (!af.duration || af.duration === 0)) {
       const durEl = item.querySelector('.ep-dur');
       const a = new Audio();
       a.onloadedmetadata = () => {
@@ -1717,7 +2109,7 @@ window._nvToggleSort = function() {
 };
 
 // ── play episode (ใช้ audio element เดิมใน shell — SPA-5 ต้องตรวจ)
-window._nvPlayEp = function(idx, audioFiles, novel, resumeTime = 0) {
+window._nvPlayEp = async function(idx, audioFiles, novel, resumeTime = 0) {
   const audio = document.getElementById('audioEl');
   if (!audio) { console.warn('[SPA-5] ไม่พบ #audioEl element'); return; }
   // [BUG-PREVNEXT-1] อัปเดต global ให้ prevEp/nextEp/ended ใช้ได้เสมอ
@@ -1725,7 +2117,17 @@ window._nvPlayEp = function(idx, audioFiles, novel, resumeTime = 0) {
   _nvNovel = novel;
 
   const af = audioFiles[idx];
-  if (!af || !af.url) return;
+  if (isEpisodeLocked(af, idx)) { openUnlockDialog(novel); return; }
+  if (!af || (!af.url && !af.audioKey)) return;
+
+  let playSrc;
+  try {
+    playSrc = await resolveEpisodeSrc(af);
+  } catch (e) {
+    if (e && e.code === 'MEMBERS_ONLY') { await showMembersOnly(novel); return; }
+    console.warn('[r2/sign]', e);
+    return;
+  }
 
   _nvCurrentIdx = idx; // [UX-3] track ep ที่กำลังเล่น
 
@@ -1741,15 +2143,12 @@ window._nvPlayEp = function(idx, audioFiles, novel, resumeTime = 0) {
     activeEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 
-  let src = af.url;
-  if (src.includes('cloudinary.com') && src.includes('/raw/upload/'))
-    src = src.replace('/raw/upload/', '/video/upload/');
-  audio.src = src; audio.load();
+  audio.src = playSrc; audio.load();
   if (resumeTime > 0) {
     const onReady = () => { audio.currentTime = resumeTime; audio.removeEventListener('canplay', onReady); };
     audio.addEventListener('canplay', onReady);
   }
-  audio.play().catch(() => { audio.src = af.url; audio.load(); audio.play().catch(()=>{}); });
+  audio.play().catch(() => { audio.play().catch(()=>{}); });
   isPlaying = true;
   syncPlayBtn(true);
 
