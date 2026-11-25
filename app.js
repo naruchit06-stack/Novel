@@ -135,6 +135,7 @@ function watchMemberStatus(user) {
       closeUnlockDialog();
       refreshNovelForMembership();
     }
+    syncMemberMenu();
   }, (e) => console.warn('[membership/watch]', e));
 }
 
@@ -149,6 +150,44 @@ function fmtMemberUntil() {
   } catch (e) {
     return _memberUntil.toISOString().slice(0, 10);
   }
+}
+
+function memberPageHref() {
+  return (window._BASE || '') + '/member.html';
+}
+
+function syncMemberMenu() {
+  const label = isMemberActive() ? 'สมาชิกของฉัน' : 'สมัครสมาชิก';
+  const href  = memberPageHref();
+  const onMemberPage = /\/member\.html$/i.test(window.location.pathname);
+
+  document.querySelectorAll('.nav-links').forEach(nav => {
+    let a = nav.querySelector('a[data-member-nav]');
+    if (!a) {
+      a = document.createElement('a');
+      a.setAttribute('data-member-nav', '');
+      nav.appendChild(a);
+    }
+    a.setAttribute('href', href);
+    a.textContent = label;
+    a.classList.toggle('active', onMemberPage);
+  });
+
+  document.querySelectorAll('.nav-mobile-drawer').forEach(nav => {
+    let a = nav.querySelector('a[data-member-nav]');
+    if (!a) {
+      a = document.createElement('a');
+      a.setAttribute('data-member-nav', '');
+      a.innerHTML = '<span data-icon="crown"></span> <span data-member-nav-label></span>';
+      const authBlock = nav.querySelector('.nav-mobile-auth');
+      if (authBlock) nav.insertBefore(a, authBlock);
+      else nav.appendChild(a);
+    }
+    a.setAttribute('href', href);
+    const lbl = a.querySelector('[data-member-nav-label]');
+    if (lbl) lbl.textContent = label;
+    a.classList.toggle('active', onMemberPage);
+  });
 }
 
 function isEpisodeLocked(af, idx) {
@@ -312,13 +351,17 @@ async function renderUnlockBody(box, novel) {
   const qrBlock = _membership.qrUrl
     ? `<img class="gh-unlock-qr" src="${esc(_membership.qrUrl)}" alt="QR รับโอน">`
     : `<div class="gh-unlock-note">แอดมินยังไม่ได้อัปโหลด QR รับโอน</div>`;
+  const memberHref = memberPageHref();
+  const memberCta = text =>
+    `<a class="gh-unlock-btn gh-unlock-link" href="${memberHref}">${text}</a>`;
 
   if (!_authUser) {
     box.innerHTML = `
       ${qrBlock}
       ${priceLine}
       <div class="gh-unlock-note">เข้าสู่ระบบก่อน แล้วกลับมาแจ้งโอนได้ทันที (สมาชิก ${_membership.memberDays} วันต่อการอนุมัติ 1 ครั้ง)</div>
-      <button class="gh-unlock-btn" id="ghUnlockLogin" type="button">เข้าสู่ระบบ</button>`;
+      ${memberCta('สมัครสมาชิก')}
+      <button class="gh-unlock-btn ghost" id="ghUnlockLogin" type="button">เข้าสู่ระบบ</button>`;
     box.querySelector('#ghUnlockLogin').addEventListener('click', () => {
       window.location.href = (window._BASE || '') + '/login.html';
     });
@@ -328,7 +371,8 @@ async function renderUnlockBody(box, novel) {
   if (isMemberActive()) {
     box.innerHTML = `
       <div class="gh-unlock-note">คุณเป็นสมาชิกอยู่แล้ว ใช้ได้ถึง ${esc(fmtMemberUntil())}</div>
-      <button class="gh-unlock-btn" id="ghUnlockClose" type="button">ปิด</button>`;
+      ${memberCta('ดูสถานะสมาชิก')}
+      <button class="gh-unlock-btn ghost" id="ghUnlockClose" type="button">ปิด</button>`;
     box.querySelector('#ghUnlockClose').addEventListener('click', closeUnlockDialog);
     return;
   }
@@ -354,6 +398,7 @@ async function renderUnlockBody(box, novel) {
         <strong>รอตรวจสอบ</strong>
         <span>แจ้งโอน ${amt.toLocaleString('th-TH')} บาทแล้ว แอดมินกำลังตรวจสอบ</span>
       </div>
+      ${memberCta('ไปหน้าสมัครสมาชิก')}
       <button class="gh-unlock-btn ghost" id="ghUnlockClose" type="button">ปิด</button>`;
     box.querySelector('#ghUnlockClose').addEventListener('click', closeUnlockDialog);
     return;
@@ -362,13 +407,14 @@ async function renderUnlockBody(box, novel) {
   box.innerHTML = `
     ${qrBlock}
     ${priceLine}
-    <div class="gh-unlock-note">โอนตาม QR ด้านบน แล้วกรอกยอดที่โอนจริงเพื่อแจ้งแอดมิน (สมาชิก ${_membership.memberDays} วันต่อการอนุมัติ 1 ครั้ง)</div>
+    ${memberCta('สมัครสมาชิก — ดูราคาและ QR')}
+    <div class="gh-unlock-note">หรือแจ้งโอนที่นี่: โอนตาม QR ด้านบน แล้วกรอกยอดที่โอนจริง (สมาชิก ${_membership.memberDays} วันต่อการอนุมัติ 1 ครั้ง)</div>
     <label class="gh-unlock-label" for="ghUnlockAmount">ยอดเงินที่โอน (บาท)</label>
     <input class="gh-unlock-input" id="ghUnlockAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="เช่น 99">
     <label class="gh-unlock-label" for="ghUnlockNote">หมายเหตุ (ไม่บังคับ)</label>
     <textarea class="gh-unlock-input" id="ghUnlockNote" rows="2" maxlength="500" placeholder="เช่น ชื่อบัญชีผู้โอน / เลขอ้างอิง"></textarea>
     <div class="gh-unlock-msg" id="ghUnlockMsg"></div>
-    <button class="gh-unlock-btn" id="ghUnlockSubmit" type="button">แจ้งโอนแล้ว</button>`;
+    <button class="gh-unlock-btn ghost" id="ghUnlockSubmit" type="button">แจ้งโอนแล้ว</button>`;
 
   const submitBtn = box.querySelector('#ghUnlockSubmit');
   const msgEl     = box.querySelector('#ghUnlockMsg');
@@ -475,6 +521,7 @@ onAuthStateChanged(auth, async (user) => {
 
   await loadMemberStatus(user);
   watchMemberStatus(user);
+  syncMemberMenu();
   await refreshNovelForMembership();
 });
 
@@ -2220,6 +2267,7 @@ import('./router.js').then(router => {
 /* [CARD-H-1] wire nav-favorites-link + init badge */
 document.addEventListener('DOMContentLoaded', () => {
   _updateFavBadge();
+  syncMemberMenu();
   const favLink = document.getElementById('nav-favorites-link');
   if (favLink) favLink.onclick = e => { e.preventDefault(); window.handleRoute('/favorites'); };
 });

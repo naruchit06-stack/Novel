@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>สมัครสมาชิก — The Golden Hoard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Chakra+Petch:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<style>
+  .mem-main { max-width: 1080px; margin: 0 auto; padding: 36px 24px 0; }
+  .mem-hero { text-align: center; margin-bottom: 26px; }
+  .mem-eyebrow {
+    font-family: 'Chakra Petch', sans-serif; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 3px; color: var(--primary); margin-bottom: 10px;
+  }
+  .mem-hero h1 {
+    font-family: 'Chakra Petch', sans-serif; font-size: 2.1rem; font-weight: 800;
+    line-height: 1.25; margin-bottom: 8px;
+  }
+  .mem-hero p { color: var(--text-secondary); font-size: 0.98rem; }
+  .mem-chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .mem-chip {
+    padding: 9px 18px; border-radius: 999px; font-size: 0.92rem; font-weight: 800;
+    color: var(--gold); background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.3);
+  }
+  .mem-chip.plain {
+    font-weight: 600; color: var(--text-secondary);
+    background: var(--surface2); border-color: var(--border);
+  }
+  .mem-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    flex-wrap: wrap; padding: 14px 18px; border-radius: 14px; margin-bottom: 20px;
+    font-size: 0.92rem; line-height: 1.7;
+  }
+  .mem-banner.ok { background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.35); color: #8fe0b4; }
+  .mem-banner.warn { background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.3); color: var(--gold); }
+  .mem-banner.info { background: var(--surface2); border: 1px solid var(--border); color: var(--text-secondary); }
+  .mem-banner strong { font-weight: 800; }
+  .mem-banner-btn {
+    padding: 9px 18px; border-radius: 10px; border: 1px solid rgba(76,175,125,0.4);
+    background: transparent; color: #8fe0b4; font-family: inherit; font-size: 0.88rem;
+    font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .mem-banner-btn:hover { background: rgba(76,175,125,0.12); }
+  .mem-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 22px; align-items: start; }
+  .mem-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+  }
+  .mem-card h2 {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Chakra Petch', sans-serif; font-size: 1.02rem; font-weight: 700;
+    color: var(--gold); margin-bottom: 16px;
+  }
+  .mem-list { display: flex; flex-direction: column; gap: 12px; list-style: none; }
+  .mem-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.92rem; line-height: 1.75; color: var(--text-secondary);
+  }
+  .mem-list .mem-tick { color: var(--gold); display: inline-flex; margin-top: 3px; }
+  .mem-qr { display: block; width: 100%; max-width: 270px; margin: 0 auto 16px; border-radius: 14px; background: #fff; padding: 10px; }
+  .mem-qr-empty {
+    margin: 0 auto 16px; padding: 26px 16px; border-radius: 14px; text-align: center;
+    border: 1px dashed rgba(245,197,66,0.35); color: var(--text-secondary); font-size: 0.88rem;
+  }
+  .mem-field { margin-bottom: 14px; }
+  .mem-field label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 7px; }
+  .mem-input {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: 0.95rem; resize: vertical;
+  }
+  .mem-input:focus { outline: none; border-color: var(--gold); }
+  .mem-btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+    background: var(--gold); color: #1a1200; font-family: inherit;
+    font-size: 1rem; font-weight: 800;
+  }
+  .mem-btn:hover { filter: brightness(1.07); }
+  .mem-btn:disabled { opacity: 0.6; cursor: default; filter: none; }
+  .mem-btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700; }
+  .mem-note { font-size: 0.84rem; line-height: 1.75; color: var(--text-secondary); margin-bottom: 14px; }
+  .mem-msg { min-height: 20px; margin-top: 10px; text-align: center; font-size: 0.85rem; color: var(--primary); }
+  .mem-msg.ok { color: #4caf7d; }
+  .mem-history { margin-top: 28px; }
+  .mem-history h2 {
+    font-family: 'Chakra Petch', sans-serif; font-size: 1.02rem; font-weight: 700;
+    color: var(--gold); margin-bottom: 14px;
+  }
+  .mem-req {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; padding: 13px 16px; margin-bottom: 8px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .mem-req-amt { font-weight: 800; color: var(--gold); font-size: 0.98rem; }
+  .mem-req-meta { font-size: 0.76rem; color: var(--muted); margin-top: 3px; }
+  .mem-tag { font-size: 0.72rem; font-weight: 800; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .mem-tag.pending { color: var(--gold); background: rgba(245,197,66,0.13); border: 1px solid rgba(245,197,66,0.3); }
+  .mem-tag.approved { color: #4caf7d; background: rgba(76,175,125,0.13); border: 1px solid rgba(76,175,125,0.3); }
+  .mem-tag.rejected { color: var(--primary); background: rgba(232,68,90,0.13); border: 1px solid rgba(232,68,90,0.3); }
+  .mem-empty { padding: 20px; text-align: center; font-size: 0.88rem; color: var(--muted); }
+  @media (max-width: 860px) {
+    .mem-grid { grid-template-columns: 1fr; }
+    .mem-main { padding: 24px 16px 0; }
+    .mem-hero h1 { font-size: 1.7rem; }
+  }
+  .ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; }
+  [data-icon] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+</style>
+<script src="icons.js"></script>
+</head>
+<body>
+
+<nav class="navbar" id="mainNavbar">
+  <a class="nav-logo" href="index.html">
+    <span class="nav-logo-icon" data-icon="crown" data-icon-size="1.35em"></span>
+    <div class="nav-logo-text">The Golden <span>Hoard</span></div>
+  </a>
+
+  <div class="nav-links">
+    <a href="index.html">หน้าแรก</a>
+    <a href="index.html?_r=/library">นิยายทั้งหมด</a>
+    <a href="member.html" class="active" id="navMemberLink">สมัครสมาชิก</a>
+  </div>
+
+  <div class="nav-actions" id="navGuestActions">
+    <a href="login.html" class="nav-btn nav-btn-outline" id="navLoginBtn">เข้าสู่ระบบ</a>
+    <a href="login.html" class="nav-btn nav-btn-fill" id="navRegisterBtn">สมัครบัญชี</a>
+  </div>
+
+  <div class="nav-user" id="navUserMenu" style="display:none;">
+    <div class="nav-avatar" id="navAvatar">U</div>
+    <div class="nav-dropdown">
+      <a href="#" id="navUserName" style="cursor:default;pointer-events:none;color:var(--text);font-weight:700;">ผู้ใช้</a>
+      <a href="member.html"><span data-icon="crown"></span> สถานะสมาชิก</a>
+      <a href="index.html" id="navAdminBtn" style="display:none;"><span data-icon="gear"></span> จัดการนิยาย</a>
+      <a href="#" class="danger" onclick="event.preventDefault();window.memSignOut();"><span data-icon="logout"></span> ออกจากระบบ</a>
+    </div>
+  </div>
+
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="window.memToggleDrawer()" aria-label="เมนู"><span data-icon="menu" data-icon-size="1.2em"></span></button>
+</nav>
+
+<div class="nav-mobile-drawer" id="mobileDrawer">
+  <a href="index.html"><span data-icon="home"></span> หน้าแรก</a>
+  <a href="index.html?_r=/library"><span data-icon="book"></span> นิยายทั้งหมด</a>
+  <a href="member.html" class="active" id="mobileMemberLink"><span data-icon="crown"></span> สมัครสมาชิก</a>
+  <div class="nav-mobile-auth" id="mobileGuestAuth">
+    <a href="login.html" class="nav-btn nav-btn-outline"><span>เข้าสู่ระบบ</span></a>
+    <a href="login.html" class="nav-btn nav-btn-fill"><span>สมัครบัญชี</span></a>
+  </div>
+</div>
+
+<main class="mem-main">
+  <section class="mem-hero">
+    <div class="mem-eyebrow">THE GOLDEN HOARD MEMBERSHIP</div>
+    <h1>สมัครสมาชิก</h1>
+    <p>ปลดล็อกทุกเรื่อง ทุกตอนที่ล็อก</p>
+    <div class="mem-chips">
+      <span class="mem-chip" id="memPriceChip">กำลังโหลดราคา...</span>
+      <span class="mem-chip plain" id="memDaysChip">—</span>
+    </div>
+  </section>
+
+  <div class="mem-banner info" id="memBanner" style="display:none;"></div>
+
+  <div class="mem-grid" id="memGrid">
+    <section class="mem-card">
+      <h2><span data-icon="crown"></span> สิทธิประโยชน์ของสมาชิก</h2>
+      <ul class="mem-list">
+        <li><span class="mem-tick" data-icon="check"></span><span>ปลดล็อกทุกตอนที่ล็อกของทุกเรื่อง ไม่จำกัดจำนวนเรื่อง</span></li>
+        <li><span class="mem-tick" data-icon="check"></span><span>ฟังได้ตลอดจนกว่าจะหมดอายุ สิทธิ์ผูกกับบัญชี ไม่ใช่รายตอน</span></li>
+        <li><span class="mem-tick" data-icon="check"></span><span>ต่ออายุได้ตลอดเมื่อใกล้หมดอายุ วันสมาชิกจะถูกต่อจากวันเดิม</span></li>
+        <li><span class="mem-tick" data-icon="check"></span><span>หลังผู้ดูแลอนุมัติ ระบบเปิดตอนที่ล็อกให้ทันทีโดยไม่ต้องรีเฟรชหน้า</span></li>
+      </ul>
+    </section>
+
+    <section class="mem-card" id="memPayCard"></section>
+  </div>
+
+  <section class="mem-history" id="memHistorySection" style="display:none;">
+    <h2><span data-icon="clipboard"></span> ประวัติการแจ้งโอน</h2>
+    <div id="memHistoryList"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner" style="grid-template-columns:1fr;">
+    <div>
+      <a class="footer-brand-logo" href="index.html">The Golden <span>Hoard</span></a>
+      <p class="footer-brand-desc">นิยายเสียงออนไลน์ ฟังได้ทุกที่ทุกเวลา</p>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 The Golden Hoard — สงวนลิขสิทธิ์</div>
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, addDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
+  authDomain:        "login-24acc.firebaseapp.com",
+  projectId:         "login-24acc",
+  storageBucket:     "login-24acc.firebasestorage.app",
+  messagingSenderId: "440213309587",
+  appId:             "1:440213309587:web:072857c31c2e6bd5062566"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+const esc = v => {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+const safeUrl = u => {
+  if (!u) return '';
+  const s = String(u).trim();
+  return /^(https?:\/\/|\/|\.\/)/i.test(s) ? s : '';
+};
+
+const toDate = v => {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (typeof v.toDate === 'function') return v.toDate();
+  if (typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+  if (typeof v === 'number') return new Date(v);
+  return null;
+};
+
+const fmtDay = d => {
+  if (!d) return '';
+  try { return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  catch (e) { return d.toISOString().slice(0, 10); }
+};
+
+const fmtStamp = d => {
+  if (!d) return '';
+  try {
+    return d.toLocaleString('th-TH', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  } catch (e) { return d.toISOString().slice(0, 16).replace('T', ' '); }
+};
+
+const parsePrice = t => {
+  const m = String(t || '').replace(/\s/g, '').match(/(\d[\d,]*)/);
+  if (!m) return '';
+  const n = Number(m[1].replace(/,/g, ''));
+  return Number.isFinite(n) && n > 0 ? String(n) : '';
+};
+
+const STATUS_TH = { pending: 'รอตรวจสอบ', approved: 'อนุมัติแล้ว', rejected: 'ปฏิเสธ' };
+
+const settings = { enabled: false, priceText: '', memberDays: 30, qrUrl: '' };
+let user = null;
+let memberUntil = null;
+let requests = [];
+let pendingReq = null;
+let renewMode = false;
+let sending = false;
+let settingsLoaded = false;
+let payMode = '';
+let unsubUser = null;
+let unsubReqs = null;
+
+const isMemberNow = () => !!memberUntil && memberUntil.getTime() > Date.now();
+
+function setBanner(kind, html) {
+  const el = $('memBanner');
+  if (!el) return;
+  if (!html) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.className = 'mem-banner ' + kind;
+  el.innerHTML = html;
+  el.style.display = 'flex';
+}
+
+function syncHeader() {
+  const memberLabel = isMemberNow() ? 'สมาชิกของฉัน' : 'สมัครสมาชิก';
+  const n1 = $('navMemberLink');
+  const n2 = $('mobileMemberLink');
+  if (n1) n1.textContent = memberLabel;
+  if (n2) n2.innerHTML = '<span data-icon="crown"></span> ' + esc(memberLabel);
+
+  const guest = $('navGuestActions');
+  const menu  = $('navUserMenu');
+  const mGuest = $('mobileGuestAuth');
+  if (user) {
+    if (guest) guest.style.display = 'none';
+    if (menu) menu.style.display = 'flex';
+    if (mGuest) mGuest.style.display = 'none';
+    const nameEl = $('navUserName');
+    if (nameEl) nameEl.textContent = user.displayName || (user.email || '').split('@')[0] || 'ผู้ใช้';
+    const av = $('navAvatar');
+    if (av) {
+      av.textContent = '';
+      if (user.photoURL) {
+        const im = document.createElement('img');
+        im.src = user.photoURL;
+        im.alt = '';
+        im.referrerPolicy = 'no-referrer';
+        av.appendChild(im);
+      } else {
+        const nm = (user.displayName || user.email || 'U').trim();
+        av.textContent = (nm.charAt(0) || 'U').toUpperCase();
+      }
+    }
+  } else {
+    if (guest) guest.style.display = 'flex';
+    if (menu) menu.style.display = 'none';
+    if (mGuest) mGuest.style.display = 'flex';
+  }
+}
+
+async function checkAdmin() {
+  if (!user) return false;
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists() && snap.data()?.active !== false;
+  } catch (e) { return false; }
+}
+
+function renderChips() {
+  const priceChip = $('memPriceChip');
+  const daysChip  = $('memDaysChip');
+  if (priceChip) priceChip.textContent = settings.priceText || 'ติดต่อผู้ดูแลเพื่อสอบถามราคา';
+  if (daysChip) daysChip.textContent = settings.memberDays ? ('สมาชิก ' + settings.memberDays + ' วัน / การอนุมัติ 1 ครั้ง') : 'จำนวนวันแจ้งโดยผู้ดูแล';
+}
+
+function qrBlock() {
+  const u = safeUrl(settings.qrUrl);
+  return u
+    ? '<img class="mem-qr" src="' + esc(u) + '" alt="QR รับโอนเงิน">'
+    : '<div class="mem-qr-empty">ผู้ดูแลยังไม่ได้อัปโหลด QR</div>';
+}
+
+function requestedPrice() {
+  return parsePrice(settings.priceText);
+}
+
+function renderPayCard() {
+  const card = $('memPayCard');
+  if (!card) return;
+
+  let mode;
+  if (!settingsLoaded) mode = 'loading';
+  else if (!settings.enabled) mode = 'disabled';
+  else if (!user) mode = 'guest';
+  else if (isMemberNow() && !renewMode) mode = 'member';
+  else if (pendingReq) mode = 'pending';
+  else mode = 'form';
+
+  if (mode === payMode) {
+    if (mode === 'form') {
+      const btn = card.querySelector('#memSubmit');
+      const amt = card.querySelector('#memAmount');
+      if (btn && sending) { btn.disabled = true; btn.textContent = 'กำลังส่ง...'; }
+      if (amt && !amt.value) amt.value = requestedPrice();
+    }
+    return;
+  }
+  payMode = mode;
+
+  if (mode === 'loading') {
+    card.innerHTML =
+      '<h2><span data-icon="hourglass"></span> ขั้นตอนชำระเงิน</h2>' +
+      '<p class="mem-note">กำลังโหลดข้อมูล...</p>';
+    return;
+  }
+
+  if (mode === 'disabled') {
+    card.innerHTML =
+      '<h2><span data-icon="lock"></span> ขั้นตอนชำระเงิน</h2>' +
+      '<p class="mem-note">ยังไม่เปิดรับสมัครสมาชิกในขณะนี้ กรุณาติดตามประกาศจากผู้ดูแลอีกครั้ง</p>';
+    return;
+  }
+
+  if (mode === 'guest') {
+    card.innerHTML =
+      '<h2><span data-icon="lock"></span> ขั้นตอนชำระเงิน</h2>' +
+      qrBlock() +
+      '<p class="mem-note">ต้องเข้าสู่ระบบก่อนจึงจะแจ้งโอนและติดตามสถานะได้</p>' +
+      '<a class="mem-btn" href="login.html" style="display:block;text-align:center;text-decoration:none;">เข้าสู่ระบบ</a>';
+    return;
+  }
+
+  if (mode === 'member') {
+    card.innerHTML =
+      '<h2><span data-icon="crown"></span> สถานะของคุณ</h2>' +
+      '<p class="mem-note">คุณเป็นสมาชิกอยู่แล้ว ใช้ฟังตอนที่ล็อกได้ทุกเรื่องจนถึง ' + esc(fmtDay(memberUntil)) + '</p>' +
+      '<button class="mem-btn ghost" type="button" id="memRenewOpen">ต่ออายุสมาชิก</button>';
+    const rb = card.querySelector('#memRenewOpen');
+    if (rb) rb.addEventListener('click', () => {
+      renewMode = true;
+      payMode = '';
+      renderAll();
+    });
+    return;
+  }
+
+  if (mode === 'pending') {
+    const amt = Number(pendingReq?.amount) || 0;
+    card.innerHTML =
+      '<h2><span data-icon="hourglass"></span> ขั้นตอนชำระเงิน</h2>' +
+      qrBlock() +
+      '<p class="mem-note">แจ้งโอน ' + esc(amt.toLocaleString('th-TH')) + ' บาท ไว้แล้ว ผู้ดูแลกำลังตรวจสอบ</p>' +
+      '<button class="mem-btn" type="button" disabled>รอผู้ดูแลตรวจสอบ</button>' +
+      '<p class="mem-note" style="margin:12px 0 0;">เมื่อผู้ดูแลอนุมัติ สถานะหน้านี้จะเปลี่ยนเป็นสมาชิกทันที</p>';
+    return;
+  }
+
+  const prefill = requestedPrice();
+  card.innerHTML =
+    '<h2><span data-icon="edit"></span> ขั้นตอนชำระเงิน</h2>' +
+    qrBlock() +
+    '<p class="mem-note">สแกน QR เพื่อโอนเงิน แล้วกรอกยอดที่โอนจริงเพื่อให้ผู้ดูแลตรวจสอบ (สมาชิก ' +
+      esc(settings.memberDays) + ' วันต่อการอนุมัติ 1 ครั้ง)</p>' +
+    '<div class="mem-field"><label for="memAmount">จำนวนเงินที่โอน (บาท)</label>' +
+      '<input class="mem-input" id="memAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="เช่น 99" value="' + esc(prefill) + '"></div>' +
+    '<div class="mem-field"><label for="memNote">หมายเหตุ (ไม่บังคับ)</label>' +
+      '<textarea class="mem-input" id="memNote" rows="2" maxlength="500" placeholder="เช่น เวลาโอน / เลขที่อ้างอิง / ชื่อบัญชีผู้โอน"></textarea></div>' +
+    '<button class="mem-btn" type="button" id="memSubmit">แจ้งโอนแล้ว</button>' +
+    '<div class="mem-msg" id="memMsg"></div>';
+
+  const btn = card.querySelector('#memSubmit');
+  if (btn) btn.addEventListener('click', submitRequest);
+}
+
+function renderBanner() {
+  if (!settingsLoaded) { setBanner('', ''); return; }
+  if (user && isMemberNow() && !renewMode) {
+    setBanner('ok',
+      '<span><strong>สมาชิกถึง ' + esc(fmtDay(memberUntil)) + '</strong> — ฟังได้ทุกเรื่อง ทุกตอนที่ล็อก</span>' +
+      '<button class="mem-banner-btn" type="button" id="memRenewBtn">ต่ออายุ</button>');
+    const rb = $('memRenewBtn');
+    if (rb) rb.addEventListener('click', () => {
+      renewMode = true;
+      payMode = '';
+      renderAll();
+    });
+    return;
+  }
+  if (!settings.enabled) {
+    setBanner('warn', '<span>ยังไม่เปิดรับสมัครสมาชิก</span>');
+    return;
+  }
+  if (!user) {
+    setBanner('info', '<span>ต้องเข้าสู่ระบบก่อน</span><a class="mem-banner-btn" href="login.html" style="text-decoration:none;">เข้าสู่ระบบ</a>');
+    return;
+  }
+  if (pendingReq) {
+    setBanner('warn', '<span><strong>รอผู้ดูแลตรวจสอบ</strong> — ระบบจะแจ้งผลบนหน้านี้ทันทีเมื่ออนุมัติ</span>');
+    return;
+  }
+  if (memberUntil && !isMemberNow()) {
+    setBanner('info', '<span>สมาชิกหมดอายุเมื่อ ' + esc(fmtDay(memberUntil)) + ' — แจ้งโอนเพื่อกลับมาใช้งานได้อีกครั้ง</span>');
+    return;
+  }
+  if (renewMode && isMemberNow()) {
+    setBanner('ok', '<span><strong>สมาชิกถึง ' + esc(fmtDay(memberUntil)) + '</strong> — กรอกยอดเพื่อต่ออายุได้เลย</span>');
+    return;
+  }
+  setBanner('', '');
+}
+
+function renderHistory() {
+  const sec = $('memHistorySection');
+  const list = $('memHistoryList');
+  if (!sec || !list) return;
+
+  if (!user || !requests.length) {
+    sec.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+
+  sec.style.display = 'block';
+  const rows = requests
+    .slice()
+    .sort((a, b) => {
+      const ta = toDate(a.createdAt)?.getTime() || 0;
+      const tb = toDate(b.createdAt)?.getTime() || 0;
+      return tb - ta;
+    })
+    .slice(0, 10);
+
+  list.innerHTML = rows.map(r => {
+    const st = ['pending', 'approved', 'rejected'].includes(r.status) ? r.status : 'pending';
+    const amt = Number(r.amount);
+    return '<div class="mem-req">' +
+      '<div><div class="mem-req-amt">' + esc(Number.isFinite(amt) ? amt.toLocaleString('th-TH') : '0') + ' บาท</div>' +
+      '<div class="mem-req-meta">' + esc(fmtStamp(toDate(r.createdAt)) || 'ไม่ทราบวันที่') + '</div></div>' +
+      '<span class="mem-tag ' + st + '">' + esc(STATUS_TH[st]) + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function renderAll() {
+  renderChips();
+  renderBanner();
+  renderPayCard();
+  renderHistory();
+  syncHeader();
+  if (window.mountIcons) window.mountIcons(document);
+}
+
+async function submitRequest() {
+  if (!user || sending) return;
+  if (pendingReq) return;
+
+  const card = $('memPayCard');
+  const btn = card.querySelector('#memSubmit');
+  const msg = card.querySelector('#memMsg');
+  const amtEl = card.querySelector('#memAmount');
+  const noteEl = card.querySelector('#memNote');
+  const amount = Number(amtEl?.value);
+  const note = (noteEl?.value || '').trim();
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    if (msg) { msg.className = 'mem-msg'; msg.textContent = 'กรุณากรอกยอดเงินที่โอนให้ถูกต้อง'; }
+    return;
+  }
+  if (amount > 100000) {
+    if (msg) { msg.className = 'mem-msg'; msg.textContent = 'ยอดเงินสูงเกินกำหนด กรุณาติดต่อผู้ดูแล'; }
+    return;
+  }
+
+  sending = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังส่ง...'; }
+  if (msg) { msg.className = 'mem-msg'; msg.textContent = ''; }
+
+  try {
+    await addDoc(collection(db, 'paymentRequests'), {
+      uid: user.uid,
+      name: user.displayName || (user.email || '').split('@')[0] || 'ผู้ใช้',
+      email: user.email || '',
+      amount,
+      note,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    if (msg) { msg.className = 'mem-msg ok'; msg.textContent = 'ส่งแจ้งโอนแล้ว รอผู้ดูแลตรวจสอบ'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'รอผู้ดูแลตรวจสอบ'; }
+  } catch (e) {
+    console.warn('[member/request]', e);
+    if (msg) { msg.className = 'mem-msg'; msg.textContent = 'ส่งไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'แจ้งโอนแล้ว'; }
+  } finally {
+    sending = false;
+  }
+}
+
+function watchUserDoc(uid) {
+  if (unsubUser) { unsubUser(); unsubUser = null; }
+  unsubUser = onSnapshot(doc(db, 'users', uid), snap => {
+    memberUntil = snap.exists() ? toDate(snap.data().memberUntil) : null;
+    if (!isMemberNow()) renewMode = false;
+    renderAll();
+  }, e => console.warn('[member/user]', e));
+}
+
+function watchRequests(uid) {
+  if (unsubReqs) { unsubReqs(); unsubReqs = null; }
+  unsubReqs = onSnapshot(
+    query(collection(db, 'paymentRequests'), where('uid', '==', uid)),
+    snap => {
+      requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const pendings = requests.filter(r => r.status === 'pending');
+      pendingReq = pendings.length
+        ? pendings.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))[0]
+        : null;
+      renderAll();
+    },
+    e => console.warn('[member/requests]', e)
+  );
+}
+
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'membership'));
+    if (snap.exists()) {
+      const d = snap.data() || {};
+      settings.enabled = d.enabled === true;
+      settings.priceText = typeof d.priceText === 'string' ? d.priceText : '';
+      settings.memberDays = Number(d.memberDays) > 0 ? Number(d.memberDays) : 30;
+      settings.qrUrl = safeUrl(d.qrUrl);
+    }
+  } catch (e) {
+    console.warn('[member/settings]', e);
+  }
+  settingsLoaded = true;
+  payMode = '';
+  renderAll();
+}
+
+window.memToggleDrawer = function () {
+  const d = $('mobileDrawer');
+  if (d) d.classList.toggle('open');
+};
+
+window.memSignOut = async function () {
+  try { await signOut(auth); } catch (e) {}
+  window.location.reload();
+};
+
+document.addEventListener('click', e => {
+  const drawer = $('mobileDrawer');
+  const btn = $('hamburgerBtn');
+  if (drawer && btn && drawer.classList.contains('open') && !drawer.contains(e.target) && !btn.contains(e.target)) {
+    drawer.classList.remove('open');
+  }
+});
+
+renderAll();
+
+loadSettings();
+
+onAuthStateChanged(auth, async u => {
+  user = u;
+  memberUntil = null;
+  requests = [];
+  pendingReq = null;
+  renewMode = false;
+  payMode = '';
+  if (unsubUser) { unsubUser(); unsubUser = null; }
+  if (unsubReqs) { unsubReqs(); unsubReqs = null; }
+  syncHeader();
+  renderAll();
+
+  if (!u) return;
+
+  watchUserDoc(u.uid);
+  watchRequests(u.uid);
+
+  const isAdmin = await checkAdmin();
+  const adminBtn = $('navAdminBtn');
+  if (adminBtn) {
+    adminBtn.style.display = isAdmin ? 'flex' : 'none';
+    if (isAdmin) adminBtn.setAttribute('href', (window.location.pathname.replace(/\/member\.html$/i, '') || '') + '/admin.html');
+  }
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

@@ -2056,3 +2056,4 @@ body {
 .gh-unlock-btn:hover { filter: brightness(1.08); }
 .gh-unlock-btn:disabled { opacity: 0.6; cursor: default; }
 .gh-unlock-btn.ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.gh-unlock-btn.gh-unlock-link { display: block; text-align: center; text-decoration: none; }
