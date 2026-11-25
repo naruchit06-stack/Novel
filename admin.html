@@ -1633,7 +1633,8 @@ body.admin-body {
           </div>
           <div class="mmg-header-badges">
             <span class="mmg-badge" id="mmgHeaderPending">รออนุมัติ 0</span>
-            <span class="mmg-badge" id="mmgHeaderSignup">ผู้สมัครใหม่ 0</span>
+            <span class="mmg-badge" id="mmgHeaderMembers">สมาชิก 0</span>
+            <span class="mmg-badge" id="mmgHeaderListeners">ผู้ฟัง 0</span>
           </div>
         </div>
 
@@ -1655,7 +1656,7 @@ body.admin-body {
               <div class="mmg-qr-actions">
                 <button class="mmg-btn" id="mmgQrPick" type="button"><span data-icon="folder"></span> อัปโหลดรูป QR</button>
                 <input type="file" id="mmgQrFile" accept="image/*" style="display:none">
-                <span class="mmg-hint" id="mmgQrMsg">รูปจะถูกเก็บที่ Cloudinary (preset ml_default)</span>
+                <span class="mmg-hint" id="mmgQrMsg">รูปจะถูกอัปโหลดขึ้น Cloudinary แล้วบันทึกอัตโนมัติ</span>
               </div>
             </div>
             <label class="mmg-label" for="mmgQrUrl">หรือวางลิงก์รูป QR เอง</label>
@@ -1687,9 +1688,10 @@ body.admin-body {
           </div>
 
           <div class="mmg-card mmg-card-wide">
-            <h3><span data-icon="users"></span> ผู้สมัครใหม่ <span class="mmg-count" id="mmgSignupCount">0</span></h3>
+            <h3><span data-icon="users"></span> ผู้ฟังที่ยังไม่เป็นสมาชิก <span class="mmg-count" id="mmgSignupCount">0</span></h3>
+            <p class="mmg-hint" style="margin:0 0 12px;">ผู้ใช้กลุ่มนี้ล็อกอินเข้ามาแล้วแต่ยังไม่ชำระเงิน หรือสมาชิกหมดอายุแล้ว จึงยังนับเป็นผู้ฟัง ไม่ใช่นับเป็นสมาชิก</p>
             <div class="mmg-list" id="mmgSignupList">
-              <div class="mmg-empty">ยังไม่มีผู้สมัครใหม่</div>
+              <div class="mmg-empty">ยังไม่มีผู้ฟังที่ยังไม่เป็นสมาชิก</div>
             </div>
           </div>
 
@@ -1792,10 +1794,12 @@ async function loadStats() {
       ? (totalViews / 10000).toFixed(1) + ' แสน'
       : totalViews.toLocaleString();
 
-    // Members — count from users collection if exists
+    // Members — นับเฉพาะผู้ที่ memberUntil ยังไม่หมดอายุ
     try {
       const usrSnap = await getDocs(collection(db, 'users'));
-      document.getElementById('statMembers').textContent = usrSnap.size.toLocaleString();
+      let members = 0;
+      usrSnap.forEach(d => { if (mmgIsActiveMember(d.data())) members++; });
+      document.getElementById('statMembers').textContent = members.toLocaleString();
     } catch { document.getElementById('statMembers').textContent = '—'; }
   } catch(e) { console.error('loadStats:', e); }
 }
@@ -2725,6 +2729,7 @@ let _mmgInit       = false;
 let _mmgCfg        = { enabled: false, priceText: '', memberDays: 30, qrUrl: '' };
 let _mmgPending    = [];
 let _mmgSignups    = [];
+let _mmgListeners  = [];
 let _mmgNovelId    = '';
 let _mmgUnsubPay   = null;
 let _mmgUnsubUsers = null;
@@ -2746,6 +2751,10 @@ function mmgTs(v) {
 function mmgToDate(v) {
   const ms = mmgTs(v);
   return ms > 0 ? new Date(ms) : null;
+}
+
+function mmgIsActiveMember(u) {
+  return !!u && mmgTs(u.memberUntil) > Date.now();
 }
 
 function mmgFmtDateTime(v) {
@@ -3021,13 +3030,11 @@ function mmgRenderPending() {
 function mmgRenderSignups() {
   const box = document.getElementById('mmgSignupList');
   if (!box) return;
-  if (!_mmgSignups.length) {
-    box.innerHTML = '<div class="mmg-empty">ยังไม่มีผู้สมัครใหม่</div>';
+  if (!_mmgListeners.length) {
+    box.innerHTML = '<div class="mmg-empty">ยังไม่มีผู้ฟังที่ยังไม่เป็นสมาชิก</div>';
     return;
   }
-  const fresh = _mmgSignups.filter(u => u.signupSeen !== true);
-  const seen  = _mmgSignups.filter(u => u.signupSeen === true).slice(0, 20);
-  const rows  = [...fresh, ...seen].map(u => {
+  const rows = _mmgListeners.map(u => {
     const isNew = u.signupSeen !== true;
     return `
     <div class="mmg-req">
@@ -3049,19 +3056,20 @@ function mmgRenderSignups() {
 }
 
 function mmgUpdateBadges() {
-  const pending = _mmgPending.length;
-  const fresh   = _mmgSignups.filter(u => u.signupSeen !== true).length;
-  const total   = pending + fresh;
+  const pending   = _mmgPending.length;
+  const members   = _mmgSignups.filter(mmgIsActiveMember).length;
+  const listeners = _mmgSignups.length - members;
+  const fresh     = _mmgListeners.filter(u => u.signupSeen !== true).length;
 
   const pairs = [
-    ['mmgMemberBadge', total],
-    ['mmgTopBadge', total]
+    ['mmgMemberBadge', members],
+    ['mmgTopBadge', members]
   ];
   pairs.forEach(([id, n]) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = String(n);
-    el.style.display = n > 0 ? 'inline-flex' : 'none';
+    el.style.display = 'inline-flex';
   });
 
   const hp = document.getElementById('mmgHeaderPending');
@@ -3069,21 +3077,20 @@ function mmgUpdateBadges() {
     hp.textContent = `รออนุมัติ ${pending}`;
     hp.classList.toggle('hot', pending > 0);
   }
-  const hs = document.getElementById('mmgHeaderSignup');
-  if (hs) {
-    hs.textContent = `ผู้สมัครใหม่ ${fresh}`;
-    hs.classList.toggle('hot', fresh > 0);
-  }
+  const hm = document.getElementById('mmgHeaderMembers');
+  if (hm) hm.textContent = `สมาชิก ${members}`;
+  const hl = document.getElementById('mmgHeaderListeners');
+  if (hl) hl.textContent = `ผู้ฟัง ${listeners}`;
   const pc = document.getElementById('mmgPendingCount');
   if (pc) pc.textContent = String(pending);
   const sc = document.getElementById('mmgSignupCount');
-  if (sc) sc.textContent = String(fresh);
+  if (sc) sc.textContent = String(listeners);
 
   if (_mmgLastPending !== null && pending > _mmgLastPending) {
     mmgToast(`มีแจ้งโอนใหม่ ${pending - _mmgLastPending} รายการ`, 'clipboard');
   }
   if (_mmgLastSignup !== null && fresh > _mmgLastSignup) {
-    mmgToast(`มีผู้สมัครใหม่ ${fresh - _mmgLastSignup} คน`, 'users');
+    mmgToast(`มีผู้ฟังใหม่ ${fresh - _mmgLastSignup} คน`, 'users');
   }
   _mmgLastPending = pending;
   _mmgLastSignup  = fresh;
@@ -3106,7 +3113,9 @@ function mmgSubscribe() {
     _mmgUnsubUsers = onSnapshot(
       collection(db, 'users'),
       snap => {
-        _mmgSignups = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        _mmgSignups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        _mmgListeners = _mmgSignups
+          .filter(u => !mmgIsActiveMember(u))
           .sort((a, b) => (mmgTs(b.createdAt) || mmgTs(b.lastLogin)) - (mmgTs(a.createdAt) || mmgTs(a.lastLogin)));
         mmgRenderSignups();
         mmgUpdateBadges();
@@ -3182,6 +3191,8 @@ function mmgTogglePanel(force) {
     document.getElementById('rightPlaceholder').style.display = 'none';
     wrap.classList.add('visible');
     btn.classList.add('active');
+    mmgPaintQr(_mmgCfg.qrUrl);
+    mmgUpdateBadges();
     mmgFillNovelSelect();
     mmgSubscribe();
   } else {

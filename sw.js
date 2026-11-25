@@ -1,4 +1,4 @@
-const CACHE_NAME = 'niyay-v4';
+const CACHE_NAME = 'niyay-v5';
 const STATIC_ASSETS = [
   './',
   './index.html',
