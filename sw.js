@@ -1,4 +1,4 @@
-const CACHE_NAME = 'niyay-v5';
+const CACHE_NAME = 'niyay-v7';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   './router.js',
   './manifest.json',
   './member.html',
+  './support.html',
 ];
 
 self.addEventListener('install', (event) => {

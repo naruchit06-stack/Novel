@@ -1370,6 +1370,59 @@ body.admin-body {
 }
 .mmg-toast.show { opacity: 1; transform: translateY(0); }
 .mmg-toast .ico { color: var(--gold); margin-right: 6px; }
+
+.sup-admin-grid { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 18px; }
+@media (max-width: 1100px) { .sup-admin-grid { grid-template-columns: 1fr; } }
+.sup-admin-list { max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.sup-admin-item {
+  width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+  padding: 11px 13px; border-radius: 10px;
+  background: var(--admin-bg); border: 1px solid rgba(255,255,255,0.08); color: var(--text);
+}
+.sup-admin-item:hover { border-color: rgba(245,197,66,0.35); }
+.sup-admin-item.on { border-color: var(--gold); background: rgba(245,197,66,0.07); }
+.sup-admin-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.sup-admin-subject {
+  font-size: 13px; font-weight: 700; color: #fff;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sup-admin-meta { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.6; word-break: break-word; }
+.sup-admin-tag { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+.sup-admin-tag.wait { color: var(--gold); background: rgba(245,197,66,0.14); }
+.sup-admin-tag.replied { color: #4ade80; background: rgba(74,222,128,0.14); }
+.sup-admin-tag.closed { color: var(--muted); background: rgba(255,255,255,0.07); }
+.sup-admin-head { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sup-admin-head h4 { margin: 0 0 4px; font-size: 14px; color: #fff; word-break: break-word; }
+.sup-admin-head p { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.7; word-break: break-word; }
+.sup-admin-thread {
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 380px; overflow-y: auto; padding: 2px;
+}
+.sup-admin-bubble {
+  max-width: 88%; padding: 9px 12px; border-radius: 12px;
+  font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+}
+.sup-admin-bubble.user { align-self: flex-start; background: var(--admin-bg); border: 1px solid rgba(255,255,255,0.08); }
+.sup-admin-bubble.admin { align-self: flex-end; background: rgba(245,197,66,0.12); border: 1px solid rgba(245,197,66,0.32); }
+.sup-admin-bubble small { display: block; font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.mmg-table-wrap { overflow-x: auto; margin-top: 12px; }
+.mmg-table { width: 100%; font-size: 12px; }
+.mmg-table td, .mmg-table th { white-space: nowrap; }
+.mmg-table .uid-mini { font-family: 'Chakra Petch', monospace; font-size: 11px; color: var(--muted); }
+.mmg-table .left-days { font-weight: 800; color: var(--gold); }
+.mmg-table .left-days.low { color: #ff6b85; }
+.mmg-row-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.mmg-table .mmg-row-btns { flex-wrap: nowrap; }
+.mmg-table .mmg-mini-btn { padding: 4px 9px; }
+.mmg-mini-btn {
+  padding: 5px 10px; border-radius: 8px; cursor: pointer; font-family: inherit;
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  background: transparent; border: 1px solid rgba(255,255,255,0.16);
+}
+.mmg-mini-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.mmg-mini-btn.danger { color: #ff6b85; border-color: rgba(232,68,90,0.45); }
+.mmg-mini-btn.danger:hover { background: rgba(232,68,90,0.12); }
+.mmg-mini-btn.gold { color: var(--gold); border-color: rgba(245,197,66,0.4); }
 </style>
 <script src="icons.js"></script>
 </head>
@@ -1463,6 +1516,7 @@ body.admin-body {
         <div class="panel-left-actions">
           <button class="btn-add-novel" id="btnAddNovel">+ เพิ่มนิยาย</button>
           <button class="btn-manage-admin" id="btnMemberMgmt"><span data-icon="users"></span> สมาชิก <span class="mmg-btn-badge" id="mmgMemberBadge" style="display:none">0</span></button>
+          <button class="btn-manage-admin" id="btnSupportMgmt"><span data-icon="comment"></span> แจ้งปัญหา <span class="mmg-btn-badge" id="mmgSupportBadge" style="display:none">0</span></button>
           <button class="btn-manage-admin" id="btnManageAdmin"><span data-icon="crown"></span> จัดการแอดมิน</button>
         </div>
       </div>
@@ -1671,11 +1725,22 @@ body.admin-body {
             <h3><span data-icon="lock"></span> ล็อกตอนสำหรับสมาชิก</h3>
             <label class="mmg-label" for="mmgNovelSelect">เลือกนิยาย</label>
             <select class="mmg-input" id="mmgNovelSelect"></select>
+            <label class="mmg-label" for="mmgEpSearch">ค้นหาเลขตอน</label>
+            <input class="mmg-input" type="search" id="mmgEpSearch" placeholder="พิมพ์เลขตอน เช่น 25">
             <div class="mmg-ep-list" id="mmgEpList">
               <div class="mmg-empty">เลือกนิยายเพื่อดูรายการตอน</div>
             </div>
+            <div class="mmg-actions" id="mmgEpMoreWrap" style="display:none">
+              <button class="mmg-btn" id="mmgEpMore" type="button">โหลดตอนเพิ่ม</button>
+            </div>
             <div class="mmg-actions">
               <button class="mmg-btn" id="mmgMigrate" type="button"><span data-icon="bolt"></span> ตั้งค่า premium ให้ตอนเก่า</button>
+              <button class="mmg-btn" id="mmgMigrateStop" type="button" disabled>หยุด</button>
+            </div>
+            <div id="mmgMigrateWrap" style="display:none;margin-top:8px">
+              <div style="height:8px;border-radius:6px;background:rgba(255,255,255,0.08);overflow:hidden">
+                <div id="mmgMigrateFill" style="height:100%;width:0%;background:var(--gold);transition:width .2s"></div>
+              </div>
             </div>
             <div class="mmg-msg" id="mmgEpMsg"></div>
           </div>
@@ -1685,6 +1750,9 @@ body.admin-body {
             <div class="mmg-list" id="mmgPendingList">
               <div class="mmg-empty">ไม่มีรายการรออนุมัติ</div>
             </div>
+            <div class="mmg-actions" id="mmgPendingMore" style="display:none">
+              <button class="mmg-btn" type="button" onclick="mmgLoadPending(true)">โหลดรายการเพิ่ม</button>
+            </div>
           </div>
 
           <div class="mmg-card mmg-card-wide">
@@ -1693,8 +1761,109 @@ body.admin-body {
             <div class="mmg-list" id="mmgSignupList">
               <div class="mmg-empty">ยังไม่มีผู้ฟังที่ยังไม่เป็นสมาชิก</div>
             </div>
+            <div class="mmg-actions" id="mmgSignupMore" style="display:none">
+              <button class="mmg-btn" type="button" onclick="mmgLoadListeners(true)">โหลดผู้ฟังเพิ่ม</button>
+            </div>
           </div>
 
+          <div class="mmg-card mmg-card-wide">
+            <h3><span data-icon="crown"></span> จัดการสมาชิก <span class="mmg-count" id="mmgMemberCount">0</span></h3>
+            <p class="mmg-hint" style="margin:0 0 12px;">สมาชิกที่ยังใช้งานได้ เรียงวันหมดอายุใกล้สุดก่อน — ถอนสิทธิ์ คืนสิทธิ์ หรือปรับจำนวนวันได้จากแถวของสมาชิกคนนั้น (ค้นด้วยอีเมลหรือชื่อที่แสดง)</p>
+            <input class="mmg-input" type="search" id="mmgMemberSearch" placeholder="ค้นหาชื่อหรืออีเมล">
+            <div class="mmg-table-wrap">
+              <table class="admin-table mmg-table">
+                <thead>
+                  <tr>
+                    <th>ชื่อ</th>
+                    <th>อีเมล</th>
+                    <th>UID</th>
+                    <th>หมดอายุ</th>
+                    <th>เหลือ</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="mmgMemberTable">
+                  <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">กำลังโหลด...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mmg-actions" id="mmgMemberMore" style="display:none">
+              <button class="mmg-btn" type="button" onclick="mmgLoadMembers(true)">โหลดสมาชิกเพิ่ม</button>
+            </div>
+            <div class="mmg-msg" id="mmgMemberMsg"></div>
+          </div>
+
+          <div class="mmg-card mmg-card-wide">
+            <h3><span data-icon="refresh"></span> ถอนแล้วล่าสุด / คืนสิทธิ์</h3>
+            <p class="mmg-hint" style="margin:0 0 12px;">บันทึกการถอนและคืนสิทธิ์จากหน้านี้ กด \"คืนสิทธิ์\" เพื่อให้สมาชิกกลับมาใช้งานได้อีกครั้ง</p>
+            <div class="mmg-list" id="mmgLogList">
+              <div class="mmg-empty">ยังไม่มีบันทึกการถอนสิทธิ์</div>
+            </div>
+          </div>
+
+          <div class="mmg-card mmg-card-wide">
+            <h3><span data-icon="alert"></span> อนุมัติผิด? ย้อนกลับ</h3>
+            <p class="mmg-hint" style="margin:0 0 12px;">รายการแจ้งโอนที่อนุมัติแล้ว เรียงใหม่สุดก่อน — เปลี่ยนเป็นปฏิเสธแล้วไปกดถอนสิทธิ์ที่ตารางสมาชิกด้านบน</p>
+            <div class="mmg-list" id="mmgApprovedList">
+              <div class="mmg-empty">ยังไม่มีรายการที่อนุมัติแล้ว</div>
+            </div>
+            <div class="mmg-actions" id="mmgApprovedMore" style="display:none">
+              <button class="mmg-btn" type="button" onclick="mmgLoadApproved(true)">โหลดรายการเพิ่ม</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="member-mgmt-wrap" id="supportMgmtWrap">
+        <div class="mmg-header">
+          <div class="mmg-header-icon"><span data-icon="comment" data-icon-size="1.6em"></span></div>
+          <div>
+            <h2>แจ้งปัญหา</h2>
+            <p>เรื่องที่ผู้ใช้ส่งถึงผู้ดูแล · ตอบกลับ ปิดเรื่อง และเปิดเรื่องใหม่ได้จากที่นี่</p>
+          </div>
+          <div class="mmg-header-badges">
+            <span class="mmg-badge" id="supHeaderUnread">ยังไม่ตอบ 0</span>
+            <span class="mmg-badge" id="supHeaderOpen">เปิดอยู่ 0</span>
+          </div>
+        </div>
+
+        <div class="sup-admin-grid">
+          <div class="mmg-card">
+            <h3><span data-icon="clipboard"></span> รายการเรื่อง <span class="mmg-count" id="supAdminCount">0</span></h3>
+            <div class="mmg-actions" id="supFilterTabs" style="margin-bottom:10px">
+              <button class="mmg-btn primary" type="button" data-filter="all" onclick="window.supSetFilter('all')">ทั้งหมด</button>
+              <button class="mmg-btn" type="button" data-filter="open" onclick="window.supSetFilter('open')">เปิด</button>
+              <button class="mmg-btn" type="button" data-filter="closed" onclick="window.supSetFilter('closed')">ปิด</button>
+              <button class="mmg-btn" type="button" data-filter="unread" onclick="window.supSetFilter('unread')">ยังไม่ตอบ</button>
+            </div>
+            <div class="sup-admin-list" id="supAdminList">
+              <div class="mmg-empty">กำลังโหลด...</div>
+            </div>
+            <div class="mmg-actions" id="supTicketsMore" style="display:none">
+              <button class="mmg-btn" type="button" onclick="window.supLoadMoreTickets()">โหลดเรื่องเพิ่ม</button>
+            </div>
+          </div>
+
+          <div class="mmg-card">
+            <div class="sup-admin-head" id="supAdminThreadHead">
+              <h4>บทสนทนา</h4>
+              <p>เลือกเรื่องจากรายการด้านซ้ายเพื่อดูบทสนทนาและตอบกลับ</p>
+            </div>
+            <div class="sup-admin-thread" id="supAdminThread">
+              <div class="mmg-empty">ยังไม่ได้เลือกเรื่อง</div>
+            </div>
+            <div id="supAdminReplyWrap" style="display:none;">
+              <label class="mmg-label" for="supAdminReply">ตอบกลับผู้ใช้</label>
+              <textarea class="mmg-input" id="supAdminReply" rows="3" maxlength="2000" placeholder="พิมพ์คำตอบถึงผู้ใช้"></textarea>
+              <div class="mmg-actions">
+                <button class="mmg-btn primary" id="supAdminSend" type="button"><span data-icon="mail"></span> ส่งคำตอบ</button>
+                <button class="mmg-btn" id="supAdminClose" type="button"><span data-icon="x"></span> ปิดเรื่อง</button>
+                <button class="mmg-btn" id="supAdminReopen" type="button"><span data-icon="refresh"></span> เปิดใหม่</button>
+              </div>
+              <div class="mmg-msg" id="supAdminMsg"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1708,7 +1877,8 @@ import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/fir
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, where, doc,
-         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch, addDoc, Timestamp }
+         getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch, addDoc, Timestamp,
+         limit, startAfter, getCountFromServer, documentId }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ===== FIREBASE INIT ===== */
@@ -1779,27 +1949,29 @@ function initAdmin() {
 }
 
 /* ===== STATS ===== */
+const ADMIN_NOVEL_LIMIT = 200;
+
 async function loadStats() {
   try {
-    const novSnap = await getDocs(collection(db, 'novels'));
+    const novCount = await getCountFromServer(collection(db, 'novels'));
+    const novSnap  = await getDocs(query(collection(db, 'novels'), limit(ADMIN_NOVEL_LIMIT)));
     let totalEps = 0, totalViews = 0;
     novSnap.forEach(d => {
       const data = d.data();
       totalEps   += (data.episodeCount || 0);
       totalViews += (data.views || 0);
     });
-    document.getElementById('statNovels').textContent = novSnap.size;
+    document.getElementById('statNovels').textContent = novCount.data().count.toLocaleString();
     document.getElementById('statEps').textContent    = totalEps.toLocaleString();
     document.getElementById('statViews').textContent  = totalViews >= 10000
       ? (totalViews / 10000).toFixed(1) + ' แสน'
       : totalViews.toLocaleString();
 
-    // Members — นับเฉพาะผู้ที่ memberUntil ยังไม่หมดอายุ
     try {
-      const usrSnap = await getDocs(collection(db, 'users'));
-      let members = 0;
-      usrSnap.forEach(d => { if (mmgIsActiveMember(d.data())) members++; });
-      document.getElementById('statMembers').textContent = members.toLocaleString();
+      const members = await getCountFromServer(
+        query(collection(db, 'users'), where('memberUntil', '>', Timestamp.now()))
+      );
+      document.getElementById('statMembers').textContent = members.data().count.toLocaleString();
     } catch { document.getElementById('statMembers').textContent = '—'; }
   } catch(e) { console.error('loadStats:', e); }
 }
@@ -1962,12 +2134,12 @@ async function _renderEstimatedUsage(force, api) {
   const usedEl = document.getElementById('storageUsed');
   if (usedEl) usedEl.textContent = 'กำลังคำนวณขนาดไฟล์...';
 
-  const novSnap = await getDocs(collection(db, 'novels'));
+  const novSnap = await getDocs(query(collection(db, 'novels'), limit(ADMIN_NOVEL_LIMIT)));
   const novels  = novSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  const epsLists = await _mapPool(novels, 4, async (n) => {
+  const epsLists = await _mapPool(novels.slice(0, 10), 4, async (n) => {
     try {
-      const s = await getDocs(collection(db, 'novels', n.id, 'episodes'));
+      const s = await getDocs(query(collection(db, 'novels', n.id, 'episodes'), limit(50)));
       return s.docs.map(e => e.data());
     } catch (e) { return []; }
   });
@@ -1993,7 +2165,7 @@ async function _renderEstimatedUsage(force, api) {
     pct,
     usedText: 'ใช้ไป ' + fmtSize(used) + ' / ' + fmtSize(STORAGE_QUOTA_BYTES),
     freeText: 'เหลือ ' + fmtSize(Math.max(0, STORAGE_QUOTA_BYTES - used)),
-    noteText: 'ค่าประมาณจากไฟล์ ' + (urls.length - unknown) + ' ไฟล์ (ปก+เสียง) ในระบบ'
+    noteText: 'ค่าประมาณจากตัวอย่าง ' + (urls.length - unknown) + ' ไฟล์ (ปก+เสียง)'
       + (unknown ? ' • อ่านขนาดไม่ได้ ' + unknown + ' ไฟล์' : '')
       + ' • ' + why,
     noteTone: ' warn'
@@ -2039,7 +2211,7 @@ window.loadStorageUsage = loadStorageUsage;
 
 /* ===== NOVELS ===== */
 function loadNovels() {
-  const q = query(collection(db, 'novels'), orderBy('createdAt', 'desc'));
+  const q = query(collection(db, 'novels'), orderBy('createdAt', 'desc'), limit(ADMIN_NOVEL_LIMIT));
   onSnapshot(q, snap => {
     allNovels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     document.getElementById('novelCountBadge').textContent = allNovels.length;
@@ -2143,10 +2315,13 @@ window.openEdit = async function(id) {
   // Hide admin panel, show edit form
   document.getElementById('adminMgmtWrap').classList.remove('visible');
   document.getElementById('memberMgmtWrap').classList.remove('visible');
+  document.getElementById('supportMgmtWrap').classList.remove('visible');
   document.getElementById('rightPlaceholder').style.display = 'none';
   document.getElementById('editFormWrap').style.display = 'block';
   document.getElementById('btnManageAdmin').classList.remove('active');
   document.getElementById('btnMemberMgmt').classList.remove('active');
+  document.getElementById('btnSupportMgmt').classList.remove('active');
+  supStopMessages();
 
   // Mark selected
   document.querySelectorAll('.novel-list-item').forEach(el => {
@@ -2199,7 +2374,7 @@ async function loadEpisodes(novelId, novel) {
   epContainer.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px;">กำลังโหลด...</div>';
   try {
     const snap = await getDocs(
-      query(collection(db, 'novels', novelId, 'episodes'), orderBy('order','asc'))
+      query(collection(db, 'novels', novelId, 'episodes'), orderBy('order','asc'), limit(300))
     );
     const eps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     document.getElementById('epSectionTitle').textContent = `รายการตอน (${eps.length})`;
@@ -2577,7 +2752,7 @@ document.getElementById('coverFileInput').addEventListener('change', async e => 
 async function loadAdminList() {
   if (!isSuperAdmin) return;
   try {
-    const snap = await getDocs(collection(db, 'admins'));
+    const snap = await getDocs(query(collection(db, 'admins'), limit(100)));
     const admins = [];
     snap.forEach(d => admins.push({ id: d.id, ...d.data() }));
 
@@ -2704,7 +2879,10 @@ function bindEvents() {
     } else {
       document.getElementById('adminMgmtWrap').classList.add('visible');
       document.getElementById('memberMgmtWrap').classList.remove('visible');
+      document.getElementById('supportMgmtWrap').classList.remove('visible');
       document.getElementById('btnMemberMgmt').classList.remove('active');
+      document.getElementById('btnSupportMgmt').classList.remove('active');
+      supStopMessages();
       document.getElementById('editFormWrap').style.display = 'none';
       document.getElementById('rightPlaceholder').style.display = 'none';
       document.getElementById('btnManageAdmin').classList.add('active');
@@ -2729,14 +2907,43 @@ let _mmgInit       = false;
 let _mmgCfg        = { enabled: false, priceText: '', memberDays: 30, qrUrl: '' };
 let _mmgPending    = [];
 let _mmgSignups    = [];
-let _mmgListeners  = [];
 let _mmgNovelId    = '';
-let _mmgUnsubPay   = null;
-let _mmgUnsubUsers = null;
 let _mmgLastPending = null;
-let _mmgLastSignup  = null;
 let _mmgToastEl     = null;
 let _mmgToastTimer  = null;
+let _mmgLog         = [];
+let _mmgApproved    = [];
+let _mmgMemberQuery = '';
+let _supTickets       = [];
+let _supMessages      = [];
+let _supActiveId      = null;
+let _supUnsubTickets  = null;
+let _supUnsubMessages = null;
+let _supLastUnread    = null;
+
+const MMG_PAGE          = 25;
+const MMG_PENDING_PAGE  = 50;
+const MMG_APPROVED_PAGE = 20;
+const MMG_LOG_PAGE      = 20;
+const MMG_EP_PAGE       = 30;
+const MMG_MIGRATE_BATCH = 200;
+const SUP_PAGE          = 30;
+const SUP_MSG_PAGE      = 50;
+
+let _mmgPendingCursor  = null, _mmgPendingDone = true, _mmgPendingLoading = false;
+let _mmgMemberRows     = [];
+let _mmgMemberCursor   = null, _mmgMemberDone = true, _mmgMemberLoading = false;
+let _mmgListenCursor   = null, _mmgListenDone = true, _mmgListenLoading = false;
+let _mmgApprovedCursor = null, _mmgApprovedDone = true, _mmgApprovedLoading = false;
+let _mmgLogLoading     = false;
+let _mmgEpRows         = [], _mmgEpCursor = null, _mmgEpDone = true, _mmgEpLoading = false, _mmgEpSearchValue = '';
+let _mmgMigrateRun     = false, _mmgMigrateStop = false;
+let _mmgSearchTimer    = null;
+let _mmgEpSearchTimer  = null;
+
+let _supFilter     = 'all';
+let _supCursor     = null, _supDone = true, _supLoading = false;
+let _supOlder      = [], _supLive = [], _supOldestDoc = null, _supMsgDone = true, _supKeepScroll = false;
 
 function mmgTs(v) {
   if (!v) return 0;
@@ -2918,37 +3125,69 @@ function mmgFillNovelSelect() {
   if (keep && allNovels.some(n => n.id === keep)) sel.value = keep;
 }
 
-async function mmgLoadEpisodes(novelId) {
+function mmgSyncMore(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+
+function mmgRenderEpisodes() {
   const box = document.getElementById('mmgEpList');
-  _mmgNovelId = novelId || '';
-  if (!novelId) {
-    box.innerHTML = '<div class="mmg-empty">เลือกนิยายเพื่อดูรายการตอน</div>';
+  if (!box) return;
+  if (!_mmgEpRows.length) {
+    box.innerHTML = '<div class="mmg-empty">' +
+      (_mmgEpSearchValue.trim() ? 'ไม่พบตอนที่ตรงกับเลขที่ค้น' : 'นิยายเรื่องนี้ยังไม่มีตอน') + '</div>';
     return;
   }
-  box.innerHTML = '<div class="mmg-empty">กำลังโหลด...</div>';
+  box.innerHTML = _mmgEpRows.map(ep => {
+    const on = ep.premium === true;
+    return `<div class="mmg-ep-row${on ? ' on' : ''}">
+      <span class="mmg-ep-name">ตอนที่ ${esc(ep.order ?? '—')} · ${esc(ep.title || 'ไม่มีชื่อ')}${ep.audioKey ? ' · R2' : ''}</span>
+      <label class="mmg-switch">
+        <input type="checkbox" data-novel="${esc(_mmgNovelId)}" data-ep="${esc(ep.id)}" data-r2="${ep.audioKey ? '1' : '0'}"${on ? ' checked' : ''}>
+        <span></span>
+      </label>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('input[type="checkbox"]').forEach(inp => {
+    inp.addEventListener('change', mmgTogglePremium);
+  });
+}
+
+async function mmgLoadEpisodes(novelId, more) {
+  const box = document.getElementById('mmgEpList');
+  if (!box) return;
+  if (!more) {
+    _mmgNovelId = novelId || '';
+    _mmgEpRows = []; _mmgEpCursor = null; _mmgEpDone = false;
+  }
+  if (!_mmgNovelId) {
+    box.innerHTML = '<div class="mmg-empty">เลือกนิยายเพื่อดูรายการตอน</div>';
+    mmgSyncMore('mmgEpMoreWrap', false);
+    return;
+  }
+  if (_mmgEpLoading || (more && _mmgEpDone)) return;
+  _mmgEpLoading = true;
+  if (!more) box.innerHTML = '<div class="mmg-empty">กำลังโหลด...</div>';
   try {
-    const snap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order', 'asc')));
-    if (!snap.size) {
-      box.innerHTML = '<div class="mmg-empty">นิยายเรื่องนี้ยังไม่มีตอน</div>';
-      return;
-    }
-    box.innerHTML = snap.docs.map(d => {
-      const ep = d.data();
-      const on = ep.premium === true;
-      return `<div class="mmg-ep-row${on ? ' on' : ''}">
-        <span class="mmg-ep-name">ตอนที่ ${esc(ep.order ?? '—')} · ${esc(ep.title || 'ไม่มีชื่อ')}${ep.audioKey ? ' · R2' : ''}</span>
-        <label class="mmg-switch">
-          <input type="checkbox" data-novel="${esc(novelId)}" data-ep="${esc(d.id)}" data-r2="${ep.audioKey ? '1' : '0'}"${on ? ' checked' : ''}>
-          <span></span>
-        </label>
-      </div>`;
-    }).join('');
-    box.querySelectorAll('input[type="checkbox"]').forEach(inp => {
-      inp.addEventListener('change', mmgTogglePremium);
-    });
+    const parts  = [];
+    const search = _mmgEpSearchValue.trim();
+    if (search && /^\d+$/.test(search)) parts.push(where('order', '==', Number(search)));
+    else parts.push(orderBy('order', 'asc'));
+    parts.push(limit(MMG_EP_PAGE));
+    if (_mmgEpCursor) parts.push(startAfter(_mmgEpCursor));
+    const snap = await getDocs(query(collection(db, 'novels', _mmgNovelId, 'episodes'), ...parts));
+    if (snap.size < MMG_EP_PAGE) _mmgEpDone = true;
+    if (snap.docs.length) _mmgEpCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(_mmgEpRows.map(r => r.id));
+    snap.docs.forEach(d => { if (!seen.has(d.id)) _mmgEpRows.push({ id: d.id, ...d.data() }); });
+    mmgRenderEpisodes();
   } catch (e) {
     console.warn('[mmg/episodes]', e);
     box.innerHTML = '<div class="mmg-empty">โหลดรายการตอนไม่สำเร็จ</div>';
+    _mmgEpDone = true;
+  } finally {
+    _mmgEpLoading = false;
+    mmgSyncMore('mmgEpMoreWrap', !_mmgEpDone && _mmgEpRows.length > 0);
   }
 }
 
@@ -2976,38 +3215,85 @@ async function mmgTogglePremium(e) {
   }
 }
 
+function mmgMigrateProgress(done, total) {
+  const wrap = document.getElementById('mmgMigrateWrap');
+  const fill = document.getElementById('mmgMigrateFill');
+  if (wrap) wrap.style.display = 'block';
+  if (fill) fill.style.width = (total ? Math.round((done / total) * 100) : 0) + '%';
+  mmgMsg('mmgEpMsg', `ทำแล้ว ${done.toLocaleString('th-TH')} / ${total.toLocaleString('th-TH')} ตอน`, 'var(--muted)');
+}
+
 async function mmgMigrateLegacy() {
-  if (!confirm('ตั้งค่า premium: false ให้ทุกตอนที่ยังไม่มีฟิลด์นี้? (ทำครั้งเดียวหลังวาง rules ใหม่)')) return;
-  const btn = document.getElementById('mmgMigrate');
-  btn.disabled = true;
-  mmgMsg('mmgEpMsg', 'กำลังปรับข้อมูล...', 'var(--muted)');
-  let fixed = 0, failed = 0;
+  if (_mmgMigrateRun) { _mmgMigrateStop = true; return; }
+  if (!confirm('ตั้งค่า premium: false ให้ทุกตอนที่ยังไม่มีฟิลด์นี้? (ทำเป็นชุดละ ' + MMG_MIGRATE_BATCH + ' เอกสาร หยุดกลางทางได้)')) return;
+
+  _mmgMigrateRun  = true;
+  _mmgMigrateStop = false;
+  const btn     = document.getElementById('mmgMigrate');
+  const stopBtn = document.getElementById('mmgMigrateStop');
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังทำ... (กด "หยุด" เพื่อหยุด)'; }
+  if (stopBtn) stopBtn.disabled = false;
+
+  let total = 0, scanned = 0, fixed = 0, failed = 0;
   try {
-    const novelsSnap = await getDocs(collection(db, 'novels'));
-    for (const nDoc of novelsSnap.docs) {
-      const epSnap  = await getDocs(collection(db, 'novels', nDoc.id, 'episodes'));
-      const targets = epSnap.docs.filter(d => typeof d.data().premium !== 'boolean');
-      for (const t of targets) {
-        try {
-          await updateDoc(doc(db, 'novels', nDoc.id, 'episodes', t.id), { premium: false });
-          fixed++;
-        } catch (e) { failed++; }
+    const novelsSnap = await getDocs(query(collection(db, 'novels'), limit(ADMIN_NOVEL_LIMIT)));
+    const counts = await Promise.all(novelsSnap.docs.map(n =>
+      getCountFromServer(collection(db, 'novels', n.id, 'episodes'))
+        .then(s => s.data().count).catch(() => 0)
+    ));
+    total = counts.reduce((a, b) => a + b, 0);
+    mmgMigrateProgress(0, total);
+
+    for (let i = 0; i < novelsSnap.docs.length; i++) {
+      if (_mmgMigrateStop) break;
+      const novelId = novelsSnap.docs[i].id;
+      let cursor = null, seenInNovel = 0;
+      while (seenInNovel < counts[i]) {
+        if (_mmgMigrateStop) break;
+        const parts = [orderBy(documentId()), limit(MMG_MIGRATE_BATCH)];
+        if (cursor) parts.push(startAfter(cursor));
+        const snap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), ...parts));
+        if (!snap.docs.length) break;
+        cursor = snap.docs[snap.docs.length - 1];
+        seenInNovel += snap.size;
+
+        const batch = writeBatch(db);
+        let ops = 0;
+        snap.docs.forEach(d => {
+          if (typeof d.data().premium !== 'boolean') { batch.update(d.ref, { premium: false }); ops++; }
+        });
+        if (ops) {
+          try { await batch.commit(); fixed += ops; }
+          catch (e) { failed += ops; console.warn('[mmg/migrate]', e); }
+        }
+        scanned += snap.size;
+        mmgMigrateProgress(scanned, total);
+        await new Promise(r => setTimeout(r, 0));
       }
     }
-    mmgMsg('mmgEpMsg', `ปรับข้อมูลแล้ว ${fixed} ตอน` + (failed ? ` • ล้มเหลว ${failed} ตอน` : ''), failed ? '#fbbf24' : '#4ade80');
+
+    const stopped = _mmgMigrateStop;
+    mmgMsg('mmgEpMsg',
+      (stopped ? 'หยุดกลางทาง — ' : 'เสร็จแล้ว — ') +
+      `ปรับข้อมูลแล้ว ${fixed.toLocaleString('th-TH')} ตอน` +
+      (failed ? ` • ล้มเหลว ${failed.toLocaleString('th-TH')} ตอน` : ''),
+      failed ? '#fbbf24' : '#4ade80');
     if (_mmgNovelId) mmgLoadEpisodes(_mmgNovelId);
   } catch (e) {
     mmgMsg('mmgEpMsg', 'ปรับข้อมูลไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
   } finally {
-    btn.disabled = false;
+    _mmgMigrateRun = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = icon('bolt') + ' ตั้งค่า premium ให้ตอนเก่า'; }
+    if (stopBtn) stopBtn.disabled = true;
   }
 }
 
 function mmgRenderPending() {
   const box = document.getElementById('mmgPendingList');
   if (!box) return;
+  mmgSyncMore('mmgPendingMore', !_mmgPendingDone && _mmgPending.length > 0);
   if (!_mmgPending.length) {
-    box.innerHTML = '<div class="mmg-empty">ไม่มีรายการรออนุมัติ</div>';
+    box.innerHTML = '<div class="mmg-empty">' + (_mmgPendingLoading ? 'กำลังโหลด...' : 'ไม่มีรายการรออนุมัติ') + '</div>';
     return;
   }
   box.innerHTML = _mmgPending.map(r => `
@@ -3030,11 +3316,12 @@ function mmgRenderPending() {
 function mmgRenderSignups() {
   const box = document.getElementById('mmgSignupList');
   if (!box) return;
-  if (!_mmgListeners.length) {
-    box.innerHTML = '<div class="mmg-empty">ยังไม่มีผู้ฟังที่ยังไม่เป็นสมาชิก</div>';
+  mmgSyncMore('mmgSignupMore', !_mmgListenDone && _mmgSignups.length > 0);
+  if (!_mmgSignups.length) {
+    box.innerHTML = '<div class="mmg-empty">' + (_mmgListenLoading ? 'กำลังโหลด...' : 'ยังไม่มีผู้ฟังที่ยังไม่เป็นสมาชิก') + '</div>';
     return;
   }
-  const rows = _mmgListeners.map(u => {
+  const rows = _mmgSignups.map(u => {
     const isNew = u.signupSeen !== true;
     return `
     <div class="mmg-req">
@@ -3055,75 +3342,189 @@ function mmgRenderSignups() {
   box.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); });
 }
 
-function mmgUpdateBadges() {
-  const pending   = _mmgPending.length;
-  const members   = _mmgSignups.filter(mmgIsActiveMember).length;
-  const listeners = _mmgSignups.length - members;
-  const fresh     = _mmgListeners.filter(u => u.signupSeen !== true).length;
+async function mmgRefreshCounts() {
+  let pending = 0, members = 0, listeners = 0;
+  try {
+    const [p, m, u] = await Promise.all([
+      getCountFromServer(query(collection(db, 'paymentRequests'), where('status', '==', 'pending'))),
+      getCountFromServer(query(collection(db, 'users'), where('memberUntil', '>', Timestamp.now()))),
+      getCountFromServer(collection(db, 'users'))
+    ]);
+    pending   = p.data().count;
+    members   = m.data().count;
+    listeners = Math.max(0, u.data().count - members);
+  } catch (e) {
+    console.warn('[mmg/counts]', e);
+  }
 
-  const pairs = [
-    ['mmgMemberBadge', members],
-    ['mmgTopBadge', members]
-  ];
-  pairs.forEach(([id, n]) => {
+  [['mmgMemberBadge', members], ['mmgTopBadge', members]].forEach(([id, n]) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = String(n);
+    el.textContent = String(n.toLocaleString('th-TH'));
     el.style.display = 'inline-flex';
   });
 
   const hp = document.getElementById('mmgHeaderPending');
   if (hp) {
-    hp.textContent = `รออนุมัติ ${pending}`;
+    hp.textContent = `รออนุมัติ ${pending.toLocaleString('th-TH')}`;
     hp.classList.toggle('hot', pending > 0);
   }
   const hm = document.getElementById('mmgHeaderMembers');
-  if (hm) hm.textContent = `สมาชิก ${members}`;
+  if (hm) hm.textContent = `สมาชิก ${members.toLocaleString('th-TH')}`;
   const hl = document.getElementById('mmgHeaderListeners');
-  if (hl) hl.textContent = `ผู้ฟัง ${listeners}`;
+  if (hl) hl.textContent = `ผู้ฟัง ${listeners.toLocaleString('th-TH')}`;
   const pc = document.getElementById('mmgPendingCount');
-  if (pc) pc.textContent = String(pending);
+  if (pc) pc.textContent = pending.toLocaleString('th-TH');
   const sc = document.getElementById('mmgSignupCount');
-  if (sc) sc.textContent = String(listeners);
+  if (sc) sc.textContent = listeners.toLocaleString('th-TH');
+  const mc = document.getElementById('mmgMemberCount');
+  if (mc) mc.textContent = members.toLocaleString('th-TH');
 
   if (_mmgLastPending !== null && pending > _mmgLastPending) {
     mmgToast(`มีแจ้งโอนใหม่ ${pending - _mmgLastPending} รายการ`, 'clipboard');
   }
-  if (_mmgLastSignup !== null && fresh > _mmgLastSignup) {
-    mmgToast(`มีผู้ฟังใหม่ ${fresh - _mmgLastSignup} คน`, 'users');
-  }
   _mmgLastPending = pending;
-  _mmgLastSignup  = fresh;
+}
+
+async function mmgLoadPending(more) {
+  if (_mmgPendingLoading) return;
+  if (more && _mmgPendingDone) return;
+  if (!more) { _mmgPending = []; _mmgPendingCursor = null; _mmgPendingDone = false; }
+  _mmgPendingLoading = true;
+  mmgRenderPending();
+  try {
+    const parts = [where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(MMG_PENDING_PAGE)];
+    if (_mmgPendingCursor) parts.push(startAfter(_mmgPendingCursor));
+    const snap = await getDocs(query(collection(db, 'paymentRequests'), ...parts));
+    if (snap.size < MMG_PENDING_PAGE) _mmgPendingDone = true;
+    if (snap.docs.length) _mmgPendingCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(_mmgPending.map(r => r.id));
+    snap.docs.forEach(d => { if (!seen.has(d.id)) _mmgPending.push({ id: d.id, ...d.data() }); });
+  } catch (e) {
+    _mmgPendingDone = true;
+    console.warn('[mmg/pending]', e);
+  } finally {
+    _mmgPendingLoading = false;
+    mmgRenderPending();
+  }
+}
+
+async function mmgLoadListeners(more) {
+  if (_mmgListenLoading) return;
+  if (more && _mmgListenDone) return;
+  if (!more) { _mmgSignups = []; _mmgListenCursor = null; _mmgListenDone = false; }
+  _mmgListenLoading = true;
+  mmgRenderSignups();
+  try {
+    const parts = [orderBy('lastLogin', 'desc'), limit(MMG_PAGE)];
+    if (_mmgListenCursor) parts.push(startAfter(_mmgListenCursor));
+    const snap = await getDocs(query(collection(db, 'users'), ...parts));
+    if (snap.size < MMG_PAGE) _mmgListenDone = true;
+    if (snap.docs.length) _mmgListenCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(_mmgSignups.map(u => u.id));
+    snap.docs.forEach(d => {
+      if (seen.has(d.id)) return;
+      const row = { id: d.id, ...d.data() };
+      if (!mmgIsActiveMember(row)) _mmgSignups.push(row);
+    });
+  } catch (e) {
+    _mmgListenDone = true;
+    console.warn('[mmg/users]', e);
+  } finally {
+    _mmgListenLoading = false;
+    mmgRenderSignups();
+  }
+}
+
+async function mmgLoadMembers(more) {
+  if (_mmgMemberLoading) return;
+  const q = _mmgMemberQuery.trim();
+  if (more && _mmgMemberDone) return;
+  if (!more) { _mmgMemberRows = []; _mmgMemberCursor = null; _mmgMemberDone = false; }
+  _mmgMemberLoading = true;
+  mmgRenderMembers();
+  try {
+    const parts = [];
+    if (q) {
+      const field = q.includes('@') ? 'email' : 'displayName';
+      const v = field === 'email' ? q.toLowerCase() : q;
+      parts.push(where(field, '>=', v), where(field, '<=', v + '\uf8ff'));
+    } else {
+      parts.push(where('memberUntil', '>', Timestamp.now()), orderBy('memberUntil', 'asc'));
+    }
+    parts.push(limit(MMG_PAGE));
+    if (_mmgMemberCursor) parts.push(startAfter(_mmgMemberCursor));
+    const snap = await getDocs(query(collection(db, 'users'), ...parts));
+    if (snap.size < MMG_PAGE) _mmgMemberDone = true;
+    if (snap.docs.length) _mmgMemberCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(_mmgMemberRows.map(u => u.id));
+    snap.docs.forEach(d => {
+      if (seen.has(d.id)) return;
+      const row = { id: d.id, ...d.data() };
+      if (q && !mmgIsActiveMember(row)) return;
+      _mmgMemberRows.push(row);
+    });
+    if (q) _mmgMemberRows.sort((a, b) => mmgTs(a.memberUntil) - mmgTs(b.memberUntil));
+  } catch (e) {
+    _mmgMemberDone = true;
+    console.warn('[mmg/members]', e);
+  } finally {
+    _mmgMemberLoading = false;
+    mmgRenderMembers();
+  }
+}
+
+async function mmgLoadApproved(more) {
+  if (_mmgApprovedLoading) return;
+  if (more && _mmgApprovedDone) return;
+  if (!more) { _mmgApproved = []; _mmgApprovedCursor = null; _mmgApprovedDone = false; }
+  _mmgApprovedLoading = true;
+  try {
+    const parts = [where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(MMG_APPROVED_PAGE)];
+    if (_mmgApprovedCursor) parts.push(startAfter(_mmgApprovedCursor));
+    const snap = await getDocs(query(collection(db, 'paymentRequests'), ...parts));
+    if (snap.size < MMG_APPROVED_PAGE) _mmgApprovedDone = true;
+    if (snap.docs.length) _mmgApprovedCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(_mmgApproved.map(r => r.id));
+    snap.docs.forEach(d => { if (!seen.has(d.id)) _mmgApproved.push({ id: d.id, ...d.data() }); });
+    mmgRenderApproved();
+  } catch (e) {
+    _mmgApprovedDone = true;
+    console.warn('[mmg/approved]', e);
+  } finally {
+    _mmgApprovedLoading = false;
+    mmgRenderApproved();
+    mmgSyncMore('mmgApprovedMore', !_mmgApprovedDone && _mmgApproved.length > 0);
+  }
+}
+
+async function mmgLoadLog() {
+  if (_mmgLogLoading) return;
+  _mmgLogLoading = true;
+  try {
+    const snap = await getDocs(query(collection(db, 'membershipLog'), orderBy('at', 'desc'), limit(MMG_LOG_PAGE)));
+    _mmgLog = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.warn('[mmg/log]', e);
+  } finally {
+    _mmgLogLoading = false;
+    mmgRenderLog();
+  }
 }
 
 function mmgSubscribe() {
-  if (!_mmgUnsubPay) {
-    _mmgUnsubPay = onSnapshot(
-      query(collection(db, 'paymentRequests'), where('status', '==', 'pending')),
-      snap => {
-        _mmgPending = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => mmgTs(b.createdAt) - mmgTs(a.createdAt));
-        mmgRenderPending();
-        mmgUpdateBadges();
-      },
-      err => console.warn('[mmg/pending]', err)
-    );
-  }
-  if (!_mmgUnsubUsers) {
-    _mmgUnsubUsers = onSnapshot(
-      collection(db, 'users'),
-      snap => {
-        _mmgSignups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        _mmgListeners = _mmgSignups
-          .filter(u => !mmgIsActiveMember(u))
-          .sort((a, b) => (mmgTs(b.createdAt) || mmgTs(b.lastLogin)) - (mmgTs(a.createdAt) || mmgTs(a.lastLogin)));
-        mmgRenderSignups();
-        mmgUpdateBadges();
-      },
-      err => console.warn('[mmg/users]', err)
-    );
-  }
+  mmgLoadPending(false);
+  mmgLoadListeners(false);
+  mmgLoadMembers(false);
+  mmgLoadApproved(false);
+  mmgLoadLog();
+  mmgRefreshCounts();
 }
+
+window.mmgLoadPending   = mmgLoadPending;
+window.mmgLoadListeners = mmgLoadListeners;
+window.mmgLoadMembers   = mmgLoadMembers;
+window.mmgLoadApproved  = mmgLoadApproved;
 
 async function mmgApprove(reqId, btn) {
   const req = _mmgPending.find(r => r.id === reqId);
@@ -3147,6 +3548,10 @@ async function mmgApprove(reqId, btn) {
       reviewedAt: new Date()
     });
     mmgToast(`อนุมัติแล้ว · สมาชิกถึง ${mmgFmtDate(until)}`, 'check');
+    _mmgPending = _mmgPending.filter(r => r.id !== reqId);
+    mmgRenderPending();
+    mmgRefreshCounts();
+    mmgLoadMembers(false);
   } catch (e) {
     alert('อนุมัติไม่สำเร็จ: ' + (e.message || e.code || ''));
     if (btn) btn.disabled = false;
@@ -3163,6 +3568,9 @@ async function mmgReject(reqId, btn) {
       reviewedAt: new Date()
     });
     mmgToast('ปฏิเสธรายการแล้ว', 'x');
+    _mmgPending = _mmgPending.filter(r => r.id !== reqId);
+    mmgRenderPending();
+    mmgRefreshCounts();
   } catch (e) {
     alert('ปฏิเสธไม่สำเร็จ: ' + (e.message || e.code || ''));
     if (btn) btn.disabled = false;
@@ -3173,9 +3581,581 @@ async function mmgSeenSignup(uid, btn) {
   if (btn) btn.disabled = true;
   try {
     await updateDoc(doc(db, 'users', uid), { signupSeen: true });
+    const row = _mmgSignups.find(u => u.id === uid);
+    if (row) row.signupSeen = true;
+    mmgRenderSignups();
   } catch (e) {
     alert('บันทึกไม่สำเร็จ: ' + (e.message || e.code || ''));
     if (btn) btn.disabled = false;
+  }
+}
+
+function mmgDaysLeft(v) {
+  const d = mmgToDate(v);
+  if (!d) return 0;
+  return Math.max(0, Math.ceil((d.getTime() - Date.now()) / MEMBER_DAY_MS));
+}
+
+function mmgMemberLabel(u, fallback) {
+  if (!u) return fallback || 'ไม่ระบุชื่อ';
+  return u.displayName || u.email || fallback || u.id || 'ไม่ระบุชื่อ';
+}
+
+function mmgFindUser(id) {
+  return _mmgMemberRows.find(x => x.id === id) || _mmgSignups.find(x => x.id === id) || null;
+}
+
+function mmgRenderMembers() {
+  const tbody = document.getElementById('mmgMemberTable');
+  if (!tbody) return;
+  const q = _mmgMemberQuery.trim();
+  const rows = _mmgMemberRows;
+  mmgSyncMore('mmgMemberMore', !_mmgMemberDone && rows.length > 0);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">' +
+      (q ? 'ไม่พบสมาชิกที่ตรงกับคำค้น' : (_mmgMemberLoading ? 'กำลังโหลด...' : 'ยังไม่มีสมาชิกที่ใช้งานอยู่')) + '</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(u => {
+    const uid  = String(u.id || u.uid || '');
+    const days = mmgDaysLeft(u.memberUntil);
+    return '<tr>' +
+      '<td>' + esc(mmgMemberLabel(u)) + '</td>' +
+      '<td>' + esc(u.email || '—') + '</td>' +
+      '<td class="uid-mini">' + esc(uid.slice(0, 10)) + '</td>' +
+      '<td>' + esc(mmgFmtDate(u.memberUntil)) + '</td>' +
+      '<td><span class="left-days' + (days <= 3 ? ' low' : '') + '">' + days + ' วัน</span></td>' +
+      '<td><div class="mmg-row-btns">' +
+        '<button class="mmg-mini-btn danger" type="button" data-mem-revoke="' + esc(uid) + '">ถอนสิทธิ์</button>' +
+        '<button class="mmg-mini-btn gold" type="button" data-mem-adjust="' + esc(uid) + '">ปรับวัน</button>' +
+        '<button class="mmg-mini-btn" type="button" data-mem-grant="' + esc(uid) + '">คืนสิทธิ์</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function mmgRenderLog() {
+  const box = document.getElementById('mmgLogList');
+  if (!box) return;
+  const rows = _mmgLog.slice(0, MMG_LOG_PAGE);
+  if (!rows.length) {
+    box.innerHTML = '<div class="mmg-empty">ยังไม่มีบันทึกการถอนสิทธิ์</div>';
+    return;
+  }
+  const ACT = { revoke: 'ถอนสิทธิ์', grant: 'คืนสิทธิ์', adjust: 'ปรับวัน' };
+  box.innerHTML = rows.map(r => {
+    const u = mmgFindUser(r.uid);
+    const active = mmgIsActiveMember(u);
+    return '<div class="mmg-req">' +
+      '<div class="mmg-req-main">' +
+        '<div class="mmg-req-name">' + esc(mmgMemberLabel(u, r.name || r.email || r.uid)) + '</div>' +
+        '<div class="mmg-req-sub">' +
+          esc(ACT[r.action] || r.action) +
+          (r.days ? ' · ' + Number(r.days) + ' วัน' : '') +
+          ' · โดย ' + esc(String(r.by || '').slice(0, 10)) +
+          ' · ' + esc(mmgFmtDateTime(r.at)) +
+          '<br>' + esc(r.note || 'ไม่มีหมายเหตุ') +
+        '</div>' +
+      '</div>' +
+      (r.action === 'revoke' && !active
+        ? '<div class="mmg-req-btns"><button class="mmg-mini-btn gold" type="button" data-mem-grant="' + esc(r.uid) + '">คืนสิทธิ์</button></div>'
+        : '<span class="mmg-badge">' + (active ? 'ใช้งานอยู่' : 'บันทึกแล้ว') + '</span>') +
+    '</div>';
+  }).join('');
+}
+
+function mmgRenderApproved() {
+  const box = document.getElementById('mmgApprovedList');
+  if (!box) return;
+  const rows = _mmgApproved.slice(0, MMG_APPROVED_PAGE);
+  mmgSyncMore('mmgApprovedMore', !_mmgApprovedDone && _mmgApproved.length > 0);
+  if (!rows.length) {
+    box.innerHTML = '<div class="mmg-empty">ยังไม่มีรายการที่อนุมัติแล้ว</div>';
+    return;
+  }
+  box.innerHTML = rows.map(r => '<div class="mmg-req">' +
+    '<div class="mmg-req-main">' +
+      '<div class="mmg-req-name">' + esc(r.name || 'ไม่ระบุชื่อ') + '</div>' +
+      '<div class="mmg-req-sub">' +
+        esc(r.email || '—') + ' · uid: ' + esc(String(r.uid || '').slice(0, 10)) +
+        '<br>อนุมัติเมื่อ ' + esc(mmgFmtDateTime(r.reviewedAt || r.createdAt)) +
+      '</div>' +
+    '</div>' +
+    '<div class="mmg-req-amount">' + Number(r.amount || 0).toLocaleString('th-TH') + ' ฿</div>' +
+    '<div class="mmg-req-btns">' +
+      '<button class="mmg-btn-reject" type="button" data-unapprove="' + esc(r.id) + '">เปลี่ยนเป็นปฏิเสธ</button>' +
+      '<button class="mmg-mini-btn" type="button" data-find-member="' + esc(r.uid || '') + '">ดูแถวสมาชิก</button>' +
+    '</div>' +
+  '</div>').join('');
+}
+
+async function mmgSetMemberUntil(uid, until, action, days, note) {
+  const userRef = doc(db, 'users', uid);
+  const snap    = await getDoc(userRef);
+  const data    = snap.exists() ? snap.data() : {};
+  const prev    = data.memberUntil ? mmgToDate(data.memberUntil) : null;
+  await setDoc(userRef, { memberUntil: until ? Timestamp.fromDate(until) : null }, { merge: true });
+  await addDoc(collection(db, 'membershipLog'), {
+    uid,
+    name: data.displayName || '',
+    email: data.email || '',
+    action,
+    by: currentUser ? currentUser.uid : '',
+    at: new Date(),
+    note: note || '',
+    days: days || 0,
+    prevUntil: prev ? Timestamp.fromDate(prev) : null
+  });
+}
+
+async function mmgRevokeMember(uid, btn) {
+  const u = mmgFindUser(uid);
+  if (!confirm('ถอนสิทธิ์สมาชิกของ ' + mmgMemberLabel(u, uid) + '?\nผู้ใช้จะถูกบล็อกตอนที่ล็อกเฉพาะสมาชิกทันที')) return;
+  if (btn) btn.disabled = true;
+  try {
+    await mmgSetMemberUntil(uid, null, 'revoke', 0, 'ถอนสิทธิ์โดยผู้ดูแล');
+    mmgMsg('mmgMemberMsg', 'ถอนสิทธิ์แล้ว', '#4ade80');
+    mmgToast('ถอนสิทธิ์สมาชิกแล้ว', 'x');
+    mmgLoadMembers(false);
+    mmgLoadLog();
+    mmgRefreshCounts();
+  } catch (e) {
+    mmgMsg('mmgMemberMsg', 'ถอนสิทธิ์ไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function mmgGrantMember(uid, btn) {
+  const days = Number(_mmgCfg.memberDays) > 0 ? Number(_mmgCfg.memberDays) : 30;
+  const u = mmgFindUser(uid);
+  if (!confirm('คืนสิทธิ์สมาชิก ' + days + ' วัน ให้ ' + mmgMemberLabel(u, uid) + '?')) return;
+  if (btn) btn.disabled = true;
+  try {
+    await mmgSetMemberUntil(uid, new Date(Date.now() + days * MEMBER_DAY_MS), 'grant', days, 'คืนสิทธิ์ ' + days + ' วัน');
+    mmgMsg('mmgMemberMsg', 'คืนสิทธิ์ ' + days + ' วันแล้ว', '#4ade80');
+    mmgToast('คืนสิทธิ์สมาชิกแล้ว ' + days + ' วัน', 'check');
+    mmgLoadMembers(false);
+    mmgLoadLog();
+    mmgRefreshCounts();
+  } catch (e) {
+    mmgMsg('mmgMemberMsg', 'คืนสิทธิ์ไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function mmgAdjustMember(uid, btn) {
+  const u = mmgFindUser(uid);
+  const raw = prompt('ปรับสิทธิ์ของ ' + mmgMemberLabel(u, uid) + ' ให้เหลือกี่วันนับจากวันนี้? (1 - 3650)',
+    String(Number(_mmgCfg.memberDays) > 0 ? Number(_mmgCfg.memberDays) : 30));
+  if (raw === null) return;
+  const days = parseInt(raw, 10);
+  if (!Number.isFinite(days) || days < 1 || days > 3650) {
+    mmgMsg('mmgMemberMsg', 'จำนวนวันต้องอยู่ระหว่าง 1 - 3650 วัน', '#ff6b85');
+    return;
+  }
+  if (btn) btn.disabled = true;
+  try {
+    await mmgSetMemberUntil(uid, new Date(Date.now() + days * MEMBER_DAY_MS), 'adjust', days, 'ปรับสิทธิ์เหลือ ' + days + ' วัน');
+    mmgMsg('mmgMemberMsg', 'ปรับสิทธิ์เหลือ ' + days + ' วันแล้ว', '#4ade80');
+    mmgToast('ปรับสิทธิ์เหลือ ' + days + ' วัน', 'edit');
+    mmgLoadMembers(false);
+    mmgLoadLog();
+    mmgRefreshCounts();
+  } catch (e) {
+    mmgMsg('mmgMemberMsg', 'ปรับสิทธิ์ไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function mmgUnapprove(reqId, btn) {
+  const req = _mmgApproved.find(r => r.id === reqId);
+  if (!req) return;
+  if (!confirm('เปลี่ยนรายการของ ' + (req.name || req.email || req.uid) + ' เป็น "ปฏิเสธ"?\nระบบจะไม่ถอนสิทธิ์ให้อัตโนมัติ ให้กดถอนที่ตารางสมาชิก')) return;
+  if (btn) btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'paymentRequests', reqId), {
+      status: 'rejected',
+      reviewedBy: currentUser ? currentUser.uid : '',
+      reviewedAt: new Date()
+    });
+    mmgToast('เปลี่ยนเป็นปฏิเสธแล้ว', 'check');
+    _mmgApproved = _mmgApproved.filter(r => r.id !== reqId);
+    mmgRenderApproved();
+    mmgRefreshCounts();
+  } catch (e) {
+    alert('เปลี่ยนสถานะไม่สำเร็จ: ' + (e.message || e.code || ''));
+    if (btn) btn.disabled = false;
+  }
+}
+
+function mmgFindMember(uid) {
+  const u = mmgFindUser(uid);
+  _mmgMemberQuery = u ? (u.displayName || u.email || '') : '';
+  const inp = document.getElementById('mmgMemberSearch');
+  if (inp) inp.value = _mmgMemberQuery;
+  mmgLoadMembers(false);
+  const tbody = document.getElementById('mmgMemberTable');
+  if (tbody && tbody.scrollIntoView) tbody.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!mmgIsActiveMember(u)) {
+    mmgMsg('mmgMemberMsg', 'ผู้ใช้นี้ไม่ได้เป็นสมาชิกอยู่แล้ว — กด "คืนสิทธิ์" ได้จากตารางหรือการ์ดด้านล่าง', '#fbbf24');
+  }
+}
+
+function supStatus(t) {
+  if (t.status === 'closed') return { cls: 'closed', label: 'ปิดแล้ว' };
+  if (t.lastMessageBy === 'admin') return { cls: 'replied', label: 'ตอบแล้ว' };
+  return { cls: 'wait', label: 'รอตอบ' };
+}
+
+function supActiveTicket() {
+  return _supTickets.find(t => t.id === _supActiveId) || null;
+}
+
+function supRenderList() {
+  const box = document.getElementById('supAdminList');
+  if (!box) return;
+  mmgSyncMore('supTicketsMore', !_supDone && _supTickets.length > 0);
+  if (!_supTickets.length) {
+    box.innerHTML = '<div class="mmg-empty">' + (_supLoading ? 'กำลังโหลด...' : 'ยังไม่มีเรื่องแจ้งปัญหา') + '</div>';
+    return;
+  }
+  box.innerHTML = _supTickets.map(t => {
+    const st = supStatus(t);
+    return '<button class="sup-admin-item' + (t.id === _supActiveId ? ' on' : '') + '" type="button" data-sup="' + esc(t.id) + '">' +
+      '<span class="sup-admin-row">' +
+        '<span class="sup-admin-subject">' + esc(t.subject || 'ไม่ระบุหัวข้อ') + '</span>' +
+        '<span class="sup-admin-tag ' + st.cls + '">' + esc(st.label) + '</span>' +
+      '</span>' +
+      '<span class="sup-admin-meta">' + esc(t.name || t.email || 'ไม่ระบุชื่อ') + ' · ' +
+        esc(mmgFmtDateTime(t.updatedAt)) + (t.unreadForAdmin === true ? ' · ยังไม่อ่าน' : '') + '</span>' +
+    '</button>';
+  }).join('');
+}
+
+function supUpdateBadges() {
+  getCountFromServer(query(collection(db, 'supportTickets'), where('unreadForAdmin', '==', true)))
+    .then(u => getCountFromServer(query(collection(db, 'supportTickets'), where('status', '==', 'open')))
+      .then(o => ({ unread: u.data().count, open: o.data().count })))
+    .then(({ unread, open }) => {
+      const badge = document.getElementById('mmgSupportBadge');
+      if (badge) {
+        badge.textContent = unread.toLocaleString('th-TH');
+        badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+      }
+      const hu = document.getElementById('supHeaderUnread');
+      if (hu) { hu.textContent = 'ยังไม่ตอบ ' + unread.toLocaleString('th-TH'); hu.classList.toggle('hot', unread > 0); }
+      const ho = document.getElementById('supHeaderOpen');
+      if (ho) ho.textContent = 'เปิดอยู่ ' + open.toLocaleString('th-TH');
+      if (_supLastUnread !== null && unread > _supLastUnread) {
+        mmgToast('มีเรื่องแจ้งใหม่ ' + (unread - _supLastUnread) + ' เรื่อง', 'comment');
+      }
+      _supLastUnread = unread;
+    })
+    .catch(e => console.warn('[sup/counts]', e));
+}
+
+function supClearUnread(ticketId) {
+  updateDoc(doc(db, 'supportTickets', ticketId), { unreadForAdmin: false })
+    .catch(e => console.warn('[sup/unread]', e));
+}
+
+function supRenderHead() {
+  const head = document.getElementById('supAdminThreadHead');
+  const t = supActiveTicket();
+  if (!head) return;
+  if (!t) {
+    head.innerHTML = '<h4>บทสนทนา</h4><p>เลือกเรื่องจากรายการด้านซ้ายเพื่อดูบทสนทนาและตอบกลับ</p>';
+    return;
+  }
+  head.innerHTML = '<h4>' + esc(t.subject || 'ไม่ระบุหัวข้อ') + '</h4>' +
+    '<p>' + esc(t.name || 'ไม่ระบุชื่อ') + ' · ' + esc(t.email || '—') +
+    ' · uid: ' + esc(String(t.uid || '').slice(0, 10)) +
+    '<br>แจ้งเมื่อ ' + esc(mmgFmtDateTime(t.createdAt)) + ' · ' + esc(supStatus(t).label) + '</p>';
+}
+
+function supRenderThread() {
+  const box = document.getElementById('supAdminThread');
+  if (!box) return;
+  if (!_supActiveId) {
+    box.innerHTML = '<div class="mmg-empty">ยังไม่ได้เลือกเรื่อง</div>';
+    return;
+  }
+  if (!_supMessages.length) {
+    box.innerHTML = '<div class="mmg-empty">กำลังโหลดบทสนทนา...</div>';
+    return;
+  }
+  const prevHeight = box.scrollHeight;
+  const prevTop    = box.scrollTop;
+  const moreHTML = _supMsgDone ? '' :
+    '<div style="text-align:center;padding:6px 0"><button class="mmg-btn" type="button" ' +
+    'onclick="window.supAdminLoadOlder()">โหลดข้อความเก่า</button></div>';
+  box.innerHTML = moreHTML + _supMessages.map(m => {
+    const admin = m.from === 'admin';
+    return '<div class="sup-admin-bubble ' + (admin ? 'admin' : 'user') + '">' +
+      '<small>' + esc(admin ? (m.authorName || 'ผู้ดูแล') : (m.authorName || 'ผู้ใช้')) +
+        ' · ' + esc(mmgFmtDateTime(m.createdAt)) + '</small>' +
+      esc(m.text) + '</div>';
+  }).join('');
+  if (_supKeepScroll) {
+    _supKeepScroll = false;
+    box.scrollTop = box.scrollHeight - prevHeight + prevTop;
+  } else {
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+function supRenderReply() {
+  const wrap = document.getElementById('supAdminReplyWrap');
+  const t = supActiveTicket();
+  if (!wrap) return;
+  wrap.style.display = t ? 'block' : 'none';
+  const closed = !!t && t.status === 'closed';
+  const closeBtn  = document.getElementById('supAdminClose');
+  const reopenBtn = document.getElementById('supAdminReopen');
+  if (closeBtn) closeBtn.disabled = !t || closed;
+  if (reopenBtn) reopenBtn.disabled = !t || !closed;
+  const ta = document.getElementById('supAdminReply');
+  if (ta) ta.disabled = !t;
+}
+
+function supStopMessages() {
+  if (_supUnsubMessages) { _supUnsubMessages(); _supUnsubMessages = null; }
+}
+
+function supMergeMessages() {
+  const seen = new Set();
+  const all  = [];
+  [..._supOlder, ..._supLive].forEach(m => {
+    if (m && !seen.has(m.id)) { seen.add(m.id); all.push(m); }
+  });
+  all.sort((a, b) => mmgTs(a.createdAt) - mmgTs(b.createdAt));
+  _supMessages = all;
+}
+
+function supWatchMessages(ticketId) {
+  supStopMessages();
+  _supOlder = []; _supLive = []; _supMessages = [];
+  _supOldestDoc = null; _supMsgDone = false;
+  supRenderThread();
+  _supUnsubMessages = onSnapshot(
+    query(collection(db, 'supportTickets', ticketId, 'messages'), orderBy('createdAt', 'desc'), limit(SUP_MSG_PAGE)),
+    snap => {
+      if (ticketId !== _supActiveId) return;
+      _supLive = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (!_supOlder.length) {
+        _supMsgDone = snap.size < SUP_MSG_PAGE;
+        _supOldestDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : null;
+      }
+      supMergeMessages();
+      supRenderThread();
+    },
+    e => {
+      console.warn('[sup/messages]', e);
+      const box = document.getElementById('supAdminThread');
+      if (box && ticketId === _supActiveId) box.innerHTML = '<div class="mmg-empty">เปิดบทสนทนาไม่สำเร็จ</div>';
+    }
+  );
+}
+
+window.supAdminLoadOlder = async function () {
+  const ticketId = _supActiveId;
+  if (!ticketId || _supMsgDone || !_supOldestDoc) return;
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'supportTickets', ticketId, 'messages'),
+      orderBy('createdAt', 'desc'),
+      startAfter(_supOldestDoc),
+      limit(SUP_MSG_PAGE)
+    ));
+    if (ticketId !== _supActiveId) return;
+    const page = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (page.length) _supOlder = [..._supOlder, ...page];
+    if (snap.docs.length) _supOldestDoc = snap.docs[snap.docs.length - 1];
+    if (snap.size < SUP_MSG_PAGE) _supMsgDone = true;
+    supMergeMessages();
+    _supKeepScroll = true;
+    supRenderThread();
+  } catch (e) {
+    console.warn('[sup/older]', e);
+  }
+};
+
+function supOpenTicket(ticketId) {
+  if (!ticketId) return;
+  if (_supActiveId !== ticketId) {
+    _supActiveId = ticketId;
+    supRenderList();
+    supRenderHead();
+    supRenderReply();
+    supWatchMessages(ticketId);
+  }
+  const t = supActiveTicket();
+  if (t && t.unreadForAdmin === true) supClearUnread(t.id);
+}
+
+async function supLoadTickets(more) {
+  if (_supLoading) return;
+  if (more && _supDone) return;
+  if (!more) { _supTickets = []; _supCursor = null; _supDone = false; }
+  _supLoading = true;
+  supRenderList();
+  try {
+    const parts = [];
+    if (_supFilter === 'open')        parts.push(where('status', '==', 'open'));
+    else if (_supFilter === 'closed') parts.push(where('status', '==', 'closed'));
+    else if (_supFilter === 'unread') parts.push(where('unreadForAdmin', '==', true));
+    parts.push(orderBy('updatedAt', 'desc'), limit(SUP_PAGE));
+    if (_supCursor) parts.push(startAfter(_supCursor));
+    const snap = await getDocs(query(collection(db, 'supportTickets'), ...parts));
+    if (snap.size < SUP_PAGE) _supDone = true;
+    if (snap.docs.length) _supCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(_supTickets.map(t => t.id));
+    snap.docs.forEach(d => { if (!seen.has(d.id)) _supTickets.push({ id: d.id, ...d.data() }); });
+    if (_supActiveId && !_supTickets.some(t => t.id === _supActiveId)) {
+      const cur = await getDoc(doc(db, 'supportTickets', _supActiveId));
+      if (cur.exists()) _supTickets.unshift({ id: cur.id, ...cur.data() });
+    }
+    const cnt = document.getElementById('supAdminCount');
+    if (cnt) cnt.textContent = _supTickets.length.toLocaleString('th-TH') + (_supDone ? '' : '+');
+  } catch (e) {
+    _supDone = true;
+    console.warn('[sup/tickets]', e);
+  } finally {
+    _supLoading = false;
+    supRenderList();
+    mmgSyncMore('supTicketsMore', !_supDone && _supTickets.length > 0);
+    if (_supActiveId) {
+      supRenderHead();
+      supRenderReply();
+      const t = supActiveTicket();
+      if (t && t.unreadForAdmin === true) supClearUnread(t.id);
+    }
+  }
+}
+
+window.supLoadMoreTickets = function () { supLoadTickets(true); };
+
+window.supSetFilter = function (value) {
+  _supFilter = value || 'all';
+  document.querySelectorAll('#supFilterTabs .mmg-btn').forEach(b => {
+    b.classList.toggle('primary', b.dataset.filter === _supFilter);
+  });
+  supLoadTickets(false);
+  supUpdateBadges();
+};
+
+function supSubscribe() {
+  supLoadTickets(false);
+  supUpdateBadges();
+}
+
+function supStopTickets() {
+  if (_supUnsubTickets) { _supUnsubTickets(); _supUnsubTickets = null; }
+  _supUnsubTickets = null;
+}
+
+async function supSendReply() {
+  const t = supActiveTicket();
+  if (!t || !currentUser) return;
+  const ta  = document.getElementById('supAdminReply');
+  const btn = document.getElementById('supAdminSend');
+  const text = (ta && ta.value || '').trim();
+  if (!text) { mmgMsg('supAdminMsg', 'กรุณาพิมพ์ข้อความก่อนส่ง', '#ff6b85'); return; }
+
+  if (btn) btn.disabled = true;
+  const authorName = currentUser.displayName || (currentUser.email || '').split('@')[0] || 'ผู้ดูแล';
+  try {
+    await addDoc(collection(db, 'supportTickets', t.id, 'messages'), {
+      from: 'admin',
+      text,
+      createdAt: new Date(),
+      authorName,
+      uid: currentUser.uid
+    });
+    await updateDoc(doc(db, 'supportTickets', t.id), {
+      updatedAt: new Date(),
+      lastMessageBy: 'admin',
+      lastMessageText: text.slice(0, 2000),
+      unreadForAdmin: false,
+      unreadForUser: true,
+      status: 'open'
+    });
+    if (ta) ta.value = '';
+    mmgMsg('supAdminMsg', 'ส่งคำตอบแล้ว', '#4ade80');
+    if (t) {
+      t.updatedAt = new Date();
+      t.lastMessageBy = 'admin';
+      t.unreadForAdmin = false;
+      t.status = 'open';
+    }
+    supRenderList();
+    supRenderHead();
+    supRenderReply();
+    supUpdateBadges();
+  } catch (e) {
+    mmgMsg('supAdminMsg', 'ส่งคำตอบไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function supSetStatus(status) {
+  const t = supActiveTicket();
+  if (!t) return;
+  const closed = status === 'closed';
+  if (!confirm(closed ? 'ปิดเรื่องนี้?' : 'เปิดเรื่องนี้ใหม่?')) return;
+  try {
+    await updateDoc(doc(db, 'supportTickets', t.id), {
+      status: closed ? 'closed' : 'open',
+      updatedAt: new Date(),
+      unreadForAdmin: false
+    });
+    mmgToast(closed ? 'ปิดเรื่องแล้ว' : 'เปิดเรื่องใหม่แล้ว', closed ? 'x' : 'refresh');
+    t.status = closed ? 'closed' : 'open';
+    t.updatedAt = new Date();
+    t.unreadForAdmin = false;
+    supRenderList();
+    supRenderHead();
+    supRenderReply();
+    supUpdateBadges();
+  } catch (e) {
+    mmgMsg('supAdminMsg', 'เปลี่ยนสถานะไม่สำเร็จ: ' + (e.message || e.code || ''), '#ff6b85');
+  }
+}
+
+function supTogglePanel(force) {
+  const wrap = document.getElementById('supportMgmtWrap');
+  const btn  = document.getElementById('btnSupportMgmt');
+  if (!wrap || !btn) return;
+  const open = force === undefined ? !wrap.classList.contains('visible') : force === true;
+  if (open) {
+    document.getElementById('memberMgmtWrap').classList.remove('visible');
+    document.getElementById('btnMemberMgmt').classList.remove('active');
+    document.getElementById('adminMgmtWrap').classList.remove('visible');
+    document.getElementById('btnManageAdmin').classList.remove('active');
+    document.getElementById('editFormWrap').style.display = 'none';
+    document.getElementById('rightPlaceholder').style.display = 'none';
+    wrap.classList.add('visible');
+    btn.classList.add('active');
+    supRenderList();
+    supRenderHead();
+    supRenderReply();
+    supUpdateBadges();
+    supSubscribe();
+  } else {
+    wrap.classList.remove('visible');
+    btn.classList.remove('active');
+    supStopMessages();
+    supStopTickets();
+    _supActiveId = null;
+    _supMessages = [];
+    _supOlder = []; _supLive = [];
+    supRenderThread();
+    supRenderHead();
+    if (selectedNovelId) document.getElementById('editFormWrap').style.display = 'block';
+    else document.getElementById('rightPlaceholder').style.display = 'flex';
   }
 }
 
@@ -3187,12 +4167,15 @@ function mmgTogglePanel(force) {
   if (open) {
     document.getElementById('adminMgmtWrap').classList.remove('visible');
     document.getElementById('btnManageAdmin').classList.remove('active');
+    document.getElementById('supportMgmtWrap').classList.remove('visible');
+    document.getElementById('btnSupportMgmt').classList.remove('active');
+    supStopMessages();
     document.getElementById('editFormWrap').style.display = 'none';
     document.getElementById('rightPlaceholder').style.display = 'none';
     wrap.classList.add('visible');
     btn.classList.add('active');
     mmgPaintQr(_mmgCfg.qrUrl);
-    mmgUpdateBadges();
+    mmgRefreshCounts();
     mmgFillNovelSelect();
     mmgSubscribe();
   } else {
@@ -3209,7 +4192,7 @@ async function initMemberPanel() {
 
   await mmgLoadSettings();
   mmgFillNovelSelect();
-  mmgSubscribe();
+  mmgRefreshCounts();
 
   document.getElementById('mmgSaveCfg').addEventListener('click', mmgSaveSettings);
   document.getElementById('mmgQrPick').addEventListener('click', () => document.getElementById('mmgQrFile').click());
@@ -3219,8 +4202,20 @@ async function initMemberPanel() {
     if (f) mmgUploadQr(f);
   });
   document.getElementById('mmgQrUrl').addEventListener('change', (e) => mmgPaintQr(e.target.value.trim()));
-  document.getElementById('mmgNovelSelect').addEventListener('change', (e) => mmgLoadEpisodes(e.target.value));
+  document.getElementById('mmgNovelSelect').addEventListener('change', (e) => {
+    _mmgEpSearchValue = '';
+    const es = document.getElementById('mmgEpSearch');
+    if (es) es.value = '';
+    mmgLoadEpisodes(e.target.value, false);
+  });
+  document.getElementById('mmgEpSearch').addEventListener('input', (e) => {
+    _mmgEpSearchValue = e.target.value || '';
+    clearTimeout(_mmgEpSearchTimer);
+    _mmgEpSearchTimer = setTimeout(() => mmgLoadEpisodes(_mmgNovelId, false), 350);
+  });
+  document.getElementById('mmgEpMore').addEventListener('click', () => mmgLoadEpisodes(_mmgNovelId, true));
   document.getElementById('mmgMigrate').addEventListener('click', mmgMigrateLegacy);
+  document.getElementById('mmgMigrateStop').addEventListener('click', () => { _mmgMigrateStop = true; });
   document.getElementById('btnMemberMgmt').addEventListener('click', () => mmgTogglePanel());
   document.getElementById('mmgTopBtn').addEventListener('click', () => {
     mmgTogglePanel(true);
@@ -3238,6 +4233,44 @@ async function initMemberPanel() {
     const sn = e.target.closest('[data-seen]');
     if (sn) mmgSeenSignup(sn.dataset.seen, sn);
   });
+
+  document.getElementById('mmgMemberSearch').addEventListener('input', (e) => {
+    _mmgMemberQuery = e.target.value || '';
+    clearTimeout(_mmgSearchTimer);
+    _mmgSearchTimer = setTimeout(() => mmgLoadMembers(false), 350);
+  });
+
+  document.getElementById('mmgMemberTable').addEventListener('click', (e) => {
+    const rv = e.target.closest('[data-mem-revoke]');
+    if (rv) { mmgRevokeMember(rv.dataset.memRevoke, rv); return; }
+    const ad = e.target.closest('[data-mem-adjust]');
+    if (ad) { mmgAdjustMember(ad.dataset.memAdjust, ad); return; }
+    const gv = e.target.closest('[data-mem-grant]');
+    if (gv) mmgGrantMember(gv.dataset.memGrant, gv);
+  });
+
+  document.getElementById('mmgLogList').addEventListener('click', (e) => {
+    const gv = e.target.closest('[data-mem-grant]');
+    if (gv) mmgGrantMember(gv.dataset.memGrant, gv);
+  });
+
+  document.getElementById('mmgApprovedList').addEventListener('click', (e) => {
+    const un = e.target.closest('[data-unapprove]');
+    if (un) { mmgUnapprove(un.dataset.unapprove, un); return; }
+    const fd = e.target.closest('[data-find-member]');
+    if (fd) mmgFindMember(fd.dataset.findMember);
+  });
+
+  document.getElementById('btnSupportMgmt').addEventListener('click', () => supTogglePanel());
+  document.getElementById('supAdminList').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sup]');
+    if (b) supOpenTicket(b.dataset.sup);
+  });
+  document.getElementById('supAdminSend').addEventListener('click', supSendReply);
+  document.getElementById('supAdminClose').addEventListener('click', () => supSetStatus('closed'));
+  document.getElementById('supAdminReopen').addEventListener('click', () => supSetStatus('open'));
+
+  supUpdateBadges();
 }
 </script>
 

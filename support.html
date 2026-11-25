@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>แจ้งปัญหา — The Golden Hoard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Chakra+Petch:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<style>
+  .sup-main { max-width: 1120px; margin: 0 auto; padding: 36px 24px 0; }
+  .sup-hero { text-align: center; margin-bottom: 24px; }
+  .sup-eyebrow {
+    font-family: 'Chakra Petch', sans-serif; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 3px; color: var(--primary); margin-bottom: 10px;
+  }
+  .sup-hero h1 {
+    font-family: 'Chakra Petch', sans-serif; font-size: 2rem; font-weight: 800;
+    line-height: 1.25; margin-bottom: 8px;
+  }
+  .sup-hero p { color: var(--text-secondary); font-size: 0.96rem; line-height: 1.75; }
+  .sup-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 22px; align-items: start; }
+  .sup-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px;
+  }
+  .sup-card h2 {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Chakra Petch', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--gold); margin-bottom: 14px;
+  }
+  .sup-field { margin-bottom: 14px; }
+  .sup-field label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 7px; }
+  .sup-input {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: 0.95rem; resize: vertical;
+  }
+  .sup-input:focus { outline: none; border-color: var(--gold); }
+  .sup-btn {
+    width: 100%; padding: 13px; border-radius: 12px; border: none; cursor: pointer;
+    background: var(--gold); color: #1a1200; font-family: inherit;
+    font-size: 0.98rem; font-weight: 800;
+  }
+  .sup-btn:hover { filter: brightness(1.07); }
+  .sup-btn:disabled { opacity: 0.6; cursor: default; filter: none; }
+  .sup-btn.inline { width: auto; padding: 11px 20px; font-size: 0.9rem; }
+  .sup-msg { min-height: 18px; margin-top: 10px; text-align: center; font-size: 0.85rem; color: var(--primary); }
+  .sup-msg.ok { color: #4caf7d; }
+  .sup-list { display: flex; flex-direction: column; gap: 9px; }
+  .sup-item {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    padding: 12px 14px; border-radius: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: inherit;
+  }
+  .sup-item:hover { border-color: rgba(245,197,66,0.45); }
+  .sup-item.on { border-color: var(--gold); background: rgba(245,197,66,0.08); }
+  .sup-item-top { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .sup-item-subject {
+    font-size: 0.92rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; display: block; max-width: 100%;
+  }
+  .sup-item-meta { font-size: 0.74rem; color: var(--muted); margin-top: 5px; line-height: 1.6; }
+  .sup-tag { font-size: 0.7rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+  .sup-tag.wait { color: var(--gold); background: rgba(245,197,66,0.13); border: 1px solid rgba(245,197,66,0.3); }
+  .sup-tag.replied { color: #4caf7d; background: rgba(76,175,125,0.13); border: 1px solid rgba(76,175,125,0.3); }
+  .sup-tag.closed { color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); }
+  .sup-empty { padding: 18px; text-align: center; font-size: 0.86rem; color: var(--muted); }
+  .sup-thread-head {
+    padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .sup-thread-subject { font-size: 1rem; font-weight: 800; line-height: 1.5; word-break: break-word; }
+  .sup-thread-meta { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
+  .sup-thread {
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 460px; overflow-y: auto; padding: 4px 2px;
+  }
+  .sup-bubble {
+    max-width: 84%; padding: 10px 14px; border-radius: 14px;
+    font-size: 0.9rem; line-height: 1.75; white-space: pre-wrap; word-break: break-word;
+  }
+  .sup-bubble.user { align-self: flex-end; background: rgba(245,197,66,0.14); border: 1px solid rgba(245,197,66,0.3); }
+  .sup-bubble.admin { align-self: flex-start; background: var(--surface2); border: 1px solid var(--border); }
+  .sup-bubble-who { font-size: 0.72rem; font-weight: 800; color: var(--muted); margin-bottom: 4px; }
+  .sup-reply { margin-top: 14px; }
+  .sup-placeholder { padding: 40px 16px; text-align: center; font-size: 0.88rem; color: var(--muted); line-height: 1.8; }
+  .sup-guest {
+    max-width: 520px; margin: 0 auto 30px; text-align: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 30px 24px;
+  }
+  .sup-guest h2 { font-family: 'Chakra Petch', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
+  .sup-guest p { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.8; margin-bottom: 18px; }
+  .sup-guest a {
+    display: inline-block; padding: 12px 26px; border-radius: 12px; text-decoration: none;
+    background: var(--gold); color: #1a1200; font-weight: 800; font-size: 0.95rem;
+  }
+  @media (max-width: 900px) {
+    .sup-grid { grid-template-columns: 1fr; }
+    .sup-main { padding: 24px 16px 0; }
+    .sup-hero h1 { font-size: 1.65rem; }
+    .sup-thread { max-height: 360px; }
+  }
+  .ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; }
+  [data-icon] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+</style>
+<script src="icons.js"></script>
+</head>
+<body>
+
+<nav class="navbar" id="mainNavbar">
+  <a class="nav-logo" href="index.html">
+    <span class="nav-logo-icon" data-icon="crown" data-icon-size="1.35em"></span>
+    <div class="nav-logo-text">The Golden <span>Hoard</span></div>
+  </a>
+
+  <div class="nav-links">
+    <a href="index.html">หน้าแรก</a>
+    <a href="index.html?_r=/library">นิยายทั้งหมด</a>
+    <a href="member.html">สมัครสมาชิก</a>
+    <a href="support.html" class="active">แจ้งปัญหา</a>
+  </div>
+
+  <div class="nav-actions" id="navGuestActions">
+    <a href="login.html" class="nav-btn nav-btn-outline" id="navLoginBtn">เข้าสู่ระบบ</a>
+    <a href="login.html" class="nav-btn nav-btn-fill" id="navRegisterBtn">สมัครบัญชี</a>
+  </div>
+
+  <div class="nav-user" id="navUserMenu" style="display:none;">
+    <div class="nav-avatar" id="navAvatar">U</div>
+    <div class="nav-dropdown">
+      <a href="#" id="navUserName" style="cursor:default;pointer-events:none;color:var(--text);font-weight:700;">ผู้ใช้</a>
+      <a href="member.html"><span data-icon="crown"></span> สถานะสมาชิก</a>
+      <a href="index.html" id="navAdminBtn" style="display:none;"><span data-icon="gear"></span> จัดการนิยาย</a>
+      <a href="#" class="danger" onclick="event.preventDefault();window.supSignOut();"><span data-icon="logout"></span> ออกจากระบบ</a>
+    </div>
+  </div>
+
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="window.supToggleDrawer()" aria-label="เมนู"><span data-icon="menu" data-icon-size="1.2em"></span></button>
+</nav>
+
+<div class="nav-mobile-drawer" id="mobileDrawer">
+  <a href="index.html"><span data-icon="home"></span> หน้าแรก</a>
+  <a href="index.html?_r=/library"><span data-icon="book"></span> นิยายทั้งหมด</a>
+  <a href="member.html"><span data-icon="crown"></span> สมัครสมาชิก</a>
+  <a href="support.html" class="active"><span data-icon="comment"></span> แจ้งปัญหา</a>
+  <div class="nav-mobile-auth" id="mobileGuestAuth">
+    <a href="login.html" class="nav-btn nav-btn-outline"><span>เข้าสู่ระบบ</span></a>
+    <a href="login.html" class="nav-btn nav-btn-fill"><span>สมัครบัญชี</span></a>
+  </div>
+</div>
+
+<main class="sup-main">
+  <section class="sup-hero">
+    <div class="sup-eyebrow">THE GOLDEN HOARD SUPPORT</div>
+    <h1>แจ้งปัญหาและติดต่อผู้ดูแล</h1>
+    <p>ส่งเรื่องถึงผู้ดูแล แล้วติดตามคำตอบได้แบบเรียลไทม์บนหน้านี้</p>
+  </section>
+
+  <section class="sup-guest" id="supGuest" style="display:none;">
+    <h2><span data-icon="lock"></span> ต้องเข้าสู่ระบบก่อน</h2>
+    <p>การแจ้งปัญหาผูกกับบัญชีของคุณ เพื่อให้ผู้ดูแลตอบกลับและติดตามเรื่องได้ตรงคน<br>กรุณาเข้าสู่ระบบก่อนส่งเรื่อง</p>
+    <a href="login.html">เข้าสู่ระบบ</a>
+  </section>
+
+  <div class="sup-grid" id="supGrid" style="display:none;">
+    <section class="sup-card">
+      <h2><span data-icon="edit"></span> แจ้งปัญหาใหม่</h2>
+      <div class="sup-field">
+        <label for="supSubject">หัวข้อ</label>
+        <input class="sup-input" id="supSubject" type="text" maxlength="120" placeholder="เช่น ฟังเสียงตอนที่ 5 ไม่ได้">
+      </div>
+      <div class="sup-field">
+        <label for="supText">รายละเอียด</label>
+        <textarea class="sup-input" id="supText" rows="4" maxlength="2000" placeholder="อธิบายสิ่งที่พบ เช่น ชื่อเรื่อง ตอนที่ อุปกรณ์ที่ใช้"></textarea>
+      </div>
+      <button class="sup-btn" id="supSend" type="button">ส่งเรื่อง</button>
+      <div class="sup-msg" id="supSendMsg"></div>
+
+      <h2 style="margin-top:26px;"><span data-icon="clipboard"></span> เรื่องของฉัน</h2>
+      <div class="sup-list" id="supList">
+        <div class="sup-empty">กำลังโหลด...</div>
+      </div>
+      <div id="supTicketsMore" style="text-align:center;padding:12px 0"></div>
+    </section>
+
+    <section class="sup-card">
+      <div class="sup-thread-head" id="supThreadHead">
+        <div class="sup-thread-subject">บทสนทนา</div>
+      </div>
+      <div class="sup-thread" id="supThread">
+        <div class="sup-placeholder">เลือกเรื่องจากรายการด้านซ้าย<br>เพื่อดูบทสนทนากับผู้ดูแล</div>
+      </div>
+      <div class="sup-reply" id="supReplyWrap" style="display:none;">
+        <div class="sup-field">
+          <label for="supReplyText">ตอบกลับ</label>
+          <textarea class="sup-input" id="supReplyText" rows="3" maxlength="2000" placeholder="พิมพ์ข้อความถึงผู้ดูแล"></textarea>
+        </div>
+        <button class="sup-btn" id="supReplySend" type="button">ส่งข้อความ</button>
+        <div class="sup-msg" id="supReplyMsg"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner" style="grid-template-columns:1fr;">
+    <div>
+      <a class="footer-brand-logo" href="index.html">The Golden <span>Hoard</span></a>
+      <p class="footer-brand-desc">นิยายเสียงออนไลน์ ฟังได้ทุกที่ทุกเวลา</p>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 The Golden Hoard — สงวนลิขสิทธิ์</div>
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, getDoc, getDocs, doc, serverTimestamp, limit, startAfter, getCountFromServer }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:            "AIzaSyCeU6VZniOzJ-gbTr4K75E6TpKELmRRVlk",
+  authDomain:        "login-24acc.firebaseapp.com",
+  projectId:         "login-24acc",
+  storageBucket:     "login-24acc.firebasestorage.app",
+  messagingSenderId: "440213309587",
+  appId:             "1:440213309587:web:072857c31c2e6bd5062566"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+const esc = v => {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+const toDate = v => {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (typeof v.toDate === 'function') return v.toDate();
+  if (typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+  if (typeof v === 'number') return new Date(v);
+  return null;
+};
+
+const ts = v => {
+  const d = toDate(v);
+  return d ? d.getTime() : 0;
+};
+
+const fmtStamp = d => {
+  if (!d) return '';
+  try {
+    return d.toLocaleString('th-TH', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  } catch (e) { return d.toISOString().slice(0, 16).replace('T', ' '); }
+};
+
+let user       = null;
+let tickets    = [];
+let activeId   = null;
+let messages   = [];
+let sending    = false;
+let unsubTickets  = null;
+let unsubMessages = null;
+const countCache  = new Map();
+
+const TICKET_PAGE = 20;
+const MSG_PAGE    = 50;
+
+let ticketCursor   = null;
+let ticketsDone    = true;
+let ticketsLoading = false;
+let olderMessages  = [];
+let liveMessages   = [];
+let msgOldestDoc   = null;
+let msgDone        = true;
+let _keepScroll    = false;
+
+function stopTickets() {
+  if (unsubTickets) { unsubTickets(); unsubTickets = null; }
+}
+
+function stopMessages() {
+  if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+}
+
+function activeTicket() {
+  return tickets.find(t => t.id === activeId) || null;
+}
+
+function ticketStatus(t) {
+  if (t.status === 'closed') return { cls: 'closed', label: 'ปิดแล้ว' };
+  if (t.lastMessageBy === 'admin') return { cls: 'replied', label: 'ตอบแล้ว' };
+  return { cls: 'wait', label: 'รอตอบ' };
+}
+
+function syncHeader() {
+  const guest = $('navGuestActions');
+  const menu  = $('navUserMenu');
+  const mGuest = $('mobileGuestAuth');
+  if (user) {
+    if (guest) guest.style.display = 'none';
+    if (menu) menu.style.display = 'flex';
+    if (mGuest) mGuest.style.display = 'none';
+    const nameEl = $('navUserName');
+    if (nameEl) nameEl.textContent = user.displayName || (user.email || '').split('@')[0] || 'ผู้ใช้';
+    const av = $('navAvatar');
+    if (av) {
+      av.textContent = '';
+      if (user.photoURL) {
+        const im = document.createElement('img');
+        im.src = user.photoURL;
+        im.alt = '';
+        im.referrerPolicy = 'no-referrer';
+        av.appendChild(im);
+      } else {
+        const nm = (user.displayName || user.email || 'U').trim();
+        av.textContent = (nm.charAt(0) || 'U').toUpperCase();
+      }
+    }
+  } else {
+    if (guest) guest.style.display = 'flex';
+    if (menu) menu.style.display = 'none';
+    if (mGuest) mGuest.style.display = 'flex';
+  }
+}
+
+async function checkAdmin() {
+  if (!user) return false;
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists() && snap.data()?.active !== false;
+  } catch (e) { return false; }
+}
+
+function renderGuest() {
+  const box = $('supGuest');
+  const grid = $('supGrid');
+  if (box) box.style.display = user ? 'none' : 'block';
+  if (grid) grid.style.display = user ? 'grid' : 'none';
+}
+
+function syncTicketsMore() {
+  const box = $('supTicketsMore');
+  if (!box) return;
+  if (ticketsDone || !tickets.length) { box.innerHTML = ''; return; }
+  box.innerHTML = '<button class="sup-btn inline" type="button" onclick="window.supLoadMoreTickets()">โหลดเรื่องเพิ่ม</button>';
+}
+
+function renderList() {
+  const box = $('supList');
+  if (!box) return;
+  syncTicketsMore();
+  if (!tickets.length) {
+    box.innerHTML = '<div class="sup-empty">ยังไม่มีเรื่องที่แจ้งไว้</div>';
+    return;
+  }
+  box.innerHTML = tickets.map(t => {
+    const st = ticketStatus(t);
+    const c = countCache.get(t.id);
+    const count = c && typeof c.n === 'number' ? ' · ' + c.n + ' ข้อความ' : '';
+    return '<button class="sup-item' + (t.id === activeId ? ' on' : '') + '" type="button" data-open="' + esc(t.id) + '">' +
+      '<span class="sup-item-top">' +
+        '<span class="sup-item-subject">' + esc(t.subject || 'ไม่ระบุหัวข้อ') + '</span>' +
+        '<span class="sup-tag ' + st.cls + '">' + esc(st.label) + '</span>' +
+      '</span>' +
+      '<span class="sup-item-meta">' + esc(fmtStamp(toDate(t.updatedAt)) || 'ไม่ทราบเวลา') + esc(count) + '</span>' +
+    '</button>';
+  }).join('');
+}
+
+function renderThreadHead() {
+  const head = $('supThreadHead');
+  const t = activeTicket();
+  if (!head) return;
+  if (!t) {
+    head.innerHTML = '<div class="sup-thread-subject">บทสนทนา</div>';
+    return;
+  }
+  head.innerHTML =
+    '<div class="sup-thread-subject">' + esc(t.subject || 'ไม่ระบุหัวข้อ') + '</div>' +
+    '<div class="sup-thread-meta">แจ้งเมื่อ ' + esc(fmtStamp(toDate(t.createdAt)) || 'ไม่ทราบเวลา') +
+      ' · ' + esc(ticketStatus(t).label) + '</div>';
+}
+
+function renderThread() {
+  const box = $('supThread');
+  if (!box) return;
+  if (!activeId) {
+    box.innerHTML = '<div class="sup-placeholder">เลือกเรื่องจากรายการด้านซ้าย<br>เพื่อดูบทสนทนากับผู้ดูแล</div>';
+    return;
+  }
+  if (!messages.length) {
+    box.innerHTML = '<div class="sup-placeholder">กำลังโหลดบทสนทนา...</div>';
+    return;
+  }
+  const prevHeight = box.scrollHeight;
+  const prevTop    = box.scrollTop;
+  const moreHTML = msgDone ? '' :
+    '<div style="text-align:center;padding:6px 0"><button class="sup-btn inline" type="button" ' +
+    'onclick="window.supLoadOlderMessages()">โหลดข้อความเก่า</button></div>';
+  box.innerHTML = moreHTML + messages.map(m => {
+    const mine = m.from === 'user';
+    return '<div class="sup-bubble ' + (mine ? 'user' : 'admin') + '">' +
+      '<div class="sup-bubble-who">' + esc(mine ? 'คุณ' : (m.authorName || 'ผู้ดูแล')) +
+        ' · ' + esc(fmtStamp(toDate(m.createdAt))) + '</div>' +
+      esc(m.text) +
+    '</div>';
+  }).join('');
+  if (_keepScroll) {
+    _keepScroll = false;
+    box.scrollTop = box.scrollHeight - prevHeight + prevTop;
+  } else {
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+function renderReplyBox() {
+  const wrap = $('supReplyWrap');
+  const t = activeTicket();
+  if (!wrap) return;
+  wrap.style.display = t ? 'block' : 'none';
+  const btn = $('supReplySend');
+  const ta  = $('supReplyText');
+  const closed = !!t && t.status === 'closed';
+  if (btn) btn.disabled = !t || closed || sending;
+  if (ta) ta.disabled = !t || closed;
+  if (closed) {
+    const msg = $('supReplyMsg');
+    if (msg) { msg.className = 'sup-msg'; msg.textContent = 'เรื่องนี้ถูกปิดแล้ว หากต้องการสอบถามเพิ่มเติมกรุณาแจ้งเรื่องใหม่'; }
+  }
+}
+
+function clearUnread() {
+  const t = activeTicket();
+  if (!t || t.unreadForUser !== true) return;
+  updateDoc(doc(db, 'supportTickets', t.id), { unreadForUser: false })
+    .catch(e => console.warn('[support/clearUnread]', e));
+}
+
+async function loadCounts() {
+  for (const t of tickets) {
+    const stamp = ts(t.updatedAt);
+    const c = countCache.get(t.id);
+    if (c && c.stamp === stamp) continue;
+    try {
+      const snap = await getCountFromServer(collection(db, 'supportTickets', t.id, 'messages'));
+      countCache.set(t.id, { stamp, n: snap.data().count });
+      renderList();
+    } catch (e) {
+      console.warn('[support/counts]', e);
+    }
+  }
+}
+
+async function loadTickets(uid, reset) {
+  if (!uid || ticketsLoading) return;
+  if (reset) {
+    tickets = []; ticketCursor = null; ticketsDone = false;
+  } else if (ticketsDone) return;
+  ticketsLoading = true;
+  renderList();
+  try {
+    const parts = [where('uid', '==', uid), orderBy('updatedAt', 'desc'), limit(TICKET_PAGE)];
+    if (ticketCursor) parts.push(startAfter(ticketCursor));
+    const snap = await getDocs(query(collection(db, 'supportTickets'), ...parts));
+    if (snap.size < TICKET_PAGE) ticketsDone = true;
+    if (snap.docs.length) ticketCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(tickets.map(t => t.id));
+    snap.docs.forEach(d => { if (!seen.has(d.id)) tickets.push({ id: d.id, ...d.data() }); });
+    if (activeId && !tickets.some(t => t.id === activeId)) {
+      activeId = null;
+      messages = [];
+      stopMessages();
+      renderThread();
+    }
+    renderList();
+    renderThreadHead();
+    renderReplyBox();
+    loadCounts();
+    if (activeId) clearUnread();
+  } catch (e) {
+    ticketsDone = true;
+    console.warn('[support/tickets]', e);
+  } finally {
+    ticketsLoading = false;
+    syncTicketsMore();
+  }
+}
+
+function watchTickets(uid) {
+  stopTickets();
+  unsubTickets = null;
+  loadTickets(uid, true);
+}
+
+window.supLoadMoreTickets = function () {
+  if (user) loadTickets(user.uid, false);
+};
+
+function openTicket(id) {
+  if (!id) return;
+  if (activeId !== id) {
+    activeId = id;
+    messages = [];
+    stopMessages();
+    renderList();
+    renderThreadHead();
+    renderThread();
+    renderReplyBox();
+    watchMessages(id);
+  }
+  clearUnread();
+}
+
+function mergeMessages() {
+  const seen = new Set();
+  const all  = [];
+  [...olderMessages, ...liveMessages].forEach(m => {
+    if (m && !seen.has(m.id)) { seen.add(m.id); all.push(m); }
+  });
+  all.sort((a, b) => ts(a.createdAt) - ts(b.createdAt));
+  messages = all;
+}
+
+function watchMessages(ticketId) {
+  stopMessages();
+  olderMessages = [];
+  liveMessages  = [];
+  messages      = [];
+  msgOldestDoc  = null;
+  msgDone       = false;
+  renderThread();
+  unsubMessages = onSnapshot(
+    query(collection(db, 'supportTickets', ticketId, 'messages'), orderBy('createdAt', 'desc'), limit(MSG_PAGE)),
+    snap => {
+      if (ticketId !== activeId) return;
+      liveMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (!olderMessages.length) {
+        msgDone = snap.size < MSG_PAGE;
+        msgOldestDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : null;
+      }
+      mergeMessages();
+      renderThread();
+      renderList();
+    },
+    e => {
+      console.warn('[support/messages]', e);
+      const box = $('supThread');
+      if (box && ticketId === activeId) box.innerHTML = '<div class="sup-placeholder">เปิดบทสนทนาไม่สำเร็จ กรุณาลองใหม่</div>';
+    }
+  );
+}
+
+window.supLoadOlderMessages = async function () {
+  const ticketId = activeId;
+  if (!ticketId || msgDone || !msgOldestDoc) return;
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'supportTickets', ticketId, 'messages'),
+      orderBy('createdAt', 'desc'),
+      startAfter(msgOldestDoc),
+      limit(MSG_PAGE)
+    ));
+    if (ticketId !== activeId) return;
+    const page = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (page.length) olderMessages = [...olderMessages, ...page];
+    if (snap.docs.length) msgOldestDoc = snap.docs[snap.docs.length - 1];
+    if (snap.size < MSG_PAGE) msgDone = true;
+    mergeMessages();
+    _keepScroll = true;
+    renderThread();
+  } catch (e) {
+    console.warn('[support/older]', e);
+  }
+};
+
+function showMsg(id, text, cls) {
+  const msg = $(id);
+  if (!msg) return;
+  msg.className = 'sup-msg' + (cls ? ' ' + cls : '');
+  msg.textContent = text;
+}
+
+async function submitTicket() {
+  if (!user || sending) return;
+  const subjectEl = $('supSubject');
+  const textEl    = $('supText');
+  const btn       = $('supSend');
+  const subject   = (subjectEl?.value || '').trim();
+  const text      = (textEl?.value || '').trim();
+
+  if (!subject) { showMsg('supSendMsg', 'กรุณากรอกหัวข้อเรื่อง'); return; }
+  if (subject.length > 120) { showMsg('supSendMsg', 'หัวข้อยาวเกิน 120 ตัวอักษร'); return; }
+  if (!text) { showMsg('supSendMsg', 'กรุณากรอกรายละเอียดปัญหา'); return; }
+  if (text.length > 2000) { showMsg('supSendMsg', 'รายละเอียดยาวเกิน 2000 ตัวอักษร'); return; }
+
+  sending = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังส่ง...'; }
+  showMsg('supSendMsg', '');
+
+  const authorName = user.displayName || (user.email || '').split('@')[0] || 'ผู้ใช้';
+  try {
+    const ref = await addDoc(collection(db, 'supportTickets'), {
+      uid: user.uid,
+      name: authorName,
+      email: user.email || '',
+      subject,
+      status: 'open',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessageBy: 'user',
+      lastMessageText: text.slice(0, 2000),
+      unreadForAdmin: true,
+      unreadForUser: false
+    });
+    await addDoc(collection(db, 'supportTickets', ref.id, 'messages'), {
+      from: 'user',
+      text,
+      createdAt: serverTimestamp(),
+      authorName,
+      uid: user.uid
+    });
+    if (subjectEl) subjectEl.value = '';
+    if (textEl) textEl.value = '';
+    showMsg('supSendMsg', 'ส่งเรื่องแล้ว ผู้ดูแลจะตอบกลับในหน้านี้', 'ok');
+    await loadTickets(user.uid, true);
+    openTicket(ref.id);
+  } catch (e) {
+    console.warn('[support/create]', e);
+    showMsg('supSendMsg', 'ส่งเรื่องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+  } finally {
+    sending = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'ส่งเรื่อง'; }
+  }
+}
+
+async function submitReply() {
+  const t = activeTicket();
+  if (!user || !t || sending) return;
+  const ta  = $('supReplyText');
+  const btn = $('supReplySend');
+  const text = (ta?.value || '').trim();
+
+  if (!text) { showMsg('supReplyMsg', 'กรุณาพิมพ์ข้อความก่อนส่ง'); return; }
+  if (text.length > 2000) { showMsg('supReplyMsg', 'ข้อความยาวเกิน 2000 ตัวอักษร'); return; }
+
+  sending = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังส่ง...'; }
+  showMsg('supReplyMsg', '');
+
+  const authorName = user.displayName || (user.email || '').split('@')[0] || 'ผู้ใช้';
+  try {
+    await addDoc(collection(db, 'supportTickets', t.id, 'messages'), {
+      from: 'user',
+      text,
+      createdAt: serverTimestamp(),
+      authorName,
+      uid: user.uid
+    });
+    await updateDoc(doc(db, 'supportTickets', t.id), {
+      updatedAt: serverTimestamp(),
+      lastMessageBy: 'user',
+      lastMessageText: text.slice(0, 2000),
+      unreadForAdmin: true
+    });
+    if (ta) ta.value = '';
+    showMsg('supReplyMsg', 'ส่งข้อความแล้ว', 'ok');
+    loadTickets(user.uid, true);
+  } catch (e) {
+    console.warn('[support/reply]', e);
+    showMsg('supReplyMsg', 'ส่งข้อความไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+  } finally {
+    sending = false;
+    renderReplyBox();
+    if (btn) btn.textContent = 'ส่งข้อความ';
+  }
+}
+
+window.supToggleDrawer = function () {
+  const d = $('mobileDrawer');
+  if (d) d.classList.toggle('open');
+};
+
+window.supSignOut = async function () {
+  try { await signOut(auth); } catch (e) {}
+  window.location.reload();
+};
+
+$('supSend').addEventListener('click', submitTicket);
+$('supReplySend').addEventListener('click', submitReply);
+$('supList').addEventListener('click', e => {
+  const b = e.target.closest('[data-open]');
+  if (b) openTicket(b.dataset.open);
+});
+
+document.addEventListener('click', e => {
+  const drawer = $('mobileDrawer');
+  const btn = $('hamburgerBtn');
+  if (drawer && btn && drawer.classList.contains('open') && !drawer.contains(e.target) && !btn.contains(e.target)) {
+    drawer.classList.remove('open');
+  }
+});
+
+renderGuest();
+renderList();
+
+onAuthStateChanged(auth, async u => {
+  user = u;
+  tickets = [];
+  messages = [];
+  activeId = null;
+  countCache.clear();
+  stopTickets();
+  stopMessages();
+  syncHeader();
+  renderGuest();
+  renderList();
+  renderThread();
+  renderThreadHead();
+  renderReplyBox();
+
+  if (!u) return;
+
+  watchTickets(u.uid);
+
+  const isAdmin = await checkAdmin();
+  const adminBtn = $('navAdminBtn');
+  if (adminBtn) {
+    adminBtn.style.display = isAdmin ? 'flex' : 'none';
+    if (isAdmin) adminBtn.setAttribute('href', (window.location.pathname.replace(/\/support\.html$/i, '') || '') + '/admin.html');
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  stopTickets();
+  stopMessages();
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

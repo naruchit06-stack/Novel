@@ -20,7 +20,7 @@
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, where, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp }
+import { getFirestore, collection, onSnapshot, query, orderBy, where, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp, limit, startAfter }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -188,6 +188,45 @@ function syncMemberMenu() {
     if (lbl) lbl.textContent = label;
     a.classList.toggle('active', onMemberPage);
   });
+
+  syncSupportMenu();
+}
+
+function supportPageHref() {
+  return (window._BASE || '') + '/support.html';
+}
+
+function syncSupportMenu() {
+  const href = supportPageHref();
+  const onSupportPage = /\/support\.html$/i.test(window.location.pathname);
+
+  document.querySelectorAll('.nav-links').forEach(nav => {
+    let a = nav.querySelector('a[data-support-nav]');
+    if (!a) {
+      a = document.createElement('a');
+      a.setAttribute('data-support-nav', '');
+      a.textContent = 'แจ้งปัญหา';
+      nav.appendChild(a);
+    }
+    a.setAttribute('href', href);
+    a.classList.toggle('active', onSupportPage);
+  });
+
+  document.querySelectorAll('.nav-mobile-drawer').forEach(nav => {
+    let a = nav.querySelector('a[data-support-nav]');
+    if (!a) {
+      a = document.createElement('a');
+      a.setAttribute('data-support-nav', '');
+      a.innerHTML = '<span data-icon="comment"></span> <span>แจ้งปัญหา</span>';
+      const authBlock = nav.querySelector('.nav-mobile-auth');
+      if (authBlock) nav.insertBefore(a, authBlock);
+      else nav.appendChild(a);
+    }
+    a.setAttribute('href', href);
+    a.classList.toggle('active', onSupportPage);
+  });
+
+  if (window.mountIcons) window.mountIcons(document);
 }
 
 function isEpisodeLocked(af, idx) {
@@ -257,45 +296,100 @@ async function showMembersOnly(novel) {
   alert('ตอนนี้สำหรับสมาชิก — กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิกที่ยังไม่หมดอายุ');
 }
 
-async function loadEpisodesForAccess(novelId, epCnt) {
-  const epsRef   = collection(db, 'novels', novelId, 'episodes');
-  const fullOpen = !_membership.enabled || isMemberActive() || await isAdminNow();
-  const cacheKey = novelId + (fullOpen ? '|full' : '|free');
-  if (_epCache[cacheKey]) return _epCache[cacheKey];
+const EP_PAGE_SIZE = 50;
 
-  let out;
-  if (fullOpen) {
-    const snap = await getDocs(query(epsRef, orderBy('order', 'asc')));
-    const list = snap.docs.map(d => ({ id: d.id, url: d.data().audioUrl, name: d.data().title, ...d.data() }));
-    out = { list, locked: new Set(), count: list.length };
-  } else {
-    let snap = null;
-    try {
-      snap = await getDocs(query(epsRef, where('premium', '==', false)));
-    } catch (e) {
-      console.warn('[membership/episodes]', e);
-      try { snap = await getDocs(query(epsRef, orderBy('order', 'asc'))); } catch (e2) { snap = null; }
-    }
-    const total = Math.max(Number(epCnt) || 0, snap ? snap.size : 0);
-    const list  = new Array(total);
-    const rest  = [];
-    if (snap) {
-      snap.docs.forEach(d => {
-        const data = d.data();
-        const rec  = { id: d.id, url: data.audioUrl, name: data.title, ...data };
-        const idx  = Number(data.order) - 1;
-        if (Number.isInteger(idx) && idx >= 0 && idx < total && !list[idx]) list[idx] = rec;
-        else rest.push(rec);
-      });
-      rest.forEach(r => list.push(r));
-    }
-    const locked = new Set();
-    for (let i = 0; i < total; i++) if (!list[i]) locked.add(i);
-    out = { list, locked, count: total };
+function _epState(novelId, fullOpen) {
+  const key = novelId + (fullOpen ? '|full' : '|free');
+  let st = _epCache[key];
+  if (!st) {
+    st = { list: [], map: [], locked: new Set(), count: 0, top: -1, cursor: null, done: false, loading: false, fullOpen };
+    _epCache[key] = st;
   }
-  _epCache[cacheKey] = out;
-  return out;
+  return st;
 }
+
+async function _epResolveOpen() {
+  return !_membership.enabled || isMemberActive() || await isAdminNow();
+}
+
+async function _epFetchPage(novelId, epCnt, st) {
+  if (st.loading || st.done) return;
+  st.loading = true;
+  try {
+    const epsRef = collection(db, 'novels', novelId, 'episodes');
+    const parts  = [];
+    if (!st.fullOpen) parts.push(where('premium', '==', false));
+    parts.push(orderBy('order', 'asc'), limit(EP_PAGE_SIZE));
+    if (st.cursor) parts.push(startAfter(st.cursor));
+    const snap = await getDocs(query(epsRef, ...parts));
+    if (snap.size < EP_PAGE_SIZE) st.done = true;
+    if (snap.docs.length) st.cursor = snap.docs[snap.docs.length - 1];
+
+    snap.docs.forEach(d => {
+      const data = d.data();
+      const rec  = { id: d.id, url: data.audioUrl, name: data.title, ...data };
+      if (st.fullOpen) {
+        st.list.push(rec);
+        st.top = st.list.length - 1;
+        return;
+      }
+      const idx = Number(data.order) - 1;
+      if (Number.isInteger(idx) && idx >= 0) {
+        st.map[idx] = rec;
+        st.top = Math.max(st.top, idx);
+      } else {
+        st.map.push(rec);
+        st.top = Math.max(st.top, st.map.length - 1);
+      }
+    });
+
+    if (st.fullOpen) {
+      st.count = st.list.length;
+    } else {
+      st.count = Math.max(Number(epCnt) || 0, st.map.length);
+      st.list  = new Array(st.count).fill(null);
+      st.map.forEach((rec, i) => { if (rec && i < st.count) st.list[i] = rec; });
+      st.locked = new Set();
+      const top = Math.min(st.count - 1, st.top);
+      for (let i = 0; i <= top; i++) if (!st.list[i]) st.locked.add(i);
+    }
+  } catch (e) {
+    st.done = true;
+    console.warn('[episodes/page]', e);
+  } finally {
+    st.loading = false;
+  }
+}
+
+function _epApply(st, novelId) {
+  _nvEpsDone   = st.done;
+  _nvEpsTop    = st.fullOpen ? st.list.length - 1 : st.top;
+  _nvEpCount   = st.count;
+  _nvEpNovelId = novelId;
+  return { list: st.list, locked: st.locked, count: st.count, done: st.done, top: _nvEpsTop };
+}
+
+async function loadEpisodesForAccess(novelId, epCnt) {
+  const fullOpen = await _epResolveOpen();
+  const st = _epState(novelId, fullOpen);
+  if (!st.loading && !st.done && !st.list.length) await _epFetchPage(novelId, epCnt, st);
+  return _epApply(st, novelId);
+}
+
+async function loadMoreEpisodes(novelId) {
+  const fullOpen = await _epResolveOpen();
+  const st = _epState(novelId, fullOpen);
+  await _epFetchPage(novelId, st.count, st);
+  return _epApply(st, novelId);
+}
+
+window._nvLoadMoreEps = async function () {
+  if (!_nvNovel || !_nvEpNovelId) return;
+  const btn = document.querySelector('.ep-load-more button');
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังโหลด...'; }
+  const eps = await loadMoreEpisodes(_nvEpNovelId);
+  _nvBuildEpList(eps.count, eps.list, _nvNovel, eps.locked);
+};
 
 async function refreshNovelForMembership() {
   if (!_membershipLoaded) await loadMembershipSettings();
@@ -566,23 +660,81 @@ async function loadHeroImage() {
   } catch(e) { console.warn('Hero image:', e); }
 }
 loadHeroImage();
-const novelsQuery = query(novelsRef, orderBy('createdAt', 'desc'));
 
-onSnapshot(novelsQuery, (snapshot) => {
-  allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  filtered  = [...allNovels];
-  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
-  renderSection('newReleasesGrid', allNovels.slice(0, 3));
-  renderSection('popularGrid',     allNovels.slice(0, 4));
-  renderNovels(filtered);
-}, (error) => {
-  console.warn('Firestore error:', error);
-  allNovels = [];
-  filtered  = [];
-  renderSection('newReleasesGrid', []);
-  renderSection('popularGrid',     []);
-  renderNovels([]);
-});
+const NOVEL_PAGE_SIZE = 24;
+let _novelsCursor  = null;
+let _novelsDone    = false;
+let _novelsLoading = false;
+
+function _novelsPageQuery(after) {
+  const parts = [orderBy('createdAt', 'desc'), limit(NOVEL_PAGE_SIZE)];
+  if (after) parts.push(startAfter(after));
+  return query(novelsRef, ...parts);
+}
+
+function _novelsMoreHTML(id, label) {
+  return `<div id="${id}" style="text-align:center;margin:22px 0 8px;">` +
+    `<button type="button" onclick="window.loadMoreNovels()" style="padding:11px 26px;border-radius:10px;` +
+    `border:1px solid rgba(245,197,66,0.45);background:transparent;color:#f5c542;font-size:0.9rem;cursor:pointer;` +
+    `font-family:inherit">${label}</button></div>`;
+}
+
+function _setNovelsBusy(busy) {
+  const view = document.getElementById('app-view');
+  if (!view) return;
+  view.querySelectorAll('[onclick="window.loadMoreNovels()"]').forEach(b => {
+    b.disabled = busy;
+    b.textContent = busy ? 'กำลังโหลด...' : 'โหลดนิยายเพิ่ม';
+  });
+}
+
+function _syncNovelsMore() {
+  ['novelsMore', 'libLoadMore', 'favLoadMore'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = _novelsDone ? 'none' : 'block';
+  });
+}
+
+function _paintNovelViews() {
+  const view = document.getElementById('app-view');
+  if (document.getElementById('novelsGrid')) {
+    renderSection('newReleasesGrid', allNovels.slice(0, 3));
+    renderSection('popularGrid',     allNovels.slice(0, 4));
+    renderNovels(filtered);
+  }
+  if (view && view.dataset.view === 'library' && typeof window._libDoRender === 'function') window._libDoRender();
+  if (view && view.dataset.view === 'favorites' && typeof window._favRenderGrid === 'function') window._favRenderGrid();
+  _syncNovelsMore();
+}
+
+async function loadNovelsPage(reset) {
+  if (_novelsLoading) return;
+  if (reset) {
+    allNovels = []; filtered = [];
+    _novelsCursor = null; _novelsDone = false;
+  } else if (_novelsDone) return;
+  _novelsLoading = true;
+  _setNovelsBusy(true);
+  try {
+    const snap = await getDocs(_novelsPageQuery(_novelsCursor));
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (snap.size < NOVEL_PAGE_SIZE) _novelsDone = true;
+    if (snap.docs.length) _novelsCursor = snap.docs[snap.docs.length - 1];
+    const seen = new Set(allNovels.map(n => n.id));
+    rows.forEach(n => { if (!seen.has(n.id)) { allNovels.push(n); seen.add(n.id); } });
+    filtered = [...allNovels];
+    _pruneFavs();
+    _paintNovelViews();
+  } catch (e) {
+    console.warn('[novels/page]', e);
+  } finally {
+    _novelsLoading = false;
+    _setNovelsBusy(false);
+    _syncNovelsMore();
+  }
+}
+
+window.loadMoreNovels = function () { loadNovelsPage(false); };
 
 
 /* ===== 4. NOVEL CARDS ===== */
@@ -688,6 +840,7 @@ window.toggleFav = toggleFav;
 /* ===== [FAV-PRUNE-1] ลบ id ที่นิยายถูกลบไปแล้ว เพื่อให้ตัวเลขบนเมนูตรงกับการ์ด ===== */
 function _pruneFavs() {
   if (!allNovels || !allNovels.length) return false;   // ยังโหลดไม่เสร็จ → อย่าแตะ
+  if (!_novelsDone) { _updateFavBadge(); return false; }
   const favs = _getFavs();
   let changed = false;
   if (favs.length) {
@@ -1169,7 +1322,15 @@ window.prevEp = function() {
 window.nextEp = function() {
   if (_nvAudioFiles.length > 0) {
     const n = _nvPlayableDir(_nvCurrentIdx, 1);
-    if (n >= 0) window._nvPlayEp(n, _nvAudioFiles, _nvNovel);
+    if (n >= 0) { window._nvPlayEp(n, _nvAudioFiles, _nvNovel); return; }
+    if (!_nvEpsDone && _nvEpNovelId) {
+      loadMoreEpisodes(_nvEpNovelId).then(eps => {
+        if (!document.getElementById('nvEpList')) return;
+        _nvBuildEpList(eps.count, eps.list, _nvNovel, eps.locked);
+        const k = _nvPlayableDir(_nvCurrentIdx, 1);
+        if (k >= 0) window._nvPlayEp(k, eps.list, _nvNovel);
+      });
+    }
     return;
   }
   const max = Math.max((currentNovel?.episodeCount || 0), audioFiles_modal.length) - 1;
@@ -1264,6 +1425,7 @@ audio.addEventListener('ended', () => {
   if (_nvAudioFiles.length > 0 && _nvCurrentIdx < _nvAudioFiles.length - 1) {
     const nx = _nvPlayableDir(_nvCurrentIdx, 1);
     if (nx >= 0) window._nvPlayEp(nx, _nvAudioFiles, _nvNovel);
+    else nextEp();
   } else {
     nextEp();
   }
@@ -1708,6 +1870,7 @@ export async function renderHomeView() {
         <span id="novels-count" class="novels-count"></span>
       </div>
       <div id="novelsGrid" class="novels-grid"></div>
+      ${_novelsMoreHTML('novelsMore', 'โหลดนิยายเพิ่ม')}
     </section>
 
     <!-- NEW RELEASES -->
@@ -1737,20 +1900,13 @@ export async function renderHomeView() {
   // render history (ถ้า login อยู่แล้ว)
   window.renderHistory();
 
-  // re-attach Firestore listener — คืน unsub ให้ router
-  const unsub = onSnapshot(novelsQuery, (snapshot) => {
-    allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    filtered  = [...allNovels];
-  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
-    renderSection('newReleasesGrid', allNovels.slice(0, 3));
-    renderSection('popularGrid',     allNovels.slice(0, 4));
-    renderNovels(filtered);
-  }, (err) => {
-    console.warn('[renderHomeView] Firestore error:', err);
-    renderNovels([]);
-  });
+  if (allNovels.length) {
+    _paintNovelViews();
+  } else {
+    await loadNovelsPage(true);
+  }
 
-  return unsub; // router จะเรียก unsub() ก่อน navigate ออก
+  return null;
 }
 
 /** helper: navigate ไป library view (ใช้ใน hero button) */
@@ -2018,6 +2174,7 @@ let _nvTab  = 'all';   // 'all' | 'latest'
 let _nvDesc = false;   // false = เก่า→ใหม่, true = ใหม่→เก่า
 let _nvAudioFiles = [], _nvNovel = null;
 let _nvCurrentIdx = -1; // [UX-3] track ep ที่กำลังเล่นอยู่
+let _nvEpsDone = true, _nvEpsTop = -1, _nvEpCount = 0, _nvEpNovelId = '';
 
 async function _nvBuildEpList(epCnt, audioFiles, novel, locked) {
   _nvAudioFiles = audioFiles;
@@ -2046,7 +2203,11 @@ async function _nvBuildEpList(epCnt, audioFiles, novel, locked) {
   const epProgressMap = await getEpProgressMap(novel.id);
 
   // สร้าง array index ตาม tab + sort
-  let indices = Array.from({ length: epCnt }, (_, i) => i);
+  const total = Math.max(epCnt, audioFiles.length, _nvEpNovelId === novel.id ? _nvEpCount : 0);
+  let visible = total;
+  if (_nvEpNovelId === novel.id && !_nvEpsDone) visible = Math.max(_nvEpsTop + 1, 1);
+  visible = Math.min(visible, total);
+  let indices = Array.from({ length: visible }, (_, i) => i);
   if (_nvDesc) indices = indices.slice().reverse();
   if (_nvTab === 'latest') indices = indices.slice(0, 10);
 
@@ -2127,6 +2288,16 @@ async function _nvBuildEpList(epCnt, audioFiles, novel, locked) {
       a.src = af.url;
     }
   });
+
+  if (_nvEpNovelId === novel.id && !_nvEpsDone) {
+    const more = document.createElement('div');
+    more.className = 'ep-load-more';
+    more.style.cssText = 'text-align:center;padding:14px 0 4px';
+    more.innerHTML = '<button type="button" onclick="window._nvLoadMoreEps()" style="padding:10px 22px;border-radius:9px;' +
+      'border:1px solid rgba(245,197,66,0.45);background:transparent;color:#f5c542;font-size:0.85rem;cursor:pointer;font-family:inherit">' +
+      'โหลดตอนเพิ่ม</button>';
+    list.appendChild(more);
+  }
 
   // [UX-3] restore active state ถ้ามี ep ที่กำลังเล่นอยู่
   if (_nvCurrentIdx >= 0) {
@@ -2310,6 +2481,7 @@ window.renderLibraryView = async function renderLibraryView() {
       </div>
 
       <div id="libGrid" class="novels-grid"></div>
+      ${_novelsMoreHTML('libLoadMore', 'โหลดนิยายเพิ่ม')}
       <div id="libEmpty" style="display:none;text-align:center;padding:60px 20px;color:#666;">
         <div style="font-size:2rem;margin-bottom:12px">${icon('search')}</div>
         <p>ไม่พบนิยายที่ตรงกับการค้นหา</p>
@@ -2328,17 +2500,14 @@ window.renderLibraryView = async function renderLibraryView() {
   _libQuery = '';
   _libFilter = 'all';
 
-  // ใช้ onSnapshot ของตัวเอง — ไม่พึ่ง allNovels global ที่อาจยังว่าง
-  const unsub = onSnapshot(novelsQuery, (snapshot) => {
-    allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    filtered  = [...allNovels];
-  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
+  if (allNovels.length) {
     _libDoRender();
-  }, (err) => {
-    console.warn('[renderLibraryView] Firestore error:', err);
-  });
+  } else {
+    await loadNovelsPage(true);
+    _libDoRender();
+  }
 
-  return unsub; // router จะเรียก unsub() ก่อน navigate ออก
+  return null;
 };
 
 /** กรอง + เรียงนิยายตาม query + filter ปัจจุบัน */
@@ -2360,6 +2529,7 @@ function _libDoRender() {
   const empty = document.getElementById('libEmpty');
   const count = document.getElementById('libCount');
   if (!grid) return;
+  _syncNovelsMore();
 
   let list = [...allNovels];
 
@@ -2387,6 +2557,7 @@ function _libDoRender() {
   if (empty) empty.style.display = 'none';
   grid.innerHTML = list.map(n => cardHTML(n)).join('');
 }
+window._libDoRender = _libDoRender;
 
 /* ===== [CARD-H-1] Favorites View ===== */
 window.renderFavoritesView = async function renderFavoritesView() {
@@ -2404,6 +2575,7 @@ window.renderFavoritesView = async function renderFavoritesView() {
     <div class="novels-grid" id="favGrid">
       <div class="empty-state"><div class="empty-icon">${icon('heart-outline')}</div><p>กำลังโหลด...</p></div>
     </div>
+    ${_novelsMoreHTML('favLoadMore', 'โหลดนิยายเพิ่ม')}
   </div>`;
 
   function _renderFavGrid() {
@@ -2418,18 +2590,16 @@ window.renderFavoritesView = async function renderFavoritesView() {
       : `<div class="empty-state"><div class="empty-icon">${icon('heart-outline')}</div><p>ยังไม่มีรายการโปรด<br><small>กดรูปหัวใจบนการ์ดนิยายเพื่อเพิ่ม</small></p></div>`;
   }
 
-  // ใช้ onSnapshot ของตัวเอง
-  const unsub = onSnapshot(novelsQuery, (snapshot) => {
-    allNovels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    filtered  = [...allNovels];
-  _pruneFavs();   // [FAV-PRUNE-1] เก็บกวาด id ที่นิยายถูกลบไปแล้ว
+  window._favRenderGrid = _renderFavGrid;
+  if (allNovels.length) {
     _renderFavGrid();
-  }, (err) => {
-    console.warn('[renderFavoritesView] Firestore error:', err);
-    _renderFavGrid(); // render จาก allNovels ที่มีอยู่
-  });
+    _syncNovelsMore();
+  } else {
+    await loadNovelsPage(true);
+    _renderFavGrid();
+  }
 
-  return unsub;
+  return null;
 };
 
 /**

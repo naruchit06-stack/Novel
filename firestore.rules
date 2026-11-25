@@ -123,6 +123,46 @@ service cloud.firestore {
         && (!('note' in d)  || isStr(d.note, 500));
     }
 
+    function validSupportTicket(d) {
+      return d.keys().hasOnly([
+               'uid','name','email','subject','status','createdAt','updatedAt',
+               'lastMessageBy','lastMessageText','unreadForAdmin','unreadForUser'
+             ])
+        && d.uid is string && d.uid.size() > 0 && d.uid.size() <= 128
+        && d.subject is string && d.subject.size() > 0 && d.subject.size() <= 120
+        && (!('name' in d)  || isStr(d.name, 120))
+        && (!('email' in d) || isStr(d.email, 200))
+        && d.status == 'open'
+        && d.lastMessageBy == 'user'
+        && isStr(d.lastMessageText, 2000)
+        && d.unreadForAdmin == true
+        && d.unreadForUser == false
+        && d.createdAt is timestamp
+        && d.updatedAt is timestamp;
+    }
+
+    function validSupportMessage(d) {
+      return d.keys().hasOnly(['from','text','createdAt','authorName','uid'])
+        && d.from in ['user','admin']
+        && d.text is string && d.text.size() > 0 && d.text.size() <= 2000
+        && d.uid is string && d.uid.size() > 0 && d.uid.size() <= 128
+        && (!('authorName' in d) || isStr(d.authorName, 120))
+        && d.createdAt is timestamp;
+    }
+
+    function validMembershipLog(d) {
+      return d.keys().hasOnly(['uid','name','email','action','by','at','note','prevUntil','days'])
+        && d.uid is string && d.uid.size() > 0 && d.uid.size() <= 128
+        && d.action in ['grant','revoke','adjust']
+        && d.by is string && d.by.size() > 0 && d.by.size() <= 128
+        && d.at is timestamp
+        && (!('name' in d)      || isStr(d.name, 120))
+        && (!('email' in d)     || isStr(d.email, 200))
+        && (!('note' in d)      || isStr(d.note, 300))
+        && (!('days' in d)      || isNonNegInt(d.days))
+        && (!('prevUntil' in d) || d.prevUntil == null || d.prevUntil is timestamp);
+    }
+
     /* ---------- นิยาย ---------- */
     match /novels/{novelId} {
       allow read: if true;
@@ -190,6 +230,66 @@ service cloud.firestore {
       allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
 
       allow update, delete: if isAdmin();
+    }
+
+    /* ---------- Support tickets (ผู้ใช้ ↔ แอดมิน) ---------- */
+    match /supportTickets/{ticketId} {
+      function ticketData() {
+        return get(/databases/$(database)/documents/supportTickets/$(ticketId)).data;
+      }
+      function isOwner() {
+        return isSignedIn() && ticketData().uid == request.auth.uid;
+      }
+      function isMine() {
+        return isSignedIn() && resource.data.uid == request.auth.uid;
+      }
+
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && validSupportTicket(request.resource.data);
+
+      allow read: if isAdmin() || isMine();
+
+      allow update: if isAdmin();
+
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'unreadForUser','unreadForAdmin','updatedAt','lastMessageBy','lastMessageText','status'
+           ])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.updatedAt is timestamp
+        && isStr(request.resource.data.lastMessageText, 2000)
+        && (request.resource.data.unreadForUser == resource.data.unreadForUser
+            || request.resource.data.unreadForUser == false)
+        && (request.resource.data.unreadForAdmin == resource.data.unreadForAdmin
+            || request.resource.data.unreadForAdmin == true)
+        && (request.resource.data.lastMessageBy == resource.data.lastMessageBy
+            || request.resource.data.lastMessageBy == 'user')
+        && (request.resource.data.status == resource.data.status
+            || (resource.data.status == 'open' && request.resource.data.status == 'closed'));
+
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAdmin() || isOwner();
+
+        allow create: if validSupportMessage(request.resource.data)
+          && ((isSignedIn()
+               && request.resource.data.from == 'user'
+               && request.resource.data.uid == request.auth.uid
+               && isOwner())
+              || (isAdmin()
+                  && request.resource.data.from == 'admin'
+                  && request.resource.data.uid == request.auth.uid));
+
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    /* ---------- Membership log (บันทึกการถอน/คืนสิทธิ์) ---------- */
+    match /membershipLog/{logId} {
+      allow create: if isAdmin() && validMembershipLog(request.resource.data);
+      allow read:   if isAdmin();
     }
   }
 }

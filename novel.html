@@ -250,7 +250,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy }
+import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy, limit }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseApp = initializeApp({
@@ -348,7 +348,7 @@ if (!novelId) {
       const snap = await getDoc(doc(db, 'novels', novelId));
       if (!snap.exists()) { showErr('ไม่พบนิยายนี้ในฐานข้อมูล'); return; }
       novel = { id: snap.id, ...snap.data() };
-      const epSnap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order', 'asc')));
+      const epSnap = await getDocs(query(collection(db, 'novels', novelId, 'episodes'), orderBy('order', 'asc'), limit(300)));
       audioFiles = epSnap.docs.map(d => ({ url: d.data().audioUrl, name: d.data().title, ...d.data() }));
       render(novel);
     } catch(e) {
