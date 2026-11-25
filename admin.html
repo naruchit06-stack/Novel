@@ -1655,7 +1655,7 @@ body.admin-body {
               <div class="mmg-qr-actions">
                 <button class="mmg-btn" id="mmgQrPick" type="button"><span data-icon="folder"></span> อัปโหลดรูป QR</button>
                 <input type="file" id="mmgQrFile" accept="image/*" style="display:none">
-                <span class="mmg-hint" id="mmgQrMsg">รูปจะถูกเก็บที่ membership/qr.png ใน Firebase Storage</span>
+                <span class="mmg-hint" id="mmgQrMsg">รูปจะถูกเก็บที่ Cloudinary (preset ml_default)</span>
               </div>
             </div>
             <label class="mmg-label" for="mmgQrUrl">หรือวางลิงก์รูป QR เอง</label>
@@ -1708,8 +1708,6 @@ import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWith
 import { getFirestore, collection, onSnapshot, query, orderBy, where, doc,
          getDoc, setDoc, updateDoc, deleteDoc, getDocs, writeBatch, addDoc, Timestamp }
                             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
-                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 /* ===== FIREBASE INIT ===== */
 window._BASE = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
@@ -1723,7 +1721,6 @@ const app = initializeApp({
 });
 const auth = getAuth(app);
 const db   = getFirestore(app);
-const storage = getStorage(app);
 
 /* ===== SEC-1: XSS GUARDS ===== */
 function esc(v) {
@@ -2849,21 +2846,57 @@ async function mmgSaveSettings() {
 
 async function mmgUploadQr(file) {
   const msg = document.getElementById('mmgQrMsg');
+  const btn = document.getElementById('mmgQrPick');
+  const urlEl = document.getElementById('mmgQrUrl');
+  if (!file) return;
+  if (!/^image\//i.test(file.type || '')) {
+    msg.textContent = 'ไฟล์ที่เลือกไม่ใช่รูปภาพ — เลือกไฟล์ .png / .jpg';
+    msg.style.color = '#ff6b85';
+    return;
+  }
+
+  btn.disabled = true;
   msg.textContent = 'กำลังอัปโหลด...';
   msg.style.color = 'var(--muted)';
+
+  let url = '';
   try {
-    const objRef = storageRef(storage, 'membership/qr.png');
-    await uploadBytes(objRef, file, { contentType: file.type || 'image/png' });
-    const url = await getDownloadURL(objRef);
-    document.getElementById('mmgQrUrl').value = url;
-    mmgPaintQr(url);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    const res  = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const detail = data && data.error && data.error.message ? data.error.message : ('HTTP ' + res.status);
+      throw new Error('Cloudinary ตอบกลับ ' + detail);
+    }
+    url = data && data.secure_url ? String(data.secure_url) : '';
+    if (!url) throw new Error('ไม่ได้รับ secure_url จาก Cloudinary');
+  } catch (e) {
+    msg.textContent = 'อัปโหลดไม่สำเร็จ: ' + (e && e.message ? e.message : 'ไม่ทราบสาเหตุ') +
+                      ' — วางลิงก์รูปในช่องด้านล่างแทนได้';
+    msg.style.color = '#ff6b85';
+    btn.disabled = false;
+    return;
+  }
+
+  urlEl.value = url;
+  mmgPaintQr(url);
+  msg.textContent = 'อัปโหลดขึ้น Cloudinary แล้ว กำลังบันทึก...';
+  msg.style.color = 'var(--muted)';
+
+  try {
     await setDoc(MEMBER_SETTINGS_REF, { qrUrl: url, updatedAt: new Date() }, { merge: true });
     _mmgCfg.qrUrl = url;
     msg.textContent = 'อัปโหลดและบันทึกลง settings/membership แล้ว';
     msg.style.color = '#4ade80';
   } catch (e) {
-    msg.textContent = 'อัปโหลดไม่สำเร็จ (' + (e.code || e.message || 'ไม่ทราบสาเหตุ') + ') — วางลิงก์รูปในช่องด้านล่างแทนได้';
-    msg.style.color = '#ff6b85';
+    mmgMsg('mmgCfgMsg', 'บันทึกลง settings/membership ไม่สำเร็จ: ' + (e.message || e.code || '') +
+                        ' — กด "บันทึกการตั้งค่า" อีกครั้ง', '#ff6b85');
+    msg.textContent = 'อัปโหลดสำเร็จแต่อัตโนมัติบันทึกไม่สำเร็จ — กด "บันทึกการตั้งค่า"';
+    msg.style.color = '#fbbf24';
+  } finally {
+    btn.disabled = false;
   }
 }
 
